@@ -71,8 +71,8 @@ export default function Login() {
         await api("/api/auth/signup", { json: { handle, password: pw } });
         router.replace("/welcome");
       } else {
-        const r = await api<{ onboarded: boolean }>("/api/auth/login", { json: { handle, password: pw } });
-        router.replace(r.onboarded ? next : "/welcome");
+        const r = await api<{ onboarded: boolean; admin?: boolean }>("/api/auth/login", { json: { handle, password: pw } });
+        router.replace(r.admin ? "/admin" : r.onboarded ? next : "/welcome"); // 관리자(개발자) 계정은 관리자 화면으로
       }
     } catch (e2) {
       setErr((e2 as Error).message);

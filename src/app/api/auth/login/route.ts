@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { z } from "zod";
 import { SESSION_COOKIE, endLogin, sessionCookie } from "@/lib/server/auth";
 import { errorResponse } from "@/lib/server/http";
+import { isAdmin } from "@/lib/server/admin";
 import { logInWithPassword } from "@/lib/server/members";
 import { DEV_COOKIE, OUT_COOKIE } from "@/lib/server/session";
 
@@ -19,7 +20,7 @@ export async function POST(req: Request) {
     jar.set(sessionCookie(token));
     jar.delete(DEV_COOKIE);
     jar.delete(OUT_COOKIE);
-    return Response.json({ handle: user.handle, onboarded: user.onboarded !== false });
+    return Response.json({ handle: user.handle, onboarded: user.onboarded !== false, admin: isAdmin(user) });
   } catch (e) {
     return errorResponse(e);
   }

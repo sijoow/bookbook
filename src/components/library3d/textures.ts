@@ -2,7 +2,7 @@
 // 색은 globals.css 팔레트 그대로. 하지 말 것: 매끈한 그라디언트, 광택, 보라.
 
 import * as THREE from "three";
-import { FACE_DEFAULT, type AvatarConfig } from "@/lib/avatar/config";
+import { AVATAR_COLOR, FACE_DEFAULT, type AvatarConfig } from "@/lib/avatar/config";
 
 export const PAL = {
   paper: "#f7f1e3",
@@ -141,7 +141,7 @@ export function rugTexture(fill: string = PAL.butter): THREE.CanvasTexture {
 }
 
 export type Expr = "normal" | "blink" | "happy" | "read" | "wow";
-export type FaceLook = Pick<AvatarConfig, "eyes" | "brows" | "mouth" | "cheeks" | "sticker">;
+export type FaceLook = Pick<AvatarConfig, "eyes" | "brows" | "mouth" | "cheeks" | "sticker"> & Partial<Pick<AvatarConfig, "eyeColor" | "nose">>;
 
 /** 다꾸 스티커 모양 (얼굴 스티커) — 흰 테두리 + 갈색 펜 */
 function stickerShape(x: CanvasRenderingContext2D, kind: "star" | "heart", cx: number, cy: number, r: number, fill: string) {
@@ -186,7 +186,7 @@ export function faceTexture(expr: Expr, look: FaceLook = FACE_DEFAULT): THREE.Ca
   return tex(c);
 }
 
-export type FacePart = "eyes" | "brows" | "mouth" | "cheeks";
+export type FacePart = "eyes" | "brows" | "mouth" | "cheeks" | "nose";
 
 /**
  * 꾸미기 그림 칸 — 얼굴 그림의 한 부분(눈·눈썹·입·볼)을 피부색 위에 잘라 낸 그림 (data URL).
@@ -205,6 +205,7 @@ export function faceThumb(look: FaceLook, part: FacePart, skin: string, width = 
     brows: [128 - ex - 30, ey - 62, (ex + 30) * 2, 92],
     mouth: [128 - 34, ey + 14, 68, 46],
     cheeks: [128 - ex - 40, ey - 22, (ex + 40) * 2, 86],
+    nose: [128 - 46, ey - 8, 92, 56],
   };
   const [sx, sy, sw, sh] = box[part];
   const h = Math.round((width * (sh / VY)) / sw);
@@ -257,10 +258,27 @@ function drawFace(x: CanvasRenderingContext2D, expr: Expr, look: FaceLook) {
     }
   }
 
-  // 작은 코
-  x.fillStyle = "rgba(205, 118, 90, 0.45)";
-  oval(128, ey + 17, 4.4, 0.8);
-  x.fill();
+  // 코 (11-13 고르기: 콩·동글·선·없음)
+  const nose = look.nose ?? "dot";
+  if (nose === "dot") {
+    x.fillStyle = "rgba(205, 118, 90, 0.45)";
+    oval(128, ey + 17, 4.4, 0.8);
+    x.fill();
+  } else if (nose === "round") {
+    x.fillStyle = "#e79a7d";
+    oval(128, ey + 17, 6.2, 0.82);
+    x.fill();
+    x.fillStyle = "rgba(255, 255, 255, 0.7)";
+    oval(126, ey + 14.5, 1.8, 0.8);
+    x.fill();
+  } else if (nose === "line") {
+    x.strokeStyle = "rgba(150, 92, 66, 0.85)";
+    x.lineWidth = 3;
+    x.beginPath();
+    x.moveTo(129, ey + 9);
+    x.quadraticCurveTo(133, ey + 18, 126, ey + 21);
+    x.stroke();
+  }
 
   // 눈썹 — 웃거나 놀라면 살짝 올라간다 (안쪽이 낮게, 좌우 거울처럼)
   const by = ey - 43 - (expr === "happy" || expr === "wow" ? 4 : 0);
@@ -290,9 +308,10 @@ function drawFace(x: CanvasRenderingContext2D, expr: Expr, look: FaceLook) {
 
   // 눈 — 크고 까만 눈 + 위 왼쪽 큰 빛 · 아래 오른쪽 작은 빛 (반짝은 별빛 하나 더)
   const R = look.eyes === "dot" ? 12.5 : look.eyes === "sparkle" ? 19.5 : 18;
+  const iris = AVATAR_COLOR.eye[look.eyeColor ?? "ink"]; // 눈동자 색 (감은 눈 선은 갈색 펜 그대로)
   for (const s of [-1, 1]) {
     const cx = 128 + s * ex;
-    x.fillStyle = ink;
+    x.fillStyle = iris;
     x.strokeStyle = ink;
     const lashes = (cy: number, r: number) => {
       if (look.eyes !== "lash") return;
@@ -327,6 +346,7 @@ function drawFace(x: CanvasRenderingContext2D, expr: Expr, look: FaceLook) {
       x.closePath();
       x.fill();
       x.lineWidth = 5.5;
+      x.strokeStyle = ink;
       x.beginPath();
       x.moveTo(cx - r - 2, ey + 2);
       x.lineTo(cx + r + 2, ey + 2);
@@ -358,6 +378,7 @@ function drawFace(x: CanvasRenderingContext2D, expr: Expr, look: FaceLook) {
         x.fill();
       }
       x.fillStyle = ink;
+      x.strokeStyle = ink;
       lashes(ey, r);
     }
   }

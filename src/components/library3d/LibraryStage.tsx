@@ -12,7 +12,7 @@ import type { LibraryBook } from "@/lib/books/types";
 import type { HouseId } from "@/lib/house/houses";
 import type { ItemPos } from "@/lib/deco/items";
 import s from "./stage.module.css";
-import { LibraryWorld, type DecoView, type StageMode } from "./world";
+import { LibraryWorld, type DecoView, type StageFocus, type StageMode } from "./world";
 
 export type StageApi = {
   fetch(id: string): Promise<void>;
@@ -36,10 +36,11 @@ export type StageProps = {
   mode: StageMode;
   marks?: Set<string>; // 반짝이를 붙일 책 (친구와 같은 책)
   reading?: boolean; // 읽는 동안 전체 화면
-  focus?: "body" | "face" | "pet"; // 미리보기 카메라 (얼굴 꾸미기 땐 얼굴만 크게 · 동물 고를 땐 동물까지)
+  focus?: StageFocus; // 미리보기 카메라 (얼굴 꾸미기 땐 그 부위로 다가감 · 동물 고를 땐 동물까지)
   stand?: boolean; // 미리보기에서 서 있기 (꾸미기 창)
   editing?: boolean; // 순서 바꾸기 — 책장이 크게 보이고 책을 끌어 옮긴다
   onReorder?: (ids: string[]) => void;
+  onAvatar?: () => void; // 아바타를 눌렀다 (마이페이지 — 꾸미기 창 열기)
   arranging?: boolean; // 물건 자리 — 방이 넓게 보이고 방 물건을 끌어 옮긴다 (홈만)
   onArrange?: (id: string, pos: ItemPos) => void;
   guest?: { avatar: AvatarConfig; name: string; worn: string[] } | null; // 친구 도서관에 놀러 간 '나'
@@ -196,6 +197,7 @@ export default function LibraryStage(p: StageProps) {
               props.current.onView?.(on);
             },
             reorder: (ids) => props.current.onReorder?.(ids),
+            avatarTap: () => props.current.onAvatar?.(),
             arrange: (id, pos) => props.current.onArrange?.(id, pos),
           },
           font,

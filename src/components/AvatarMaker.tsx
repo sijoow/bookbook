@@ -17,6 +17,8 @@ import {
   CHEEKS_LABEL,
   EYES,
   EYES_LABEL,
+  EYE_COLORS,
+  EYE_COLOR_LABEL,
   GENDERS,
   GENDER_LABEL,
   HAIR_COLORS,
@@ -26,6 +28,8 @@ import {
   HAIR_STYLES,
   MOUTHS,
   MOUTH_LABEL,
+  NOSES,
+  NOSE_LABEL,
   OUTFITS,
   OUTFIT_LABEL,
   PETS,
@@ -39,7 +43,7 @@ import {
 } from "@/lib/avatar/config";
 import type { LibraryBook } from "@/lib/books/types";
 import { FEATURES } from "@/lib/features";
-import type { DecoView } from "./library3d/world";
+import type { DecoView, StageFocus } from "./library3d/world";
 import m from "./maker.module.css";
 
 const LibraryStage = dynamic(() => import("./library3d/LibraryStage"), { ssr: false });
@@ -48,22 +52,22 @@ const PhotoAvatar = dynamic(() => import("./PhotoAvatar").then((x) => x.PhotoAva
 const NO_BOOKS: LibraryBook[] = [];
 
 export type MakerTab = "preset" | "face" | "hair" | "eyes" | "mouth" | "outfit" | "pet";
-const TABS: Array<{ id: MakerTab; label: string; focus: "face" | "body" | "pet" }> = [
+const TABS: Array<{ id: MakerTab; label: string; focus: StageFocus }> = [
   { id: "preset", label: "추천", focus: "body" },
   { id: "face", label: "얼굴", focus: "face" },
-  { id: "hair", label: "머리", focus: "face" },
-  { id: "eyes", label: "눈", focus: "face" },
-  { id: "mouth", label: "입", focus: "face" },
+  { id: "hair", label: "머리", focus: "hair" },
+  { id: "eyes", label: "눈", focus: "eyes" },
+  { id: "mouth", label: "코·입", focus: "mouth" },
   { id: "outfit", label: "옷", focus: "body" },
   { id: "pet", label: "동물", focus: "pet" },
 ];
 const ICON: Record<MakerTab, string> = { preset: "preset", face: "face", hair: "hair", eyes: "eyes", mouth: "mouth", outfit: "outfit", pet: "pet" };
 
 type Opt = { key: string; label: string; on: boolean; pick: () => void; img?: string; color?: string };
-type Group = { title: string; kind: "thumbs" | "swatches"; wide?: boolean; opts: Opt[] };
+type Group = { title: string; kind: "thumbs" | "swatches"; wide?: boolean; named?: boolean; opts: Opt[] }; // named = 그림 아래 이름 (예시 모습만 — 나머지는 그림으로만 고른다)
 
 /** 얼굴 그림 칸 열쇠 (같은 얼굴이면 다시 그리지 않는다) */
-const look = (v: AvatarConfig) => `${v.skin}|${v.eyes}|${v.brows}|${v.mouth}|${v.cheeks}|${v.sticker}`;
+const look = (v: AvatarConfig) => `${v.skin}|${v.eyes}|${v.brows}|${v.mouth}|${v.cheeks}|${v.sticker}|${v.eyeColor}|${v.nose}`;
 
 export function AvatarMaker({
   value: v,
@@ -104,12 +108,13 @@ export function AvatarMaker({
       if (tab === "face" || tab === "eyes" || tab === "mouth") {
         const { faceThumb } = await import("./library3d/textures");
         const skin = AVATAR_COLOR.skin[v.skin];
-        const base = { eyes: v.eyes, brows: v.brows, mouth: v.mouth, cheeks: v.cheeks, sticker: v.sticker };
+        const base = { eyes: v.eyes, brows: v.brows, mouth: v.mouth, cheeks: v.cheeks, sticker: v.sticker, eyeColor: v.eyeColor, nose: v.nose };
         const pairs: Array<[string, string]> = [];
         if (tab === "eyes") {
           for (const e of EYES) pairs.push([`eyes:${e}|${look(v)}`, faceThumb({ ...base, eyes: e, brows: "none" }, "eyes", skin)]);
           for (const b of BROWS) pairs.push([`brows:${b}|${look(v)}`, faceThumb({ ...base, brows: b }, "brows", skin)]);
         } else if (tab === "mouth") {
+          for (const no of NOSES) pairs.push([`nose:${no}|${look(v)}`, faceThumb({ ...base, nose: no }, "nose", skin)]);
           for (const mo of MOUTHS) pairs.push([`mouth:${mo}|${look(v)}`, faceThumb({ ...base, mouth: mo }, "mouth", skin)]);
         } else {
           for (const c of CHEEKS) pairs.push([`cheeks:${c}|${look(v)}`, faceThumb({ ...base, cheeks: c, sticker: "none" }, "cheeks", skin)]);
@@ -168,6 +173,7 @@ export function AvatarMaker({
           {
             title: "예시 모습",
             kind: "thumbs",
+            named: true,
             opts: PRESETS.map((p) => ({
               key: p.id,
               label: p.name,
@@ -193,10 +199,14 @@ export function AvatarMaker({
       case "eyes":
         return [
           { title: "눈", kind: "thumbs", wide: true, opts: opt("eyes", EYES, EYES_LABEL, v.eyes, (k) => `eyes:${k}|${look(v)}`, (eyes) => ({ eyes })) },
+          { title: "눈동자 색", kind: "swatches", opts: EYE_COLORS.map((k) => ({ key: k, label: EYE_COLOR_LABEL[k], on: v.eyeColor === k, pick: () => onChange({ eyeColor: k }), color: AVATAR_COLOR.eye[k] })) },
           { title: "눈썹", kind: "thumbs", wide: true, opts: opt("brows", BROWS, BROWS_LABEL, v.brows, (k) => `brows:${k}|${look(v)}`, (brows) => ({ brows })) },
         ];
       case "mouth":
-        return [{ title: "입", kind: "thumbs", wide: true, opts: opt("mouth", MOUTHS, MOUTH_LABEL, v.mouth, (k) => `mouth:${k}|${look(v)}`, (mouth) => ({ mouth })) }];
+        return [
+          { title: "코", kind: "thumbs", opts: opt("nose", NOSES, NOSE_LABEL, v.nose, (k) => `nose:${k}|${look(v)}`, (nose) => ({ nose })) },
+          { title: "입", kind: "thumbs", wide: true, opts: opt("mouth", MOUTHS, MOUTH_LABEL, v.mouth, (k) => `mouth:${k}|${look(v)}`, (mouth) => ({ mouth })) },
+        ];
       case "outfit": {
         const rest = JSON.stringify({ ...v, gender: "", glasses: false });
         return [
@@ -273,7 +283,7 @@ export function AvatarMaker({
                   {g.opts.map((o) => (
                     <button key={o.key} type="button" className={`${m.tile} ${o.on ? m.tileOn : ""}`} aria-pressed={o.on} aria-label={o.label} onClick={o.pick}>
                       {o.img ? <img src={o.img} alt="" /> : <span className={m.tileText}>{o.label.slice(0, 4)}</span>}
-                      <span className={m.tileLabel}>{o.label}</span>
+                      {g.named && <span className={m.tileLabel}>{o.label}</span>}
                     </button>
                   ))}
                 </div>

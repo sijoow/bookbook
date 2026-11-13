@@ -24,6 +24,8 @@ import { PAL, addSlotTexture, loadTexture, openPageTexture, pagesTexture, rugTex
 import { DEFAULT_HOUSE, type HouseId } from "@/lib/house/houses";
 
 export type StageMode = "home" | "visit" | "preview";
+/** 미리보기 카메라가 담을 곳 (꾸미기 창은 탭마다 다르게) */
+export type StageFocus = "body" | "face" | "pet" | "hair" | "eyes" | "mouth";
 
 export type WorldEvents = {
   pick?: (id: string) => void;
@@ -131,7 +133,7 @@ export class LibraryWorld {
   private pageTex: THREE.Texture | null = null;
   private unit = 0;
   private readingView = false;
-  private focus: "body" | "face" | "pet" = "body"; // 미리보기에서 얼굴만 크게 · 동물까지
+  private focus: StageFocus = "body"; // 미리보기 카메라 — 얼굴·머리·눈·코입은 그 부위로 다가가고, 동물까지 담기도
   private standing = false; // 미리보기에서 서 있기 (꾸미기 창 — 좁고 긴 칸에 크게)
   private view = { pos: new THREE.Vector3(0, 60, 200), look: new THREE.Vector3(0, 30, 0) };
   private goal = { pos: new THREE.Vector3(), look: new THREE.Vector3() };
@@ -792,7 +794,7 @@ export class LibraryWorld {
   }
 
   /** 미리보기 카메라 — 얼굴 꾸밀 땐 얼굴만 크게 */
-  setFocus(f: "body" | "face" | "pet") {
+  setFocus(f: StageFocus) {
     if (f === this.focus) return;
     this.focus = f;
     this.goalKey = "";
@@ -1954,11 +1956,19 @@ export class LibraryWorld {
     let tilt: number;
     let yaw: number;
     if (this.mode === "preview" && this.standing) {
-      // 꾸미기 창 — 서 있는 아바타 (머리 가운데 ≈ 26cm). 얼굴 탭이면 머리·어깨만 크게
-      if (this.focus === "face") {
-        pts = box(c.x - 11.5, c.x + 11.5, 16.5, 41, c.z - 4, c.z + 9);
-        rect = [-0.92, 0.92, -0.6, 0.86];
-        tilt = 0.05;
+      // 꾸미기 창 — 서 있는 아바타 (머리 가운데 ≈ 25.8cm · 눈 ≈ 24.8 · 코 ≈ 23.9 · 입 ≈ 22.8, 얼굴 앞 z ≈ 9)
+      // 11-13 사용자: "부위별로 확대 확대 되면서 고르게" → 탭마다 그 부위로 다가간다 (좁고 긴 칸이라 폭에 맞춰 — 좁게 잡을수록 크게)
+      const zoom: Partial<Record<typeof this.focus, { x: number; y0: number; y1: number; rect: [number, number, number, number] }>> = {
+        hair: { x: 12.5, y0: 15, y1: 42, rect: [-0.96, 0.96, -0.3, 0.78] }, // 머리 전체 (똥머리·모자까지)
+        face: { x: 10.2, y0: 16.5, y1: 35, rect: [-0.99, 0.99, -0.15, 0.66] }, // 얼굴 가득
+        eyes: { x: 6.8, y0: 23.2, y1: 26.4, rect: [-1, 1, 0.08, 0.42] }, // 두 눈만 (얼굴 양옆은 잘린다)
+        mouth: { x: 5, y0: 21.2, y1: 25, rect: [-1, 1, 0.02, 0.4] }, // 코·입
+      };
+      const z = zoom[this.focus];
+      if (z) {
+        pts = box(c.x - z.x, c.x + z.x, z.y0, z.y1, c.z + 2, c.z + 9.5);
+        rect = z.rect;
+        tilt = 0.04;
         yaw = 0;
       } else {
         pts = box(c.x - 10.5, c.x + 10.5, 0, 41, c.z - 5, c.z + 7);

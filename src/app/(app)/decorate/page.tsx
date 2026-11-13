@@ -349,7 +349,7 @@ export default function Decorate() {
             <Tape color="apricot" />
             <span className={ui.paperLabel}>아바타 얼굴 · 머리 · 옷</span>
             <p className={ui.muted} style={{ marginBottom: 10 }}>
-              눈·눈썹·입·볼과 머리·옷 색, 예시 모습 고르기는 마이페이지 '나의 모습 꾸미기'에서
+              눈·눈썹·입·볼과 머리·옷 색, 예시 모습 고르기는 마이페이지 &lsquo;나의 모습 꾸미기&rsquo;에서
             </p>
             <Link href="/me" className={`${ui.btn} ${ui.btnWide}`}>
               마이페이지에서 꾸미기 ▸

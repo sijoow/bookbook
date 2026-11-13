@@ -20,6 +20,8 @@ const list = (v: string | undefined) => (v ?? "").split(",").map((x) => x.trim()
 export function isAdmin(u: UserDoc): boolean {
   const emails = list(process.env.ADMIN_EMAILS);
   const handles = list(process.env.ADMIN_HANDLES);
+  const adminId = (process.env.ADMIN_ID ?? "").trim().toLowerCase(); // 관리자(개발자) 계정 fe — 비밀번호는 ADMIN_PASSWORD (members.adminAccount)
+  if (adminId && u.handle.toLowerCase() === adminId && (process.env.ADMIN_PASSWORD ?? "").length >= 8) return true;
   if (!emails.length && !handles.length) return devAllowed() && u.handle === "dev";
   return (Boolean(u.email) && emails.includes(u.email!.toLowerCase())) || handles.includes(u.handle.toLowerCase());
 }

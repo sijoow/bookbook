@@ -209,7 +209,7 @@ export default function MyPage() {
         <span className={ui.paperLabel}>나의 프로필</span>
         {me && gl && !making && (
           <div ref={preview}>
-            <LibraryStage mode="preview" books={NO_BOOKS} avatar={me.avatar} name={me.nickname} me deco={decoView} focus="body" />
+            <LibraryStage mode="preview" books={NO_BOOKS} avatar={me.avatar} name={me.nickname} me deco={decoView} focus="body" onAvatar={() => setMaking(me.avatar)} hint="아바타를 누르면 꾸미기" />
           </div>
         )}
         {me && !gl && <p className={ui.muted}>이 기기에서는 입체 화면을 볼 수 없어요. 고른 모습은 다른 기기에서 보여요.</p>}
