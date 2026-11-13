@@ -20,6 +20,12 @@ export class Pet {
   private t = Math.random() * 10;
   private phase = 0;
   private moving = 0;
+  private react = 0; // 눌렸을 때 반응 (1 → 0, 0.7초)
+
+  /** 눌렸다 — 콩 뛰며 한 바퀴 (자고 있었어도 잠깐 눈을 뜬다) */
+  poke() {
+    this.react = 1;
+  }
 
   constructor(
     readonly kind: Exclude<PetKind, "none">,
@@ -59,8 +65,16 @@ export class Pet {
     }
     this.ears.forEach((e, i) => (e.rotation.z = (i ? -1 : 1) * (0.05 * Math.sin(this.t * 3 + i) + (this.moving > 0.3 ? 0.12 : 0))));
     // 자면 눈을 감는다 (가끔 깜빡)
+    // 눌렸을 때 — 콩 + 한 바퀴
+    if (this.react > 0) {
+      this.react = Math.max(0, this.react - dt * 1.45);
+      const k = 1 - this.react;
+      this.body.position.y += Math.sin(k * Math.PI) * 6;
+      this.body.rotation.y = k * Math.PI * 2;
+      if (this.tail) this.tail.rotation.y = Math.sin(this.t * 20) * 0.7;
+    } else this.body.rotation.y = 0;
     const blink = !this.sleeping && Math.sin(this.t * 0.9) > 0.985;
-    for (const e of this.eyes) e.scale.y = this.sleeping || blink ? 0.18 : 1;
+    for (const e of this.eyes) e.scale.y = (this.sleeping && this.react === 0) || blink ? 0.18 : 1;
   }
 
   dispose() {

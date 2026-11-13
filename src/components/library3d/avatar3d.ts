@@ -117,6 +117,7 @@ export class Avatar {
   private dressed: string | null = null;
   private dressKit: Kit | null = null;
   private dressParts: THREE.Object3D[] = [];
+  private hatGroup: THREE.Group | null = null; // 기본 모자 — 머리 소품을 하면 숨긴다
 
   constructor(
     readonly cfg: AvatarConfig,
@@ -656,6 +657,7 @@ export class Avatar {
       g.position.x = 0.9;
     }
     hc.add(g);
+    this.hatGroup = g;
   }
 
   /** 신발 (11-13) — 단화(갈색 동글) · 운동화(흰 몸통 + 코랄 밑창) · 부츠(갈색 목) · 장화(노란 목) */
@@ -1052,14 +1054,17 @@ export class Avatar {
     this.worn.clear();
     this.wornKit?.dispose();
     this.wornKit = new Kit(this.gradient);
+    let headOn = false;
     for (const id of ids) {
       if (DRESS_IDS.has(id)) continue;
       const w = buildWearable(id, this.wornKit, this.cfg.outfit);
       if (!w) continue;
-      if (w.anchor === "head" && this.hatOn()) continue; // 모자를 쓰면 머리 소품은 모자에 가려 숨김 (가진 건 그대로)
+      if (w.anchor === "head") headOn = true;
       (w.anchor === "head" ? this.headCenter : this.body).add(w.obj);
       this.worn.set(id, w.obj);
     }
+    // 머리 소품(곰돌이 귀·리본·별 핀·꽃 화관·왕관)을 하면 기본 모자는 벗는다 — 소품이 먼저 (11-13 사용자: "모자를 쓰고 있어도 소품이 적용되게")
+    if (this.hatGroup) this.hatGroup.visible = !headOn;
     return new Map(this.worn);
   }
 

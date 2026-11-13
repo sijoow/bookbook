@@ -667,6 +667,50 @@ export class LibraryWorld {
     });
   }
 
+  /** 손님(나)이 선물 상자를 들고 집주인에게 건넨다 → 러그 위에 상자 (책마을 선물 — 11-13 사용자: "선물을 직접 들고 가서 전달") */
+  guestGift(): Promise<void> {
+    const g = this.guest;
+    if (!g) return Promise.resolve();
+    return this.enqueue(async () => {
+      const host = this.avatar;
+      const spot = this.guestSpot();
+      if (g.pose === "sit") await this.hop(new THREE.Vector3(spot.x, 0, spot.z + 14), 8, 0.3, "stand", g);
+      const kit = new Kit(this.gradient);
+      const { obj: box } = buildGiftBox(kit);
+      box.scale.setScalar(0.5);
+      box.position.set(0, 8.5, 6.5);
+      g.root.add(box);
+      g.setPose("carry");
+      g.setExpr("happy");
+      const to = new THREE.Vector3(this.cushion.x - 15, 0, this.cushion.z + 17);
+      await this.walkTo(to.x, to.z, g);
+      g.setPose("carry");
+      await this.turnTo(facing(this.cushion.x - to.x, this.cushion.z - to.z), 0.15, g);
+      this.events.sayGuest?.("선물이야!");
+      await this.wait(0.7);
+      box.removeFromParent();
+      kit.dispose();
+      g.setPose("wave");
+      if (!this.giftBox) this.spawnGift(false); // 러그 위에 상자 — 친구가 자기 집에서 연다
+      this.burstAt(this.giftSpot.clone().add(new THREE.Vector3(0, 10, 0)));
+      if (host && host.pose === "sit") {
+        host.setPose("sitwave");
+        host.setExpr("happy");
+        this.say("고마워!");
+      }
+      await this.wait(1.2);
+      if (host && host.pose === "sitwave") {
+        host.setPose("sit");
+        host.setExpr("normal");
+      }
+      g.setPose("stand");
+      g.setExpr("normal");
+      await this.walkTo(spot.x, spot.z + 14, g);
+      await this.turnTo(0, 0.15, g);
+      await this.hop(new THREE.Vector3(spot.x, 0, spot.z), 8, 0.34, "sit", g);
+    });
+  }
+
   /** 발도장을 남기면 손님(나)이 만세 */
   guestCheer(line = "발도장 꾹!") {
     const g = this.guest;
@@ -2390,6 +2434,19 @@ export class LibraryWorld {
         return;
       }
     }
+    // 동물 — 누르면 콩 뛰며 한 바퀴 + 하트 + 소리 (11-13)
+    const pet = this.pet;
+    if (pet && pet.root.visible) {
+      const pc = pet.root.position.clone().add(new THREE.Vector3(0, 4, 0));
+      const ps = this.toScreen(pc);
+      const pe = this.toScreen(pc.clone().add(new THREE.Vector3(6, 0, 0)));
+      if (Math.hypot(x - ps.x, y - ps.y) < Math.max(22, Math.abs(pe.x - ps.x) * 1.3)) {
+        pet.poke();
+        this.burstAt(pc.clone().add(new THREE.Vector3(0, 6, 0)));
+        this.say(PET_SOUND[pet.kind]);
+        return;
+      }
+    }
     // 아바타
     const av = this.avatar;
     if (av) {
@@ -2424,6 +2481,9 @@ export class LibraryWorld {
     }
   }
 }
+
+/** 동물 소리 — 아이가 흉내 내듯 (캐릭터 목소리로 구움, lib/voice/lines) */
+const PET_SOUND: Record<string, string> = { dog: "멍멍!", cat: "야옹!", rabbit: "깡총깡총!", hamster: "찍찍!", chick: "삐약삐약!" };
 
 function pick<T>(xs: T[]): T {
   return xs[Math.floor(Math.random() * xs.length)];

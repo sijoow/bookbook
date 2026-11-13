@@ -11,6 +11,9 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { ChatSheet } from "@/components/ChatSheet";
+import { GiftSheet } from "@/components/GiftSheet";
+import { TalkIcon } from "@/components/InkIcons";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { TopBar } from "@/components/Bars";
 import { CoverSticker, Stars } from "@/components/Bits";
@@ -46,7 +49,7 @@ const HUD_INSETS = { top: 50, bottom: 96, left: 0 };
 
 type Side = { id: string; status: BookStatus; readMinutes: number; rating: number | null; oneLiner: string | null };
 type PortalView = { workKey: string; open: boolean; title: string; coverUrl: string | null; mine: Side; theirs: Side };
-type Data = { user: { handle: string; nickname: string; avatar: AvatarConfig; deco?: Deco; house?: HouseId }; books: LibraryBook[]; portals: PortalView[]; myWorkKeys: string[] };
+type Data = { user: { handle: string; nickname: string; avatar: AvatarConfig; deco?: Deco; house?: HouseId; reading?: { title: string; coverUrl: string | null } | null }; books: LibraryBook[]; portals: PortalView[]; myWorkKeys: string[] };
 
 /** "다 읽음 · 4시간 20분" */
 function sideLine(x: Side): string {
@@ -60,6 +63,8 @@ export default function FriendLibrary() {
   const [data, setData] = useState<Data | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [leaving, setLeaving] = useState(false); // '우리 집' — 인사하고 나가는 중
+  const [chatOpen, setChatOpen] = useState(false); // 책마을 — 둘만의 이야기
+  const [giftOpen, setGiftOpen] = useState(false); // 책마을 — 선물 보내기
   const onStageReady = useCallback((a: StageApi) => {
     stageApi.current = a;
   }, []);
@@ -267,6 +272,8 @@ export default function FriendLibrary() {
                   {showCredit && FEATURES.yes24HomeCredit && <HudCredit />}
                   <HudBar cols={4} hidden={Boolean(sel) || stampOpen}>
                     <HudButton icon={<MenuIcon name="paw" />} label="발도장" onClick={() => setStampOpen(true)} />
+                    <HudButton icon={<TalkIcon />} label="이야기" onClick={() => setChatOpen(true)} />
+                    <HudButton icon={<MenuIcon name="shop" />} label="선물" onClick={() => setGiftOpen(true)} />
                     <HudButton icon={<MenuIcon name="portal" />} label="통하는 책" badge={portals.length || undefined} onClick={() => setDrawer(true)} />
                     <HudButton icon={shelf ? <MenuIcon name="house" /> : <MenuIcon name="zoom" />} label={shelf ? "방 보기" : "크게 보기"} on={shelf} onClick={() => stageApi.current?.setShelfView(!shelf)} />
                     <HudButton icon={<MenuIcon name="house" />} label="우리 집" onClick={goHome} disabled={leaving} />
@@ -304,6 +311,26 @@ export default function FriendLibrary() {
         </section>
 
         {/* 발도장 창 */}
+        {chatOpen && data && <ChatSheet handle={data.user.handle} nickname={data.user.nickname} onClose={() => setChatOpen(false)} />}
+        {giftOpen && data && (
+          <GiftSheet
+            to={data.user.handle}
+            nickname={data.user.nickname}
+            has={[...(data.user.deco?.owned ?? []), ...(data.user.deco?.boxes ?? [])]}
+            onClose={() => setGiftOpen(false)}
+            onSent={() => {
+              setGiftOpen(false);
+              void stageApi.current?.guestGift();
+            }}
+          />
+        )}
+        {/* 친구가 지금 읽는 중이면 위에 작은 띠 (책마을) */}
+        {data?.user.reading && !chatOpen && (
+          <button type="button" className={hud.readingNow} onClick={() => setChatOpen(true)}>
+            <i aria-hidden />
+            {data.user.nickname}이 『{data.user.reading.title}』 읽는 중 · 말 걸기
+          </button>
+        )}
         {stampOpen && (
           <div className={stage.sheet} role="dialog" aria-modal="true" aria-label="발도장 남기기">
             <p className={s.handTitle} style={{ marginBottom: 10 }}>
@@ -399,6 +426,26 @@ export default function FriendLibrary() {
         </>
       )}
       {toastEl}
+      {chatOpen && data && <ChatSheet handle={data.user.handle} nickname={data.user.nickname} onClose={() => setChatOpen(false)} />}
+      {giftOpen && data && (
+        <GiftSheet
+          to={data.user.handle}
+          nickname={data.user.nickname}
+          has={[...(data.user.deco?.owned ?? []), ...(data.user.deco?.boxes ?? [])]}
+          onClose={() => setGiftOpen(false)}
+          onSent={() => {
+            setGiftOpen(false);
+            void stageApi.current?.guestGift();
+          }}
+        />
+      )}
+      {/* 친구가 지금 읽는 중이면 위에 작은 띠 (책마을) */}
+      {data?.user.reading && !chatOpen && (
+        <button type="button" className={hud.readingNow} onClick={() => setChatOpen(true)}>
+          <i aria-hidden />
+          {data.user.nickname}이 『{data.user.reading.title}』 읽는 중 · 말 걸기
+        </button>
+      )}
     </>
   );
 }

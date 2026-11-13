@@ -475,8 +475,7 @@
 .immersive {
   position: relative;
   height: calc(100dvh - 64px - env(safe-area-inset-bottom));
-  margin-top: calc(-1 * env(safe-area-inset-top, 0px)); /* 방은 노치 자리까지 (위 여백 상쇄) */
-  margin: 0 -16px -104px; /* 아래 -104px = .main 아래 여백 상쇄 → 화면이 내려가지 않는다 (숨겨진 화면일 땐 자리를 안 차지해 다른 화면에 안 번진다) */
+  margin: calc(-1 * env(safe-area-inset-top, 0px)) -16px -104px; /* 위 = 노치 자리까지 방을 (.main 위 여백 상쇄 — 11-13: 따로 margin-top 을 두면 이 줄이 덮어써 모눈이 보였다) */ /* 아래 -104px = .main 아래 여백 상쇄 → 화면이 내려가지 않는다 (숨겨진 화면일 땐 자리를 안 차지해 다른 화면에 안 번진다) */
 }
 .immersiveErr {
   position: absolute;
@@ -759,4 +758,10 @@
   justify-content: center;
   gap: 6px;
   padding-bottom: 6px;
+}
+
+/* 책마을 — 친구가 지금 읽는 중 (멀티버스 친구 줄) */
+.readingNow {
+  color: var(--coral);
+  font-weight: 700;
 }

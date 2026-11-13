@@ -84,14 +84,7 @@ async function settle(fresh: UserDoc, users: Awaited<ReturnType<typeof cols>>["u
     await users.updateOne({ _id: user._id }, { $set: { points: 999_999 } });
     fresh.points = 999_999;
   }
-  // 배달 상자는 없앴다 — 남은 상자는 열어서 바로 입고/놓는다 (11-13 사용자: "상자 속 열기 이런 거 빼 줘, 바로 쓰게")
-  let deco = readDeco(fresh.deco);
-  if (deco.boxes.length) {
-    const before = deco.boxes;
-    for (let r = openBox(deco); r; r = openBox(deco)) deco = r.deco;
-    await users.updateOne({ _id: user._id, "deco.boxes": before }, { $set: { deco } });
-    return (await users.findOne({ _id: user._id })) ?? fresh;
-  }
+  // (11-13 밤) 상자는 이제 친구 선물 전용이라 저절로 열지 않는다 — 친구가 자기 집에서 눌러 연다
   return fresh;
 }
 

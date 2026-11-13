@@ -5,10 +5,12 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { TopBar } from "@/components/Bars";
+import { MonthCard } from "@/components/MonthCard";
 import { Tape } from "@/components/Deco";
 import ui from "@/components/ui.module.css";
 import { api } from "@/lib/client/api";
 import { DEFAULT_PPM, formatMinutes, lastWeek, minutesPerBook, readingSpeed } from "@/lib/books/reading";
+import { monthReport } from "@/lib/books/report";
 import type { LibraryBook, ReadingSession } from "@/lib/books/types";
 import s from "../screens.module.css";
 
@@ -68,6 +70,9 @@ export default function Log() {
     <>
       <TopBar title="기록" />
       {err && <p className={ui.error}>{err}</p>}
+
+      {/* 이달의 독서 카드 (11-13) — 기준 시각은 불러온 뒤 정한 asOf */}
+      {asOf && <MonthCard r={monthReport(books, sessions ?? [], new Date(asOf))} />}
 
       <section className={`${ui.paper} ${s.section}`}>
         <Tape color="apricot" />

@@ -8,6 +8,7 @@ import { TopBar } from "@/components/Bars";
 import { CoverSticker, Progress, Stars } from "@/components/Bits";
 import { Tape, Yes24Credit } from "@/components/Deco";
 import { RelatedBooks } from "@/components/Picks";
+import { RecommendButton } from "@/components/Recommend";
 import ui from "@/components/ui.module.css";
 import Link from "next/link";
 import { api } from "@/lib/client/api";
@@ -280,6 +281,9 @@ export default function BookDetail() {
           )}
         </section>
       )}
+
+      {/* 책마을 — 친구에게 추천하기 (11-13) */}
+      <RecommendButton book={book} />
 
       {/* 이어지는 책 — 같은 책을 읽은 친구 · 그 친구들이 좋아한 책 · 같은 작가의 다른 책 (11-13) */}
       <RelatedBooks bookId={book.id} className={`${ui.paper} ${s.section}`} />

@@ -25,6 +25,7 @@ export type StageApi = {
   openGift(itemId: string, deco: DecoView, left: number): Promise<void>;
   guestCheer(line?: string): void;
   guestLeave(): Promise<void>; // 친구 집 '우리 집' — 인사하고 걸어 나간다
+  guestGift(): Promise<void>; // 친구 집 '선물' — 상자를 들고 가서 건넨다
   setShelfView(on: boolean): void; // 크게 보기 ↔ 방 보기 (immersive 면 페이지의 퀵메뉴가 부른다)
 };
 
@@ -264,6 +265,7 @@ export default function LibraryStage(p: StageProps) {
         openGift: (itemId, deco, left) => lw.openGift(itemId, deco, left),
         guestCheer: (line) => lw.guestCheer(line),
         guestLeave: () => lw.guestLeave(),
+        guestGift: () => lw.guestGift(),
         setShelfView: (on) => lw.setShelfView(on),
       });
     };

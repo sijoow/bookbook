@@ -19,6 +19,7 @@ import { CoverSticker, Progress } from "@/components/Bits";
 import { Bookshelf } from "@/components/Bookshelf";
 import { Sparkle, StarDoodle, Tape, Yes24Credit } from "@/components/Deco";
 import { EditBar, HudCredit, HudHint, HudNotice, HudPoints, QuickMenu, ReadHandle, SideDrawer, SideTab, Stat, hud } from "@/components/HomeHud";
+import { ChatSheet } from "@/components/ChatSheet";
 import { MissionPanel } from "@/components/Missions";
 import { ShareLibrary, useShareLibrary } from "@/components/ShareLibrary";
 import { StampIcon } from "@/components/Stamp";
@@ -120,7 +121,9 @@ export default function MyLibrary() {
   const [editing, setEditing] = useState(false); // 책장 순서 바꾸기
   const [arranging, setArranging] = useState(false); // 방 물건 자리 옮기기 (11-13)
   const [drawer, setDrawer] = useState(false); // 옆 서랍 (나의 도서관)
-  const [missions, setMissions] = useState<MissionsView | null>(null); // 오늘의 미션 (서랍 맨 위, 받을 게 있으면 색인 탭에 점)
+  const [missions, setMissions] = useState<MissionsView | null>(null);
+  const [talk, setTalk] = useState<{ unread: { handle: string; nickname: string; count: number; last: string }[]; reading: { handle: string; nickname: string; reading: { title: string } }[] } | null>(null); // 책마을 — 새 이야기·읽는 친구
+  const [chatWith, setChatWith] = useState<{ handle: string; nickname: string } | null>(null); // 오늘의 미션 (서랍 맨 위, 받을 게 있으면 색인 탭에 점)
   const [shelf, setShelf] = useState(false); // 크게 보기 중
   const [closingSheet, setClosingSheet] = useState(false);
   const [readBarOpen, setReadBarOpen] = useState(false);
@@ -157,6 +160,7 @@ export default function MyLibrary() {
       const startedAt = Date.now();
       setFlow({ book, phase: "out", startedAt, from: null });
       saveReading({ bookId: book.id, startedAt });
+      api("/api/me/reading", { method: "PUT", json: { bookId: book.id } }).catch(() => {}); // 책마을 — 친구에게 '읽는 중'
       window.scrollTo({ top: 0, behavior: reducedMotion() ? "auto" : "smooth" });
       await stg.fetch(book.id);
       const f = flowRef.current as Flow | null; // 기다리는 동안 바뀌었을 수 있다
@@ -186,6 +190,7 @@ export default function MyLibrary() {
       }
       const startedAt = Date.now();
       saveReading({ bookId: book.id, startedAt });
+      api("/api/me/reading", { method: "PUT", json: { bookId: book.id } }).catch(() => {}); // 책마을 — 친구에게 '읽는 중'
       document.body.style.overflow = "hidden";
       setFlow({ book, phase: "out", startedAt, from: el?.getBoundingClientRect() ?? null });
     },
@@ -256,6 +261,9 @@ export default function MyLibrary() {
         api<MissionsView>("/api/missions")
           .then((x) => alive && setMissions(x))
           .catch(() => {});
+        api<{ unread: { handle: string; nickname: string; count: number; last: string }[]; reading: { handle: string; nickname: string; reading: { title: string } }[] }>("/api/chat")
+          .then((x) => alive && setTalk(x))
+          .catch(() => {});
         api<{ notice: { id: string; text: string; level: "info" | "event" | "warn" } | null }>("/api/notice")
           .then((n) => {
             let closed: string | null = null;
@@ -316,6 +324,7 @@ export default function MyLibrary() {
     setFlow({ ...f, book, phase: "back" });
     document.body.style.overflow = "";
     clearReading();
+    api("/api/me/reading", { method: "PUT", json: { bookId: null } }).catch(() => {});
     if (updated) {
       const next = (booksRef.current = booksRef.current.map((b) => (b.id === book.id ? book : b)));
       setBooks(next);
@@ -414,6 +423,7 @@ export default function MyLibrary() {
     setBooks(next);
     setFlow(null);
     clearReading();
+    api("/api/me/reading", { method: "PUT", json: { bookId: null } }).catch(() => {});
     document.body.style.overflow = "";
     const el = spines.current.get(f.book.id);
     lifts.current.get(f.book.id)?.cancel();
@@ -444,6 +454,9 @@ export default function MyLibrary() {
     let alive = true;
     api<MissionsView>("/api/missions")
       .then((x) => alive && setMissions(x))
+      .catch(() => {});
+    api<NonNullable<typeof talk>>("/api/chat")
+      .then((x) => alive && setTalk(x))
       .catch(() => {});
     return () => {
       alive = false;
@@ -542,7 +555,7 @@ export default function MyLibrary() {
               onView={setShelf}
               hud={
                 <>
-                  {!tidy && <SideTab open={drawer} onOpen={() => setDrawer(true)} badge={missions?.ready ?? 0} />}
+                  {!tidy && <SideTab open={drawer} onOpen={() => setDrawer(true)} badge={(missions?.ready ?? 0) + (talk?.unread.reduce((n, t) => n + t.count, 0) ?? 0)} />}
                   {!tidy && <HudPoints points={me.points} />}
                   {!tidy && notice && (
                     <HudNotice
@@ -610,6 +623,26 @@ export default function MyLibrary() {
             <span className={hud.small}>상점 가기 ›</span>
           </Link>
           {missions && <MissionPanel view={missions} onClaim={claimMission} onGo={closeDrawer} />}
+          {talk && (talk.unread.length > 0 || talk.reading.length > 0) && (
+            <section className={hud.block}>
+              <h3 className={hud.blockTitle}>책마을 이야기</h3>
+              {talk.unread.map((t) => (
+                <button key={t.handle} type="button" className={hud.talkRow} onClick={() => setChatWith({ handle: t.handle, nickname: t.nickname })}>
+                  <b>{t.nickname}</b>
+                  <span>{t.last}</span>
+                  <i className={hud.talkCount}>{t.count}</i>
+                </button>
+              ))}
+              {talk.reading
+                .filter((r) => !talk.unread.some((t) => t.handle === r.handle))
+                .map((r) => (
+                  <button key={r.handle} type="button" className={hud.talkRow} onClick={() => setChatWith({ handle: r.handle, nickname: r.nickname })}>
+                    <b>{r.nickname}</b>
+                    <span>『{r.reading.title}』 읽는 중 · 말 걸기</span>
+                  </button>
+                ))}
+            </section>
+          )}
           <div className={hud.stats}>
             <Stat value={`${all.length}권`} label="꽂은 책" />
             <Stat value={`${readCount}권`} label="다 읽은 책" />
@@ -717,6 +750,16 @@ export default function MyLibrary() {
           </nav>
           {showCredit && <Yes24Credit />}
         </SideDrawer>
+        {chatWith && (
+          <ChatSheet
+            handle={chatWith.handle}
+            nickname={chatWith.nickname}
+            onClose={() => {
+              setChatWith(null);
+              api<NonNullable<typeof talk>>("/api/chat").then(setTalk).catch(() => {});
+            }}
+          />
+        )}
 
         {toastEl}
         {readingBar}

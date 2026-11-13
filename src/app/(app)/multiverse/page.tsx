@@ -13,7 +13,7 @@ import ui from "@/components/ui.module.css";
 import { api } from "@/lib/client/api";
 import s from "../screens.module.css";
 
-type Friend = { handle: string; nickname: string; bookCount: number; open: number; faint: number };
+type Friend = { handle: string; nickname: string; bookCount: number; open: number; faint: number; reading?: { title: string; coverUrl: string | null; since: string } | null };
 type Data = { me: { handle: string; nickname: string; bookCount: number }; friends: Friend[] };
 
 const PLANETS = ["planet-orange", "planet-mint", "planet-coral", "planet-yellow", "planet-brown"];
@@ -154,6 +154,7 @@ export default function Multiverse() {
                   <span className={s.bookTitle}>{f.nickname}의 책장</span>
                   <span className={ui.muted}>
                     책 {f.bookCount}권 · 열린 통로 {f.open} · 같은 책 {f.open + f.faint}
+                    {f.reading && <b className={s.readingNow}> · 『{f.reading.title}』 읽는 중</b>}
                   </span>
                 </span>
                 <span className={s.go}>놀러 가기 ›</span>

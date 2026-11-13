@@ -8,7 +8,8 @@
   bottom: 10px;
   z-index: 4;
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-auto-flow: column; /* 버튼 수만큼 한 줄 (친구 집은 6개 — 11-13 책마을) */
+  grid-auto-columns: minmax(0, 1fr);
   padding: 7px 2px 6px;
   background: var(--card);
   border: 2px solid var(--ink);
@@ -610,4 +611,84 @@
   .sideBadge {
     animation: none;
   }
+}
+
+/* 책마을 — 친구가 지금 읽는 중 (친구 집 위 띠) */
+.readingNow {
+  position: fixed;
+  left: 50%;
+  top: calc(64px + env(safe-area-inset-top, 0px));
+  z-index: 6;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: calc(100% - 120px);
+  padding: 4px 12px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--ink);
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 2px 2px 0 rgba(90, 69, 53, 0.18);
+}
+.readingNow i {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--mint);
+  box-shadow: 0 0 0 3px rgba(143, 205, 182, 0.35);
+}
+/* 홈 서랍 — 이야기 칸 */
+.talkRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1.5px dashed var(--line);
+  border-radius: 14px;
+  background: var(--card-2);
+  color: var(--ink);
+  text-align: left;
+}
+.talkRow + .talkRow {
+  margin-top: 6px;
+}
+.talkRow b {
+  font-family: var(--hand);
+  font-size: 17px;
+  white-space: nowrap;
+}
+.talkRow span {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.talkCount {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: var(--coral);
+  font-size: 11px;
+  font-weight: 800;
+  font-style: normal;
+}
+
+/* 버튼이 6개 넘으면 글자를 조금 작게 */
+.quick:has(> :nth-child(6)) .qBtn {
+  font-size: 13px;
+  letter-spacing: -0.3px;
 }
