@@ -229,6 +229,7 @@ export default function MyLibrary() {
     ])
       .then(([lib, ses, who]) => {
         if (!alive) return;
+        setErr(null); // 로그인 전에 남은 '로그인이 필요해요'를 지운다 (Next 16 은 숨겨 둔 홈을 그 상태 그대로 다시 보여 준다 — 11-13 앱에서)
         setGl(hasWebGL());
         setSoundState(soundOn());
         setMusicState(musicOn());

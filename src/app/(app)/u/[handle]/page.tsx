@@ -72,6 +72,7 @@ export default function FriendLibrary() {
     api<Data>(`/api/universe/${encodeURIComponent(handle)}`)
       .then((d) => {
         if (!alive) return;
+        setErr(null); // 숨겨 둔 화면에 남은 옛 오류 지우기 (홈과 같은 까닭)
         setGl(hasWebGL());
         setData(d);
         setMine(new Set(d.myWorkKeys));

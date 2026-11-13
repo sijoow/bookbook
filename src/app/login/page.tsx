@@ -80,7 +80,8 @@ export default function Login() {
         router.replace("/welcome");
       } else {
         const r = await api<{ onboarded: boolean; admin?: boolean }>("/api/auth/login", { json: { handle, password: pw } });
-        router.replace(r.admin ? "/admin" : r.onboarded ? next : "/welcome"); // 관리자(개발자) 계정은 관리자 화면으로
+        // 관리자(fe)도 보통은 앱으로 — 관리자 화면은 마이페이지 '관리자 페이지 열기'(?next=/admin)로 왔을 때만 (11-13 사용자: "fe 로그인하면 바로 어드민단 가는 것 고쳐 줘")
+        router.replace(r.admin || r.onboarded ? next : "/welcome");
       }
     } catch (e2) {
       setErr((e2 as Error).message);

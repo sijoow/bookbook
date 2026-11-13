@@ -31,7 +31,7 @@ const KEYS_JSON = path.join(KEYDIR, "keys.json");
 const PROJECT = path.join(B, "project");
 const OUT = path.join(B, "out");
 const RELEASE = path.join(__dirname, "..", "release");
-const VERSION = { code: 1, name: "0.1.0-beta" };
+const VERSION = { code: 2, name: "0.1.1-beta" }; // 11-13 오후: 가로 화면 허용 (다시 깔 때 번호를 올린다)
 
 const randomPassword = () => crypto.randomBytes(18).toString("base64").replace(/[^A-Za-z0-9]/g, "").slice(0, 20);
 
@@ -79,7 +79,7 @@ const randomPassword = () => crypto.randomBytes(18).toString("base64").replace(/
   twa.signingKey = { path: KEYSTORE, alias: ALIAS };
   twa.appVersionCode = VERSION.code;
   twa.appVersionName = test ? `${VERSION.name}-test` : VERSION.name;
-  twa.orientation = "portrait";
+  twa.orientation = "any"; // 11-13 사용자: 가로로도 (세로·가로 돌리는 대로)
   twa.display = "standalone"; // 상태 표시줄은 보이게 (가입·쪽 적기처럼 글자를 치는 화면이 있다)
   twa.fallbackType = "customtabs";
   twa.enableNotifications = false;
