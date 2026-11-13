@@ -99,7 +99,7 @@ export function layoutLibrary(books: Sized[], addSlot = true, opts: ShelfOpts = 
   // 한 줄뿐이면 책장 폭을 책에 맞춘다 (책이 적을 때 책장이 작아져 책이 크게 보이게)
   const lineW = (line: number[]) => line.reduce((t, i, k) => t + dims[i].t + (k ? CASE.bookGap : 0), 0);
   const fitW =
-    lines.length === 1
+    lines.length === 1 && !opts.wide // 넓은 책장은 책이 적어도 넓게 (산 게 바로 보이게 — 11-13 사용자)
       ? clamp(Math.ceil(lineW(lines[0]) + (addSlot ? ADD_W + CASE.bookGap : 0) + CASE.pad * 2 + CASE.endRoom), CASE.minInnerW, innerMax)
       : innerMax;
 
@@ -109,7 +109,7 @@ export function layoutLibrary(books: Sized[], addSlot = true, opts: ShelfOpts = 
   const slots: Slot[] = [];
   for (let u = 0; u < unitCount; u++) {
     const mine = lines.slice(u * maxRows, (u + 1) * maxRows);
-    const rows = Math.max(1, mine.length);
+    const rows = Math.max(u === 0 && opts.tall ? maxRows : 1, mine.length); // 높은 책장은 책이 적어도 4줄 (11-13 사용자: "쓰는 중인데 변경이 전혀 안 됨")
     const cx = unitX(u, innerMax);
     const bottomFloor = CASE.plinth + CASE.board;
     const rowFloors = Array.from({ length: rows }, (_, r) => bottomFloor + (rows - 1 - r) * (rowH + CASE.board));

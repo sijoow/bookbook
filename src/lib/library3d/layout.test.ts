@@ -114,7 +114,9 @@ describe("책장 꾸미기 (넓은·높은 책장)", () => {
     expect(tall.units[0].height).toBeGreaterThan(base.units[0].height);
     expect(tall.units.length).toBeLessThanOrEqual(base.units.length);
   });
-  it("책이 적으면 넓은 책장이어도 책에 맞춰 좁다", () => {
-    expect(layoutLibrary([book("a"), book("b")], true, { wide: true }).units[0].innerW).toBeLessThan(SHELF_WIDE_INNER);
+  it("책이 적어도 넓은 책장은 넓고, 높은 책장은 4줄 — 산 게 바로 보이게 (11-13)", () => {
+    expect(layoutLibrary([book("a"), book("b")], true, { wide: true }).units[0].innerW).toBe(SHELF_WIDE_INNER);
+    expect(layoutLibrary([book("a"), book("b")], true, { tall: true }).units[0].rows).toBe(4);
+    expect(layoutLibrary([book("a"), book("b")], true).units[0].innerW).toBeLessThan(SHELF_WIDE_INNER);
   });
 });

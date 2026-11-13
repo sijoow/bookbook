@@ -18,10 +18,11 @@ export type Shell = { group: THREE.Group; own: Disposable[]; focus: THREE.Vector
 
 /** 집마다 방 보기 카메라 — tilt(내려다보는 각), yaw(+ 오른쪽에서, - 왼쪽에서) */
 export const HOUSE_CAM: Record<HouseId, { tilt: number; yaw: number }> = {
-  grid: { tilt: 0.52, yaw: 0.06 },
-  attic: { tilt: 0.44, yaw: 0.46 },
-  sunny: { tilt: 0.78, yaw: 0.2 },
-  cabin: { tilt: 0.3, yaw: -0.36 },
+  // 11-13 사용자: 처음 각도는 위에서 내려다보지 말고 거의 일직선으로 — 낮춤 (손으로 끌면 더 내려다볼 수 있다)
+  grid: { tilt: 0.2, yaw: 0.06 },
+  attic: { tilt: 0.22, yaw: 0.46 },
+  sunny: { tilt: 0.34, yaw: 0.2 },
+  cabin: { tilt: 0.16, yaw: -0.36 },
 };
 
 /** 집마다 러그·방석 색 — 같은 물건이어도 집마다 느낌이 다르게 */
