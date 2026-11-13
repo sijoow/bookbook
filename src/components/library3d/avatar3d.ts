@@ -28,11 +28,11 @@ export function loadPart(name: string): Promise<THREE.Object3D | null> {
 /** 미리보기 그림을 찍기 전에 — 쓰는 부위를 다 받아 둔다 */
 export function preloadParts(): Promise<unknown> {
   if (!FEATURES.blenderParts) return Promise.resolve();
-  return Promise.all([...Object.values(BLENDER_PARTS.hair), ...Object.values(BLENDER_PARTS.hat)].map(loadPart));
+  return Promise.all([...Object.values(BLENDER_PARTS.hair), ...Object.values(BLENDER_PARTS.hat), "eye"].map(loadPart));
 }
 import { approach } from "@/lib/library3d/motion";
 import { buildWearable } from "./deco3d";
-import { FACE_EYE, PAL, cachedPattern, clothTexture, faceTexture, hairTexture, loadPattern, type Expr } from "./textures";
+import { FACE_EYE, PAL, eyeRadius, cachedPattern, clothTexture, faceTexture, hairTexture, loadPattern, type Expr } from "./textures";
 import { Kit } from "./toon";
 
 export type Pose = "stand" | "sit" | "sitwave" | "read" | "reach" | "pull" | "carry" | "cheer" | "wave" | "show";
@@ -144,6 +144,9 @@ export class Avatar {
   private dressKit: Kit | null = null;
   private dressParts: THREE.Object3D[] = [];
   private hatGroup: THREE.Group | null = null; // 기본 모자 — 머리 소품을 하면 숨긴다
+  private eyes3d: THREE.Group[] = []; // Blender 눈 둘
+  private eyesReady = false;
+  private faceNoEyes: THREE.Texture | null = null; // 눈을 뺀 평소 얼굴 (입체 눈이 얹힐 때)
 
   constructor(
     readonly cfg: AvatarConfig,
@@ -220,7 +223,10 @@ export class Avatar {
     }
     if (this.blinkLeft > 0) this.blinkLeft -= dt;
     const blink = this.blinkLeft > 0 && (this.expr === "normal" || this.expr === "read");
-    const map = this.faces[blink ? "blink" : this.expr];
+    // 입체 눈 — 평소 표정이고 깜빡이지 않을 때만 (그때 얼굴 그림은 눈을 뺀 것)
+    const eyes3d = this.eyesReady && this.expr === "normal" && !blink && this.faceNoEyes !== null;
+    for (const g of this.eyes3d) g.visible = eyes3d;
+    const map = eyes3d && this.faceNoEyes ? this.faceNoEyes : this.faces[blink ? "blink" : this.expr];
     if (this.faceMat.map !== map) this.faceMat.map = map;
   }
 
@@ -263,7 +269,7 @@ export class Avatar {
   }
 
   /** Blender 부위 붙이기 — 받아지면 모양을 굳혀(노드 변형까지) 만화 재질 + 갈색 펜 테두리로. 바로 돌려주는 빈 묶음에 나중에 들어간다 */
-  private attachPart(parent: THREE.Object3D, name: string, mat: THREE.Material, line: number, scale = 10.05, accent?: THREE.Material): THREE.Group {
+  private attachPart(parent: THREE.Object3D, name: string, mat: THREE.Material, line: number, scale = 10.05, accent?: THREE.Material, done?: () => void): THREE.Group {
     const g = new THREE.Group();
     g.scale.setScalar(scale);
     parent.add(g);
@@ -278,6 +284,7 @@ export class Avatar {
         if (!geo.getAttribute("normal")) geo.computeVertexNormals();
         g.add(this.part(geo, accent && mesh.name.includes("accent") ? accent : mat, line / scale)); // 두 색 부위 — accent 덩어리는 포인트 색
       });
+      done?.();
       this.onPartReady?.();
     };
     const ready = PART_READY.get(name);
@@ -633,6 +640,31 @@ export class Avatar {
     const face = new THREE.Mesh(faceGeo, this.faceMat);
     face.renderOrder = 2;
     hc.add(face);
+    // 눈 — Blender 입체 눈 (평소 표정만, 졸린 눈은 그림). 그림 눈 자리(FACE_EYE)를 얼굴 판 공 조각 위 좌표로 바꿔 얹는다 (11-13)
+    if (FEATURES.blenderParts && cfg.eyes !== "sleepy") {
+      this.faceNoEyes = faceTexture("normal", cfg, true);
+      this.trash.push(this.faceNoEyes);
+      const onFace = (px: number, py: number, rr: number) => {
+        const phi = Math.PI / 2 - 0.92 + (px / 256) * 1.84;
+        const th = Math.PI / 2 - 0.72 + (py / 256) * 1.44;
+        return new THREE.Vector3(-rr * Math.cos(phi) * Math.sin(th), rr * Math.cos(th), rr * Math.sin(phi) * Math.sin(th));
+      };
+      const irisMat = new THREE.MeshBasicMaterial({ color: AVATAR_COLOR.eye[cfg.eyeColor ?? "ink"] });
+      const shine = new THREE.MeshBasicMaterial({ color: "#ffffff" });
+      this.trash.push(irisMat, shine);
+      const size = eyeRadius(cfg.eyes ?? "round") * 0.0696; // 그림 1px ≈ 0.0696 (가로)
+      let ready = 0;
+      for (const s of [-1, 1]) {
+        const p = onFace(128 + s * FACE_EYE.x, FACE_EYE.y, 9.7);
+        const g = this.attachPart(hc, "eye", irisMat, 0, size, shine, () => {
+          if (++ready === 2) this.eyesReady = true;
+        });
+        g.position.copy(p);
+        g.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), p.clone().normalize());
+        g.renderOrder = 3;
+        this.eyes3d.push(g);
+      }
+    }
     // 귀
     for (const s of [-1, 1]) {
       const e = this.part(new THREE.SphereGeometry(2.0, 12, 10), skin, 0.3);

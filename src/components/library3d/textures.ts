@@ -176,13 +176,15 @@ function stickerShape(x: CanvasRenderingContext2D, kind: "star" | "heart", cx: n
  * 그림 칸 256(가로 1.84rad · 세로 1.44rad, 머리 반지름 9.68) — 가로 1px ≈ 0.070cm, 세로 1px ≈ 0.054cm 라
  * 구에 붙었을 때 둥글게 보이려면 세로로 VY 배 늘려 그린다. 캔버스는 512 로 두 배 선명하게.
  */
+/** 그림 눈 반지름(256 좌표) — 입체 눈 크기도 이걸로 */
+export const eyeRadius = (eyes: string) => (eyes === "dot" ? 12.5 : eyes === "sparkle" ? 19.5 : 18);
 export const FACE_EYE = { x: 54, y: 150 } as const; // 눈 가운데 (가운데에서 옆으로 x, 위에서 y) — 안경이 이 자리에 맞춘다
 const VY = 1.28;
 
-export function faceTexture(expr: Expr, look: FaceLook = FACE_DEFAULT): THREE.CanvasTexture {
+export function faceTexture(expr: Expr, look: FaceLook = FACE_DEFAULT, noEyes = false): THREE.CanvasTexture {
   const [c, x] = canvas(512, 512);
   x.scale(2, 2);
-  drawFace(x, expr, look);
+  drawFace(x, expr, look, noEyes);
   return tex(c);
 }
 
@@ -215,7 +217,7 @@ export function faceThumb(look: FaceLook, part: FacePart, skin: string, width = 
 }
 
 /** 얼굴 그리기 (256 좌표) — 입체 얼굴(faceTexture)과 꾸미기 그림 칸(faceThumb)이 함께 쓴다 */
-function drawFace(x: CanvasRenderingContext2D, expr: Expr, look: FaceLook) {
+function drawFace(x: CanvasRenderingContext2D, expr: Expr, look: FaceLook, noEyes = false) {
   const ink = PAL.inkDeep;
   const ey = FACE_EYE.y;
   const ex = FACE_EYE.x;
@@ -356,6 +358,9 @@ function drawFace(x: CanvasRenderingContext2D, expr: Expr, look: FaceLook) {
       x.fill();
       x.fillStyle = ink;
       lashes(ey + 2, r);
+    } else if (noEyes) {
+      // 입체 눈(Blender)이 이 자리에 얹힌다 — 속눈썹만 그림으로 (11-13)
+      lashes(ey, R);
     } else {
       const r = R * (expr === "wow" ? 1.12 : 1);
       oval(cx, ey, r, 1.04);

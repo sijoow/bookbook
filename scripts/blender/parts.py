@@ -375,3 +375,11 @@ knit.append(bpy.context.active_object)
 knit.append(sphere(0.3, (0, 0.05, 1.3)))
 fuse_export(objs, "hair-beanie", accent=knit, faces=3000)
 print("done hair2")
+
+# ── 눈 (11-13 사용자: "눈매도 블렌더로") — 눈동자(main, 눈동자 색) + 반짝이 둘(accent, 흰색). 가로 반지름 1, 앞 -Y
+# 그림 눈과 같은 자리: 큰 빛 = 왼쪽 위(-x, +z), 작은 빛 = 오른쪽 아래 (앱이 그림 눈 크기 R 에 맞춰 키운다)
+clear()
+iris = sphere(1.0, (0, 0, 0), (1.0, 0.3, 1.08), seg=32, rings=16)
+hl = [sphere(0.34, (-0.36, -0.3, 0.45), (1, 0.4, 1.05), seg=16, rings=8), sphere(0.15, (0.34, -0.3, -0.43), (1, 0.4, 1.05), seg=12, rings=6)]
+finish_two([iris], hl, "eye", sub=0)
+print("done eye")
