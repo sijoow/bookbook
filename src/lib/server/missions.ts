@@ -4,8 +4,8 @@
 import "server-only";
 import type { ObjectId } from "mongodb";
 import { kstDay } from "@/lib/deco/items";
-import { MISSIONS, missionRef, missionsView, todaysMissions, weekDays, kstStart, type MissionId, type MissionsView } from "@/lib/missions/missions";
-import { getDb, type MemoDoc, type PointLogDoc, type ReadingSessionDoc, type StampDoc, type UserBookDoc, type UserDoc, type VisitDoc } from "./db";
+import { MISSIONS, STREAK_REWARD, dayNumber, missionRef, missionsView, todaysMissions, weekDays, kstStart, type ClaimId, type MissionId, type MissionsView } from "@/lib/missions/missions";
+import { getDb, type ActiveDayDoc, type MemoDoc, type PointLogDoc, type ReadingSessionDoc, type StampDoc, type UserBookDoc, type UserDoc, type VisitDoc } from "./db";
 import { award } from "./deco";
 import { BadRequestError } from "./errors";
 import { friendIds } from "./friends";
@@ -36,30 +36,43 @@ async function progress(userId: ObjectId, day: string): Promise<{ now: Record<Mi
 
 async function claimedSet(userId: ObjectId, day: string): Promise<Set<string>> {
   const db = await getDb();
-  const refs = [...(Object.keys(MISSIONS) as MissionId[]).map((id) => missionRef(day, id)), missionRef(day, "all"), missionRef(day, "week")];
+  const refs = [...(Object.keys(MISSIONS) as MissionId[]).map((id) => missionRef(day, id)), missionRef(day, "all"), missionRef(day, "week"), missionRef(day, "attend")];
   const rows = await db.collection<PointLogDoc>("pointLog").find({ userId, reason: "mission", ref: { $in: refs } }, { projection: { ref: 1 } }).toArray();
   const got = new Set(rows.map((r) => r.ref));
   const out = new Set<string>();
   for (const id of Object.keys(MISSIONS) as MissionId[]) if (got.has(missionRef(day, id))) out.add(id);
   if (got.has(missionRef(day, "all"))) out.add("all");
   if (got.has(missionRef(day, "week"))) out.add("week");
+  if (got.has(missionRef(day, "attend"))) out.add("attend");
   return out;
+}
+
+/** 들어온 날 — 지난 10주 (출석 이어진 날 세기) */
+async function seenDays(userId: ObjectId, day: string): Promise<Set<string>> {
+  const db = await getDb();
+  const from = new Date((dayNumber(day) - 70) * 86_400_000).toISOString().slice(0, 10);
+  const rows = await db.collection<ActiveDayDoc>("activeDays").find({ userId, day: { $gte: from } }, { projection: { day: 1 } }).toArray();
+  return new Set(rows.map((r) => r.day));
 }
 
 export async function missionsFor(user: UserDoc, at = new Date()): Promise<MissionsView> {
   const day = kstDay(at);
   const ids = todaysMissions(day, (await friendIds(user)).length > 0);
-  const [{ now, readDays }, claimed] = await Promise.all([progress(user._id, day), claimedSet(user._id, day)]);
-  return missionsView(day, ids, now, claimed, readDays);
+  const [{ now, readDays }, claimed, seen] = await Promise.all([progress(user._id, day), claimedSet(user._id, day), seenDays(user._id, day)]);
+  return missionsView(day, ids, now, claimed, readDays, seen);
 }
 
 /** 받기 — 다 한 미션(또는 이번 주 도장)만. 셋 다 받으면 보너스도 같이. 받은 만큼과 새 화면을 돌려준다 */
-export async function claimMission(user: UserDoc, id: MissionId | "week"): Promise<{ gained: number; bonus: number; view: MissionsView; points: number }> {
+export async function claimMission(user: UserDoc, id: ClaimId): Promise<{ gained: number; bonus: number; view: MissionsView; points: number }> {
   const before = await missionsFor(user);
   const day = before.day;
   let gained = 0;
   let bonus = 0;
-  if (id === "week") {
+  if (id === "attend") {
+    // 출석 도장 — 하루 한 번, 7일째마다 보너스
+    gained = await award(user._id, "mission", missionRef(day, "attend"), before.attend.reward, "출석 체크");
+    if (gained && before.attend.bonus) bonus = await award(user._id, "mission", missionRef(day, "streak"), STREAK_REWARD, `${before.attend.streak}일 이어서 출석`);
+  } else if (id === "week") {
     if (!before.week.done) throw new BadRequestError(`이번 주 ${before.week.goal}일을 읽으면 받을 수 있어요`);
     gained = await award(user._id, "mission", missionRef(day, "week"), before.week.reward, "이번 주 읽은 날");
   } else {

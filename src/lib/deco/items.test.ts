@@ -122,3 +122,12 @@ describe("책장 꾸미기", () => {
     expect(decoPatchSchema.safeParse({ paint: "neon" }).success).toBe(false);
   });
 });
+
+describe("책장 모양은 하나만 (11-13)", () => {
+  it("넓은 책장을 켜면 높은 책장이 꺼지고, 반대도 같다 — 다른 물건은 그대로", async () => {
+    const { placeOne } = await import("./items");
+    expect(placeOne(["plant", "shelf-tall"], "shelf-wide")).toEqual(["plant", "shelf-wide"]);
+    expect(placeOne(["shelf-wide", "lamp"], "shelf-tall")).toEqual(["lamp", "shelf-tall"]);
+    expect(placeOne(["plant"], "lamp")).toEqual(["plant", "lamp"]);
+  });
+});

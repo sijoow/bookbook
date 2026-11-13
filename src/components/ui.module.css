@@ -10,7 +10,7 @@
 }
 .main {
   flex: 1;
-  padding: 0 16px 104px;
+  padding: env(safe-area-inset-top, 0px) 16px 104px; /* 위 = 노치 (전체 화면 앱) */
 }
 
 /* ── 상단바 ── */

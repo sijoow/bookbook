@@ -252,10 +252,11 @@ export function AvatarMaker({
         const k = outfitKeys(v);
         return [
           { title: "윗옷", kind: "thumbs", opts: opt("top", TOPS, TOP_LABEL, v.top, (x) => `top:${x}|${k.top}`, (top) => ({ top })) },
-          { title: v.pattern === "none" ? "윗옷 색" : "윗옷 색 (무늬를 고르면 무늬 색 그대로)", kind: "swatches", opts: OUTFITS.map((x) => ({ key: x, label: OUTFIT_LABEL[x], on: v.outfit === x, pick: () => onChange({ outfit: x, pattern: "none" }), color: AVATAR_COLOR.outfit[x] })) },
-          {
+          { title: v.pattern === "none" || !FEATURES.patterns ? "윗옷 색" : "윗옷 색 (무늬를 고르면 무늬 색 그대로)", kind: "swatches", opts: OUTFITS.map((x) => ({ key: x, label: OUTFIT_LABEL[x], on: v.outfit === x, pick: () => onChange({ outfit: x, pattern: "none" }), color: AVATAR_COLOR.outfit[x] })) },
+          // 무늬 칸은 숨김 (FEATURES.patterns — 11-13 사용자: "무늬가 아니라 일반적인 옷")
+          ...(FEATURES.patterns ? [{
             title: "무늬",
-            kind: "thumbs",
+            kind: "thumbs" as const,
             cover: true,
             opts: PATTERNS.map((p) => ({
               key: `pattern:${p}`,
@@ -265,7 +266,7 @@ export function AvatarMaker({
               // 무늬 없음 = 지금 옷 색 한 장 (그림만으로 고르게)
               img: p === "none" ? `data:image/svg+xml;utf8,<svg xmlns=%27http://www.w3.org/2000/svg%27 width=%2764%27 height=%2764%27><rect width=%2764%27 height=%2764%27 rx=%2710%27 fill=%27${encodeURIComponent(AVATAR_COLOR.outfit[v.outfit])}%27/></svg>` : `/img/patterns/${p}.webp`,
             })),
-          },
+          }] : []),
           { title: v.top === "dress" ? "아랫옷 (원피스엔 가려져요)" : "아랫옷", kind: "thumbs", opts: opt("bottom", BOTTOMS, BOTTOM_LABEL, v.bottom, (x) => `bottom:${x}|${k.bottom}`, (bottom) => ({ bottom, ...(v.top === "dress" ? { top: "tee" as const } : {}) })) },
           { title: "신발", kind: "thumbs", opts: opt("shoes", SHOES, SHOES_LABEL, v.shoes, (x) => `shoes:${x}|${k.shoes}`, (shoes) => ({ shoes })) },
           { title: "몸 · 목소리", kind: "thumbs", opts: opt("gender", GENDERS, GENDER_LABEL, v.gender, (x) => `gender:${x}|${k.gender}`, (gender) => ({ gender, top: GENDER_TOP[gender] })) },

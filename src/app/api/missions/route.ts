@@ -16,7 +16,7 @@ export async function GET() {
   }
 }
 
-const Claim = z.object({ id: z.enum(["read20", "memo", "shelve", "visit", "stamp", "week"]) });
+const Claim = z.object({ id: z.enum(["read20", "memo", "shelve", "visit", "stamp", "week", "attend"]) });
 
 export async function POST(req: NextRequest) {
   try {

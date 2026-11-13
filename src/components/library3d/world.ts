@@ -638,6 +638,35 @@ export class LibraryWorld {
     });
   }
 
+  /** 손님(나)이 인사하고 나간다 — 친구 집 '우리 집' (11-13 사용자: "안녕 하고 집에서 나오는 연출로, 바로 화면 바뀌지 말고") */
+  guestLeave(): Promise<void> {
+    const g = this.guest;
+    if (!g) return Promise.resolve();
+    return this.enqueue(async () => {
+      const host = this.avatar;
+      const spot = this.guestSpot();
+      if (g.pose === "sit") await this.hop(new THREE.Vector3(spot.x, 0, spot.z + 14), 8, 0.3, "stand", g);
+      await this.turnTo(facing(this.cushion.x - spot.x, this.cushion.z - spot.z - 14), 0.16, g);
+      g.setPose("wave");
+      g.setExpr("happy");
+      this.events.sayGuest?.("안녕! 또 올게");
+      await this.wait(0.6);
+      if (host && host.pose === "sit") {
+        host.setPose("sitwave");
+        host.setExpr("happy");
+        this.say("잘 가!");
+      }
+      await this.wait(1.1);
+      if (host && host.pose === "sitwave") {
+        host.setPose("sit");
+        host.setExpr("normal");
+      }
+      g.setPose("stand");
+      g.setExpr("normal");
+      await this.walkTo(this.cushion.x + 70, this.cushion.z + 26, g); // 들어온 쪽(오른쪽)으로 나간다
+    });
+  }
+
   /** 발도장을 남기면 손님(나)이 만세 */
   guestCheer(line = "발도장 꾹!") {
     const g = this.guest;
@@ -1361,7 +1390,7 @@ export class LibraryWorld {
   private slide(b: Book3D) {
     const to = new THREE.Vector3(b.slot.x, b.slot.y, b.slot.z);
     const from = b.group.position.clone();
-    b.group.quaternion.identity();
+    b.restRotation();
     b.group.scale.setScalar(1);
     if (!this.active || this.instant || from.distanceTo(to) < 0.05) {
       b.home();
@@ -1425,7 +1454,7 @@ export class LibraryWorld {
     }
     b.group.rotation.z = 0;
     b.group.position.set(b.slot.x, b.slot.y + 1.5, b.slot.z + 6);
-    const planeZ = b.group.position.z + b.slot.d / 2;
+    const planeZ = b.group.position.z + (b.slot.face ? b.slot.t : b.slot.d) / 2;
     const hit = this.pointOnPlane(e.clientX, e.clientY, planeZ) ?? b.group.position.clone();
     const r = this.canvas.getBoundingClientRect();
     const rects = this.spineRects(id);
@@ -1490,7 +1519,8 @@ export class LibraryWorld {
       this.scene.add(this.insertBar);
     }
     const h = Math.max(10, this.layout.rowH - 5);
-    const x = d.target.before ? b.slot.x - b.slot.t / 2 - CASE.bookGap / 2 - 0.2 : b.slot.x + b.slot.t / 2 + CASE.bookGap / 2 + 0.2;
+    const bw = b.slot.face ? b.slot.d : b.slot.t; // 앞에서 본 폭
+    const x = d.target.before ? b.slot.x - bw / 2 - CASE.bookGap / 2 - 0.2 : b.slot.x + bw / 2 + CASE.bookGap / 2 + 0.2;
     this.insertBar.scale.y = h;
     this.insertBar.position.set(x, b.slot.y + h / 2, -SPINE_INSET + 0.6);
     this.insertBar.visible = true;
@@ -1748,7 +1778,7 @@ export class LibraryWorld {
     av.setPose("reach");
     const slide = async () => {
       const z0 = b.slot.z;
-      await this.tween(0.22, (p) => (b.group.position.z = z0 + b.slot.d * 0.6 * p), ease.out);
+      await this.tween(0.22, (p) => (b.group.position.z = z0 + b.pullDepth() * p), ease.out);
       this.grab(b);
     };
     const h = jumpFor(b.slot);

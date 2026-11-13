@@ -10,7 +10,7 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { TopBar } from "@/components/Bars";
 import { CoverSticker, Stars } from "@/components/Bits";
@@ -27,6 +27,7 @@ import { readAvatar, type AvatarConfig } from "@/lib/avatar/config";
 import { readDeco, type Deco } from "@/lib/deco/items";
 import type { HouseId } from "@/lib/house/houses";
 import { api } from "@/lib/client/api";
+import { FEATURES } from "@/lib/features";
 import { hasWebGL } from "@/lib/client/webgl";
 import { formatMinutes } from "@/lib/books/reading";
 import { STATUS_SAY, shortAuthor, type BookStatus, type LibraryBook } from "@/lib/books/types";
@@ -37,7 +38,7 @@ const LibraryStage = dynamic(() => import("@/components/library3d/LibraryStage")
   ssr: false,
   loading: () => (
     <div className={`${stage.slot} ${stage.immersiveSlot}`}>
-      <StageLoading />
+      <StageLoading visit />
     </div>
   ),
 });
@@ -55,8 +56,23 @@ function sideLine(x: Side): string {
 
 export default function FriendLibrary() {
   const { handle } = useParams<{ handle: string }>();
+  const router = useRouter();
   const [data, setData] = useState<Data | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [leaving, setLeaving] = useState(false); // '우리 집' — 인사하고 나가는 중
+  const onStageReady = useCallback((a: StageApi) => {
+    stageApi.current = a;
+  }, []);
+  /** 우리 집으로 — 손님(나)이 "안녕! 또 올게" 하고 걸어 나간 뒤 (연출이 없으면 바로) */
+  async function goHome() {
+    if (leaving) return;
+    setLeaving(true);
+    try {
+      await Promise.race([stageApi.current?.guestLeave() ?? Promise.resolve(), new Promise((r) => setTimeout(r, 6000))]);
+    } finally {
+      router.push("/");
+    }
+  }
   const [sel, setSel] = useState<LibraryBook | null>(null);
   const [mine, setMine] = useState<Set<string>>(new Set());
   const [toast, setToast] = useState<string | null>(null);
@@ -241,26 +257,26 @@ export default function FriendLibrary() {
               marks={marks}
               title={`${name}의 도서관`}
               onPick={choose}
-              onReady={(a) => (stageApi.current = a)}
+              onReady={onStageReady}
               onFail={() => setGl(false)}
               onView={setShelf}
               hud={
                 <>
                   <HudBack href="/multiverse" label="멀티버스로 돌아가기" />
                   <SideTab open={drawer} onOpen={() => setDrawer(true)} label={`${name}의 책장`} />
-                  {showCredit && <HudCredit />}
+                  {showCredit && FEATURES.yes24HomeCredit && <HudCredit />}
                   <HudBar cols={4} hidden={Boolean(sel) || stampOpen}>
                     <HudButton icon={<MenuIcon name="paw" />} label="발도장" onClick={() => setStampOpen(true)} />
                     <HudButton icon={<MenuIcon name="portal" />} label="통하는 책" badge={portals.length || undefined} onClick={() => setDrawer(true)} />
                     <HudButton icon={shelf ? <MenuIcon name="house" /> : <MenuIcon name="zoom" />} label={shelf ? "방 보기" : "크게 보기"} on={shelf} onClick={() => stageApi.current?.setShelfView(!shelf)} />
-                    <HudButton icon={<MenuIcon name="house" />} label="우리 집" href="/" />
+                    <HudButton icon={<MenuIcon name="house" />} label="우리 집" onClick={goHome} disabled={leaving} />
                   </HudBar>
                 </>
               }
             />
           ) : (
             <div className={`${stage.slot} ${stage.immersiveSlot}`}>
-              <StageLoading />
+              <StageLoading visit />
             </div>
           )}
           {err && <p className={`${ui.error} ${s.immersiveErr}`}>{err}</p>}

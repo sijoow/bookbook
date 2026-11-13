@@ -20,7 +20,7 @@ import type { AvatarConfig } from "@/lib/avatar/config";
 import { api } from "@/lib/client/api";
 import { makeSaver } from "@/lib/client/saver";
 import { hasWebGL } from "@/lib/client/webgl";
-import { CLOTHES, PAINTS, PAINT_COLOR, PAINT_LABEL, POINTS, POINT_NAME, ROOM_SURFACES, SHELF_ITEMS, TRACK, wear, type Deco, type DecoItem, type PaintId } from "@/lib/deco/items";
+import { CLOTHES, PAINTS, PAINT_COLOR, PAINT_LABEL, POINTS, POINT_NAME, ROOM_SURFACES, SHELF_ITEMS, TRACK, placeOne, wear, type Deco, type DecoItem, type PaintId } from "@/lib/deco/items";
 import { josa } from "@/lib/ko";
 import { HOUSE, HOUSES, type HouseId } from "@/lib/house/houses";
 import type { LibraryBook } from "@/lib/books/types";
@@ -92,7 +92,7 @@ export default function Decorate() {
     setErr(null);
     const d = me.deco;
     const worn = item.kind === "avatar" ? (d.worn.includes(item.id) ? d.worn.filter((x) => x !== item.id) : wear(d.worn, item.id)) : d.worn;
-    const placed = item.kind !== "avatar" ? (d.placed.includes(item.id) ? d.placed.filter((x) => x !== item.id) : [...d.placed, item.id]) : d.placed;
+    const placed = item.kind !== "avatar" ? (d.placed.includes(item.id) ? d.placed.filter((x) => x !== item.id) : placeOne(d.placed, item.id)) : d.placed; // 넓은·높은 책장은 하나만
     setMe({ ...me, deco: { ...d, worn, placed } });
     saveDeco({ worn, placed });
   }

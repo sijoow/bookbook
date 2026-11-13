@@ -3,6 +3,7 @@
 
 import * as THREE from "three";
 import { AVATAR_COLOR, type AvatarConfig, type Outfit } from "@/lib/avatar/config";
+import { FEATURES } from "@/lib/features";
 import { approach } from "@/lib/library3d/motion";
 import { buildWearable } from "./deco3d";
 import { FACE_EYE, PAL, cachedPattern, clothTexture, faceTexture, hairTexture, loadPattern, type Expr } from "./textures";
@@ -256,8 +257,12 @@ export class Avatar {
     const cloth = this.toon(AVATAR_COLOR.outfit[cfg.outfit]);
     const pants = this.toon(PAL.pants);
     // 윗옷 무늬 (11-13) — 있으면 몸통·소매를 무늬 그림으로 (옷 색 대신 무늬 색 그대로)
-    const sleeve = cfg.pattern && cfg.pattern !== "none" ? this.toon("#ffffff") : cloth;
-    if (cfg.pattern && cfg.pattern !== "none") {
+    const patterned = FEATURES.patterns && Boolean(cfg.pattern && cfg.pattern !== "none"); // 무늬는 숨김 (11-13)
+    // 데님 자켓은 늘 청색 · 세일러는 흰 몸판 (깃·리본이 옷 색)
+    if (!patterned && cfg.top === "denim") cloth.color.set("#6f93bf");
+    if (!patterned && cfg.top === "sailor") cloth.color.set(PAL.cream);
+    const sleeve = patterned ? this.toon("#ffffff") : cloth;
+    if (patterned && cfg.pattern) {
       cloth.color.set("#ffffff");
       const apply = (t: THREE.Texture) => {
         const a = t.clone();
@@ -384,8 +389,131 @@ export class Avatar {
         cuff.position.y = -5.6;
         arm.add(cuff);
       }
+    } else if (top === "sweat") {
+      // 맨투맨 — 목·밑단·소매 골지(조금 진하게) + 앞에 작은 곰돌이 얼굴
+      const rib = this.toon(darker(AVATAR_COLOR.outfit[cfg.outfit]));
+      const neck = this.part(new THREE.TorusGeometry(2.55, 0.48, 8, 28), rib, 0.2);
+      neck.rotation.x = Math.PI / 2;
+      neck.position.y = 12.05;
+      this.torso.add(neck);
+      const hem = this.part(new THREE.CylinderGeometry(6.3, 6.25, 1.1, 30), rib, 0.22);
+      hem.position.y = 2.75;
+      this.torso.add(hem);
+      for (const arm of [this.armL, this.armR]) {
+        const cuff = this.part(new THREE.TorusGeometry(1.86, 0.42, 8, 20), rib, 0.18);
+        cuff.rotation.x = Math.PI / 2;
+        cuff.position.y = -5.6;
+        arm.add(cuff);
+      }
+      const bear = this.toon(PAL.cream);
+      const face = this.part(new THREE.SphereGeometry(1.45, 16, 12), bear, 0.18);
+      face.scale.z = 0.35;
+      onFront(face, 0, 7.4, 0.05);
+      for (const s of [-1, 1]) {
+        const ear = this.part(new THREE.SphereGeometry(0.55, 10, 8), bear, 0.14);
+        ear.scale.z = 0.4;
+        onFront(ear, s * 1.15, 8.55, 0.05);
+        onFront(this.part(new THREE.SphereGeometry(0.17, 8, 6), ink, 0), s * 0.5, 7.6, 0.55);
+      }
+      onFront(this.part(new THREE.SphereGeometry(0.24, 8, 6), this.toon(PAL.woodDark), 0), 0, 7.15, 0.58);
+    } else if (top === "denim") {
+      // 데님 자켓 — 진한 청 깃 · 가운데 여밈 · 가슴 주머니 덮개 둘 · 금빛 단추
+      const deep = this.toon("#4f73a0");
+      const brass = this.toon("#d9b45a");
+      for (const s of [-1, 1]) {
+        const flap = this.part(new THREE.ConeGeometry(1.5, 2.8, 3), deep, 0.2);
+        flap.rotation.set(Math.PI / 2 + 0.5, 0, s * 0.5 + Math.PI);
+        onFront(flap, s * 1.15, 11.3, 0.25);
+        const pocket = this.part(new THREE.BoxGeometry(2.2, 0.9, 0.35), deep, 0.14);
+        onFront(pocket, s * 2.5, 9.2, 0.05).rotation.x = -0.25;
+        onFront(this.part(new THREE.SphereGeometry(0.26, 8, 6), brass, 0), s * 2.5, 9.0, 0.3);
+      }
+      const band = this.part(new THREE.BoxGeometry(0.55, 9.6, 0.3), deep, 0.12);
+      onFront(band, 0, 6.6, -0.02).rotation.x = -0.1;
+      for (const y of [9.6, 7.4, 5.2]) onFront(this.part(new THREE.SphereGeometry(0.34, 10, 8), brass, 0), 0, y, 0.22);
+      const hem = this.part(new THREE.CylinderGeometry(6.3, 6.25, 1.0, 30), deep, 0.2);
+      hem.position.y = 2.7;
+      this.torso.add(hem);
+    } else if (top === "sailor") {
+      // 세일러 — 흰 몸판에 옷 색 큰 깃(등판 + 앞 V) · 흰 줄 · 빨간 리본
+      const col = this.toon(AVATAR_COLOR.outfit[cfg.outfit]);
+      const back = this.part(new THREE.BoxGeometry(7.6, 4.6, 0.45), col, 0.2);
+      back.position.set(0, 10.4, -rAt(10.4) + 0.1);
+      back.rotation.x = 0.28;
+      this.torso.add(back);
+      for (const s of [-1, 1]) {
+        const lapel = this.part(new THREE.ConeGeometry(1.7, 4.4, 3), col, 0.2);
+        lapel.rotation.set(Math.PI / 2 + 0.35, 0, s * 0.42 + Math.PI);
+        onFront(lapel, s * 1.55, 10.2, 0.2);
+        const line = this.part(new THREE.BoxGeometry(0.22, 3.4, 0.1), cream, 0);
+        line.rotation.z = s * 0.42;
+        onFront(line, s * 1.75, 10.3, 0.62);
+      }
+      const red = this.toon(PAL.coral);
+      for (const s of [-1, 1]) {
+        const loop = this.part(new THREE.SphereGeometry(0.85, 12, 8), red, 0.16);
+        loop.scale.set(1.35, 0.75, 0.45);
+        onFront(loop, s * 0.95, 8.4, 0.35);
+        const tail = this.part(new THREE.BoxGeometry(0.5, 1.8, 0.2), red, 0.12);
+        tail.rotation.z = s * 0.25;
+        onFront(tail, s * 0.55, 7.2, 0.3);
+      }
+      onFront(this.part(new THREE.SphereGeometry(0.45, 10, 8), red, 0.12), 0, 8.4, 0.5);
+    } else if (top === "puffer") {
+      // 패딩 — 가로로 도톰한 누빔 셋 + 높은 깃 + 소매도 누빔
+      const puff = cloth;
+      for (const y of [4.0, 6.6, 9.1]) {
+        const ring = this.part(new THREE.TorusGeometry(rAt(y) + 0.1, 0.62, 10, 30), puff, 0.24);
+        ring.rotation.x = Math.PI / 2;
+        ring.position.y = y;
+        this.torso.add(ring);
+      }
+      const collarTall = this.part(new THREE.CylinderGeometry(2.6, 3.1, 1.9, 22), puff, 0.22);
+      collarTall.position.y = 12.1;
+      this.torso.add(collarTall);
+      const zip = this.part(new THREE.BoxGeometry(0.3, 9.4, 0.2), this.toon(darker(AVATAR_COLOR.outfit[cfg.outfit])), 0);
+      onFront(zip, 0, 7.4, 0.62);
+      for (const arm of [this.armL, this.armR]) {
+        for (const y of [-1.6, -4.2]) {
+          const r = this.part(new THREE.TorusGeometry(1.95, 0.5, 8, 20), puff, 0.2);
+          r.rotation.x = Math.PI / 2;
+          r.position.y = y;
+          arm.add(r);
+        }
+      }
+    } else if (top === "blouse") {
+      // 블라우스 — 목둘레 주름(작은 동그라미가 빙 둘러) + 목 리본 + 볼록 소매
+      for (let i = 0; i < 12; i++) {
+        const a = (i / 12) * Math.PI * 2;
+        const f = this.part(new THREE.SphereGeometry(0.62, 10, 8), cream, 0.12);
+        f.scale.set(1, 0.7, 1);
+        f.position.set(Math.sin(a) * 2.75, 12.0, Math.cos(a) * 2.75);
+        this.torso.add(f);
+      }
+      const bowMat = this.toon(darker(AVATAR_COLOR.outfit[cfg.outfit]));
+      for (const s of [-1, 1]) {
+        const loop = this.part(new THREE.SphereGeometry(0.7, 10, 8), bowMat, 0.14);
+        loop.scale.set(1.3, 0.7, 0.45);
+        onFront(loop, s * 0.8, 11.0, 0.45);
+      }
+      onFront(this.part(new THREE.SphereGeometry(0.36, 8, 6), bowMat, 0.1), 0, 11.0, 0.6);
+      for (const arm of [this.armL, this.armR]) {
+        const puffS = this.part(new THREE.SphereGeometry(2.45, 16, 12), cloth, 0.26);
+        puffS.scale.set(1, 0.85, 1);
+        puffS.position.y = -0.9;
+        arm.add(puffS);
+      }
+    } else if (top === "tee") {
+      // 티셔츠 — 목 골지 + 가슴에 작은 별 (단추 대신, 11-13)
+      const neck = this.part(new THREE.TorusGeometry(2.5, 0.38, 8, 28), this.toon(darker(AVATAR_COLOR.outfit[cfg.outfit])), 0.18);
+      neck.rotation.x = Math.PI / 2;
+      neck.position.y = 12.05;
+      this.torso.add(neck);
+      const star = this.part(new THREE.CylinderGeometry(0.95, 0.95, 0.3, 5), this.toon(PAL.butter), 0.14);
+      star.rotation.x = Math.PI / 2;
+      onFront(star, 2.2, 8.6, 0.1);
     } else {
-      // 티셔츠·원피스 — 단추 둘
+      // 원피스 — 단추 둘 + 허리 리본 (11-13)
       for (const [y, r] of [
         [4.6, 6.62],
         [7.4, 6.05],
@@ -393,6 +521,17 @@ export class Avatar {
         const b = this.part(new THREE.SphereGeometry(0.62, 10, 8), ink, 0);
         b.position.set(0, y, (boy ? rAt(y) : r) + 0.12);
         this.torso.add(b);
+      }
+      const sash = this.toon(cfg.outfit === "coral" ? PAL.butter : PAL.coral);
+      const belt = this.part(new THREE.TorusGeometry(rAt(8.3) + 0.05, 0.42, 8, 30), sash, 0.18);
+      belt.rotation.x = Math.PI / 2;
+      belt.position.y = 8.3;
+      this.torso.add(belt);
+      for (const s of [-1, 1]) {
+        const loop = this.part(new THREE.SphereGeometry(0.8, 10, 8), sash, 0.14);
+        loop.scale.set(1.3, 0.7, 0.45);
+        loop.position.set(2.6 + s * 0.85, 8.4, Math.sqrt(Math.max(0, rAt(8.4) ** 2 - 2.6 ** 2)) + 0.3);
+        this.torso.add(loop);
       }
     }
 

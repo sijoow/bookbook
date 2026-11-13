@@ -15,6 +15,11 @@ export const MISSIONS: Record<MissionId, MissionDef> = {
 };
 
 export const ALL_DONE_BONUS = 20; // 오늘의 미션 셋을 다 받으면
+export const ATTEND_REWARD = 10; // 출석 체크 (하루 한 번)
+export const STREAK_GOAL = 7; // 며칠 이어서 들어오면
+export const STREAK_REWARD = 50;
+/** 받기 단추 — 오늘의 미션 · 이번 주 읽은 날 · 출석 */
+export type ClaimId = MissionId | "week" | "attend";
 export const WEEK_GOAL = 5; // 이번 주 며칠 읽으면
 export const WEEK_REWARD = 50;
 export const WEEKDAY = ["월", "화", "수", "목", "금", "토", "일"] as const;
@@ -25,6 +30,13 @@ export function dayNumber(day: string): number {
 }
 
 const dayString = (n: number) => new Date(n * 86_400_000).toISOString().slice(0, 10);
+
+/** 오늘까지 며칠 이어서 들어왔나 (오늘 포함) */
+export function streakOf(days: Set<string>, today: string): number {
+  let n = 0;
+  for (let d = dayNumber(today); days.has(dayString(d)); d--) n++;
+  return n;
+}
 
 /** 오늘의 미션 셋 — 20쪽 읽기는 늘, 나머지 둘은 날마다 돌아가며 (친구가 없으면 친구 미션은 빼고) */
 export function todaysMissions(day: string, hasFriends: boolean): MissionId[] {
@@ -49,7 +61,8 @@ export function kstStart(day: string): Date {
 
 export type MissionView = { id: MissionId; title: string; hint: string; go: string; reward: number; now: number; goal: number; unit: string; done: boolean; claimed: boolean };
 export type WeekView = { days: { day: string; label: string; read: boolean; today: boolean; future: boolean }[]; count: number; goal: number; reward: number; done: boolean; claimed: boolean };
-export type MissionsView = { day: string; missions: MissionView[]; bonus: { reward: number; claimed: boolean }; week: WeekView; ready: number };
+export type AttendView = { claimed: boolean; streak: number; reward: number; bonus: number; goal: number; days: { day: string; label: string; on: boolean; today: boolean; future: boolean }[] };
+export type MissionsView = { day: string; attend: AttendView; missions: MissionView[]; bonus: { reward: number; claimed: boolean }; week: WeekView; ready: number };
 
 /** 화면에 보낼 모양 — 진행(now)·받았나(claimed)는 서버가 센 값 */
 export function missionsView(
@@ -58,6 +71,7 @@ export function missionsView(
   now: Record<MissionId, number>,
   claimed: Set<string>,
   readDays: Set<string>,
+  seenDays: Set<string> = new Set(),
 ): MissionsView {
   const missions = ids.map((id) => {
     const d = MISSIONS[id];
@@ -67,11 +81,22 @@ export function missionsView(
   const days = weekDays(day).map((d, i) => ({ day: d, label: WEEKDAY[i], read: readDays.has(d), today: d === day, future: d > day }));
   const count = days.filter((d) => d.read).length;
   const week = { days, count, goal: WEEK_GOAL, reward: WEEK_REWARD, done: count >= WEEK_GOAL, claimed: claimed.has("week") };
-  const ready = missions.filter((m) => m.done && !m.claimed).length + (week.done && !week.claimed ? 1 : 0);
-  return { day, missions, bonus: { reward: ALL_DONE_BONUS, claimed: claimed.has("all") }, week, ready };
+  // 출석 — 들어온 날(오늘은 늘 들어온 날). 7일째·14일째… 도장을 찍는 날엔 보너스
+  const seen = new Set(seenDays).add(day);
+  const streak = streakOf(seen, day);
+  const attend: AttendView = {
+    claimed: claimed.has("attend"),
+    streak,
+    reward: ATTEND_REWARD,
+    bonus: streak > 0 && streak % STREAK_GOAL === 0 ? STREAK_REWARD : 0,
+    goal: STREAK_GOAL,
+    days: weekDays(day).map((d, i) => ({ day: d, label: WEEKDAY[i], on: seen.has(d), today: d === day, future: d > day })),
+  };
+  const ready = missions.filter((m) => m.done && !m.claimed).length + (week.done && !week.claimed ? 1 : 0) + (attend.claimed ? 0 : 1);
+  return { day, attend, missions, bonus: { reward: ALL_DONE_BONUS, claimed: claimed.has("all") }, week, ready };
 }
 
 /** 포인트 장부 ref — 같은 날 같은 미션은 한 번만 (pointLog unique) */
-export function missionRef(day: string, id: MissionId | "all" | "week"): string {
+export function missionRef(day: string, id: MissionId | "all" | "week" | "attend" | "streak"): string {
   return id === "week" ? `week:${weekDays(day)[0]}` : `${day}:${id}`;
 }

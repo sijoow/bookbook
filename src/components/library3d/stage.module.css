@@ -48,7 +48,7 @@
 }
 .plaque {
   position: absolute;
-  top: 10px;
+  top: calc(10px + env(safe-area-inset-top, 0px));
   left: 50%;
   transform: translateX(-50%) rotate(-1.5deg);
   padding: 2px 16px;
@@ -379,5 +379,16 @@
   .loadingPlanet,
   .loadingShadow {
     animation: none;
+  }
+}
+
+/* 문구가 바뀔 때 살짝 떠오르며 */
+.loadingText {
+  animation: loadText 0.35s ease-out;
+}
+@keyframes loadText {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
   }
 }

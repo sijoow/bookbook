@@ -24,6 +24,7 @@ export type StageApi = {
   greet(line?: string): Promise<void>;
   openGift(itemId: string, deco: DecoView, left: number): Promise<void>;
   guestCheer(line?: string): void;
+  guestLeave(): Promise<void>; // 친구 집 '우리 집' — 인사하고 걸어 나간다
   setShelfView(on: boolean): void; // 크게 보기 ↔ 방 보기 (immersive 면 페이지의 퀵메뉴가 부른다)
 };
 
@@ -262,6 +263,7 @@ export default function LibraryStage(p: StageProps) {
         greet: (line) => lw.greet(line),
         openGift: (itemId, deco, left) => lw.openGift(itemId, deco, left),
         guestCheer: (line) => lw.guestCheer(line),
+        guestLeave: () => lw.guestLeave(),
         setShelfView: (on) => lw.setShelfView(on),
       });
     };
@@ -359,7 +361,7 @@ export default function LibraryStage(p: StageProps) {
     <div className={`${s.slot} ${p.mode === "preview" ? s.previewSlot : ""} ${p.immersive ? s.immersiveSlot : ""} ${p.className ?? ""}`}>
       <div ref={wrap} className={`${s.stage} ${p.immersive ? s.immersiveStage : ""} ${p.reading && !p.inPlace ? s.full : ""}`}>
         <div ref={host} className={s.canvasHost} />
-        {!drawn && <StageLoading overlay text={p.mode === "preview" ? "불러오는 중…" : p.mode === "visit" ? "친구 도서관에 가는 중…" : "도서관을 불러오는 중…"} />}
+        {!drawn && <StageLoading overlay text={p.mode === "preview" ? "불러오는 중…" : undefined} visit={p.mode === "visit"} />}
       {p.title && (!p.reading || p.inPlace) && <span className={s.plaque}>{p.title}</span>}
       <div ref={tag} className={s.tag} aria-hidden>
         {p.me && <b className={s.me}>나</b>}

@@ -475,6 +475,7 @@
 .immersive {
   position: relative;
   height: calc(100dvh - 64px - env(safe-area-inset-bottom));
+  margin-top: calc(-1 * env(safe-area-inset-top, 0px)); /* 방은 노치 자리까지 (위 여백 상쇄) */
   margin: 0 -16px -104px; /* 아래 -104px = .main 아래 여백 상쇄 → 화면이 내려가지 않는다 (숨겨진 화면일 땐 자리를 안 차지해 다른 화면에 안 번진다) */
 }
 .immersiveErr {

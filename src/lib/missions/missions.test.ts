@@ -48,11 +48,33 @@ describe("오늘의 미션", () => {
     expect(v.week.count).toBe(5);
     expect(v.week.done).toBe(true);
     expect(v.week.days.map((d) => d.label + (d.read ? "✓" : "") + (d.today ? "*" : "") + (d.future ? "-" : "")).join(" ")).toBe("월✓ 화✓ 수✓ 목✓ 금✓* 토- 일-");
-    expect(v.ready).toBe(2); // 20쪽 + 이번 주
+    expect(v.ready).toBe(3); // 20쪽 + 이번 주 + 출석 (아직 안 받음)
   });
 
   it("장부 ref — 하루 미션은 날짜, 주 보너스는 그 주 월요일", () => {
     expect(missionRef("2026-11-13", "read20")).toBe("2026-11-13:read20");
     expect(missionRef("2026-11-13", "week")).toBe("week:2026-11-09");
+  });
+});
+
+describe("출석 체크 (11-13)", () => {
+  it("이어서 들어온 날 — 오늘부터 거꾸로, 하루라도 빠지면 끊긴다", async () => {
+    const { streakOf } = await import("./missions");
+    expect(streakOf(new Set(["2026-11-11", "2026-11-12", "2026-11-13"]), "2026-11-13")).toBe(3);
+    expect(streakOf(new Set(["2026-11-10", "2026-11-12", "2026-11-13"]), "2026-11-13")).toBe(2);
+    expect(streakOf(new Set(), "2026-11-13")).toBe(0);
+  });
+  it("오늘은 늘 출석 · 7일째엔 보너스 · 받을 수 있는 수에 출석도", async () => {
+    const seven = new Set(["2026-11-07", "2026-11-08", "2026-11-09", "2026-11-10", "2026-11-11", "2026-11-12"]);
+    const v = missionsView("2026-11-13", ["read20", "memo", "visit"], { read20: 0, memo: 0, visit: 0, shelve: 0, stamp: 0 }, new Set(), new Set(), seven);
+    expect(v.attend.streak).toBe(7);
+    expect(v.attend.bonus).toBe(50);
+    expect(v.attend.claimed).toBe(false);
+    expect(v.attend.days.filter((d) => d.on).map((d) => d.label)).toEqual(["월", "화", "수", "목", "금"]);
+    expect(v.ready).toBe(1); // 출석만
+    const done = missionsView("2026-11-13", ["read20", "memo", "visit"], { read20: 0, memo: 0, visit: 0, shelve: 0, stamp: 0 }, new Set(["attend"]), new Set());
+    expect(done.attend.claimed).toBe(true);
+    expect(done.attend.bonus).toBe(0); // 오늘만 들어옴 → 1일째
+    expect(done.ready).toBe(0);
   });
 });

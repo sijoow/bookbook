@@ -49,6 +49,7 @@ export type Slot = {
   t: number;
   h: number;
   d: number;
+  face?: boolean; // 앞표지가 앞으로 (넓은 책장) — 폭 = d, 두께 = t (깊이 쪽)
 };
 
 export type UnitLayout = {
@@ -79,6 +80,10 @@ export function layoutLibrary(books: Sized[], addSlot = true, opts: ShelfOpts = 
   const maxRows = opts.tall ? SHELF_TALL_ROWS : CASE.maxRows;
   const usable = innerMax - CASE.pad * 2;
   const dims = books.map((b) => bookDims(b));
+  // 넓은 책장은 앞표지가 앞으로 — 한 권이 차지하는 폭이 책 가로(d), 사이도 조금 넓게
+  const face = Boolean(opts.wide);
+  const wOf = (d: { t: number; d: number }) => (face ? d.d : d.t);
+  const gap = face ? 1.4 : CASE.bookGap;
   const rowH = clamp(Math.max(0, ...dims.map((d) => d.h)) + 3.5, 24, 35.5);
 
   // 1) 줄 나누기 (책장 경계 없이 한 줄씩)
@@ -86,10 +91,10 @@ export function layoutLibrary(books: Sized[], addSlot = true, opts: ShelfOpts = 
   let used = 0;
   dims.forEach((d, i) => {
     const line = lines[lines.length - 1];
-    const need = line.length ? CASE.bookGap + d.t : d.t;
+    const need = line.length ? gap + wOf(d) : wOf(d);
     if (line.length && used + need > usable) {
       lines.push([i]);
-      used = d.t;
+      used = wOf(d);
     } else {
       line.push(i);
       used += need;
@@ -97,7 +102,7 @@ export function layoutLibrary(books: Sized[], addSlot = true, opts: ShelfOpts = 
   });
 
   // 한 줄뿐이면 책장 폭을 책에 맞춘다 (책이 적을 때 책장이 작아져 책이 크게 보이게)
-  const lineW = (line: number[]) => line.reduce((t, i, k) => t + dims[i].t + (k ? CASE.bookGap : 0), 0);
+  const lineW = (line: number[]) => line.reduce((t, i, k) => t + wOf(dims[i]) + (k ? gap : 0), 0);
   const fitW =
     lines.length === 1 && !opts.wide // 넓은 책장은 책이 적어도 넓게 (산 게 바로 보이게 — 11-13 사용자)
       ? clamp(Math.ceil(lineW(lines[0]) + (addSlot ? ADD_W + CASE.bookGap : 0) + CASE.pad * 2 + CASE.endRoom), CASE.minInnerW, innerMax)
@@ -121,8 +126,12 @@ export function layoutLibrary(books: Sized[], addSlot = true, opts: ShelfOpts = 
       let x = left;
       for (const i of mine[r] ?? []) {
         const d = dims[i];
-        slots.push({ id: books[i].id, index: i, unit: u, row: r, x: x + d.t / 2, y: rowFloors[r], z: -SPINE_INSET - d.d / 2, t: d.t, h: d.h, d: d.d });
-        x += d.t + CASE.bookGap;
+        slots.push(
+          face
+            ? { id: books[i].id, index: i, unit: u, row: r, x: x + d.d / 2, y: rowFloors[r], z: -SPINE_INSET - 2 - d.t / 2, t: d.t, h: d.h, d: d.d, face: true }
+            : { id: books[i].id, index: i, unit: u, row: r, x: x + d.t / 2, y: rowFloors[r], z: -SPINE_INSET - d.d / 2, t: d.t, h: d.h, d: d.d },
+        );
+        x += wOf(d) + gap;
       }
       free.push({ row: r, x0: x, x1: cx + innerW / 2 - CASE.pad });
     }

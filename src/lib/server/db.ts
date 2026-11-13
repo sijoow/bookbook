@@ -25,6 +25,7 @@ export type UserDoc = {
   avatarUrl?: string | null;
   deco?: Deco; // 꾸미기 — 가진 물건·배달 상자·하고 있는 소품·놓은 물건 (lib/deco/items, 옛 문서는 opened 수)
   points?: number; // 포인트 잔액 (pointLog 의 합 — 바뀔 때마다 $inc)
+  readingNow?: { bookId: string; title: string; coverUrl: string | null; since: Date } | null; // 지금 읽는 책 (책마을 — 친구에게 '읽는 중', 3시간 지나면 끈 것으로)
   pointsInit?: boolean; // 옛 계정 포인트 채우기(다 읽은 책)를 마쳤나
   house?: HouseId; // 내가 살 집 (lib/house/houses, 없으면 모눈 방)
   passwordHash?: string; // 일반 회원 비밀번호 — scrypt 로 바꾼 것만 (lib/auth/password)
@@ -123,6 +124,18 @@ export type PointLogDoc = {
 export type LoginDoc = { _id: ObjectId; tokenHash: string; userId: ObjectId; createdAt: Date; lastSeenAt: Date; expiresAt: Date; ua: string | null };
 /** 하루에 한 번이라도 들어온 사람 (관리자 통계 — 하루 사용자) */
 export type ActiveDayDoc = { _id: ObjectId; userId: ObjectId; day: string; at: Date };
+/** 책마을 — 친구 둘만의 이야기 (pair = 두 아이디를 정렬해 이은 것). book = 책 추천, gift = 선물 물건 id */
+export type ChatDoc = {
+  _id: ObjectId;
+  pair: string;
+  from: ObjectId;
+  to: ObjectId;
+  text: string;
+  book?: { title: string; author: string | null; coverUrl: string | null; isbn13: string | null; itemId: number | null } | null;
+  gift?: string | null;
+  createdAt: Date;
+  readAt: Date | null;
+};
 export type ApiCacheDoc = { _id: string; body: unknown; createdAt: Date }; // TTL 24시간
 
 /** 책장에서 꺼내 읽고 덮을 때마다 하나 — 읽는 속도·남은 시간·한 권 평균의 재료 */
@@ -140,7 +153,7 @@ export type ReadingSessionDoc = {
 
 export const CACHE_TTL_SEC = 60 * 60 * 24;
 
-type G = { _bbMongo?: Promise<MongoClient>; _bbIndexes3?: Promise<void> };
+type G = { _bbMongo?: Promise<MongoClient>; _bbIndexes4?: Promise<void> };
 const g = globalThis as G; // dev 의 핫 리로드에도 연결 하나만
 
 export function hasDb(): boolean {
@@ -159,11 +172,11 @@ export async function getDb(): Promise<Db> {
     throw e;
   }
   const db = client.db(process.env.MONGODB_DB?.trim() || "bookbook");
-  g._bbIndexes3 ??= ensureIndexes(db).catch((e) => {
-    g._bbIndexes3 = undefined;
+  g._bbIndexes4 ??= ensureIndexes(db).catch((e) => {
+    g._bbIndexes4 = undefined;
     throw e;
   });
-  await g._bbIndexes3; // 이름 끝 숫자 = 인덱스 판 (새 인덱스를 넣으면 올린다 — 켜 둔 dev 서버도 다시 만든다)
+  await g._bbIndexes4; // 이름 끝 숫자 = 인덱스 판 (새 인덱스를 넣으면 올린다 — 켜 둔 dev 서버도 다시 만든다)
   return db;
 }
 
@@ -195,5 +208,7 @@ async function ensureIndexes(db: Db): Promise<void> {
     db.collection<LoginDoc>("logins").createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 }),
     db.collection<ActiveDayDoc>("activeDays").createIndex({ day: 1, userId: 1 }, { unique: true }),
     db.collection<ActiveDayDoc>("activeDays").createIndex({ userId: 1 }),
+    db.collection<ChatDoc>("chats").createIndex({ pair: 1, createdAt: -1 }),
+    db.collection<ChatDoc>("chats").createIndex({ to: 1, readAt: 1, createdAt: -1 }),
   ]);
 }

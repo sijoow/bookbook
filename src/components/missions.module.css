@@ -239,3 +239,17 @@
 .dayFuture {
   opacity: 0.45;
 }
+
+/* 출석 체크 (11-13) — 별 도장 */
+.attend {
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1.5px dashed var(--line);
+}
+.dayStamp i {
+  background: var(--butter);
+  color: var(--coral);
+  font-size: 15px;
+  line-height: 1;
+  transform: rotate(-8deg);
+}

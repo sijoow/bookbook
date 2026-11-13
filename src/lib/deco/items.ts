@@ -164,6 +164,13 @@ export function canBuy(deco: Deco, points: number, id: string): "ok" | "owned" |
 }
 
 /** 배달 상자 하나 열기 — 맨 앞 상자의 물건이 내 것이 되고, 바로 하고/놓는다 */
+/** 책장 모양은 하나만 — 넓은 책장과 높은 책장은 같이 못 쓴다 (하나를 켜면 다른 하나는 꺼진다, 11-13 사용자) */
+export const SHELF_ONE = ["shelf-wide", "shelf-tall"] as const;
+export function placeOne(placed: string[], id: string): string[] {
+  const rest = (SHELF_ONE as readonly string[]).includes(id) ? placed.filter((x) => x === id || !(SHELF_ONE as readonly string[]).includes(x)) : placed;
+  return rest.includes(id) ? rest : [...rest, id];
+}
+
 export function openBox(deco: Deco): { deco: Deco; item: DecoItem } | null {
   const id = deco.boxes[0];
   const item = id ? ITEM[id] : undefined;
@@ -174,7 +181,7 @@ export function openBox(deco: Deco): { deco: Deco; item: DecoItem } | null {
       owned: deco.owned.includes(id) ? deco.owned : [...deco.owned, id],
       boxes: deco.boxes.slice(1),
       worn: item.kind === "avatar" ? wear(deco.worn, id) : deco.worn,
-      placed: item.kind !== "avatar" && !deco.placed.includes(id) ? [...deco.placed, id] : deco.placed,
+      placed: item.kind !== "avatar" && !deco.placed.includes(id) ? placeOne(deco.placed, id) : deco.placed,
       pos: deco.pos,
       paint: deco.paint,
     },
@@ -194,7 +201,9 @@ export function readDeco(v: unknown): Deco {
   const boxes = valid(src.boxes).filter((id) => !mine.has(id));
   let worn: string[] = [];
   for (const id of valid(src.worn)) if (mine.has(id) && ITEM[id].kind === "avatar") worn = wear(worn, id);
-  const placed = valid(src.placed).filter((id) => mine.has(id) && ITEM[id].kind !== "avatar");
+  let placed = valid(src.placed).filter((id) => mine.has(id) && ITEM[id].kind !== "avatar");
+  const shapes = placed.filter((id) => (SHELF_ONE as readonly string[]).includes(id));
+  if (shapes.length > 1) placed = placeOne(placed, shapes[shapes.length - 1]); // 둘 다 켜져 있던 옛 값 — 나중 것만
   const pos: Record<string, ItemPos> = {};
   if (src.pos && typeof src.pos === "object" && !Array.isArray(src.pos)) {
     for (const [id, p] of Object.entries(src.pos as Record<string, unknown>)) {

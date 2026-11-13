@@ -100,7 +100,7 @@ export async function friendIds(user: UserDoc): Promise<ObjectId[]> {
   return fs.map((f) => (f.a.equals(user._id) ? f.b : f.a));
 }
 
-export type FriendSummary = { handle: string; nickname: string; bookCount: number; open: number; faint: number };
+export type FriendSummary = { handle: string; nickname: string; bookCount: number; open: number; faint: number; reading: { title: string; coverUrl: string | null; since: string } | null };
 
 export async function listFriends(user: UserDoc): Promise<{ me: { handle: string; nickname: string; bookCount: number }; friends: FriendSummary[] }> {
   const { users } = await cols();
@@ -110,14 +110,15 @@ export async function listFriends(user: UserDoc): Promise<{ me: { handle: string
   const friends = await Promise.all(
     people.map(async (f) => {
       const theirs = (await listBookDocs(f._id)).map(lite);
-      return { handle: f.handle, nickname: f.nickname, bookCount: theirs.length, ...portalCounts(portalsBetween(mine, theirs)) };
+      const r = f.readingNow && Date.now() - f.readingNow.since.getTime() < 3 * 3_600_000 ? { title: f.readingNow.title, coverUrl: f.readingNow.coverUrl, since: f.readingNow.since.toISOString() } : null; // 지금 읽는 중 (3시간)
+      return { handle: f.handle, nickname: f.nickname, bookCount: theirs.length, ...portalCounts(portalsBetween(mine, theirs)), reading: r };
     }),
   );
   friends.sort((x, y) => y.open - x.open || y.faint - x.faint || x.nickname.localeCompare(y.nickname));
   return { me: { handle: user.handle, nickname: user.nickname, bookCount: mine.length }, friends };
 }
 
-async function friendByHandle(viewer: UserDoc, handle: string): Promise<WithId<UserDoc>> {
+export async function friendByHandle(viewer: UserDoc, handle: string): Promise<WithId<UserDoc>> {
   const { users, friendships } = await cols();
   const u = await users.findOne({ handle });
   if (!u) throw new NotFoundError("그런 책장이 없어요");
@@ -143,7 +144,7 @@ export async function friendShelf(viewer: UserDoc, handle: string) {
     theirs: side(p.theirs),
   }));
   return {
-    user: { handle: u.handle, nickname: u.nickname, avatar: readAvatar(u.avatar, u.handle), deco: readDeco(u.deco), house: readHouse(u.house) },
+    user: { handle: u.handle, nickname: u.nickname, avatar: readAvatar(u.avatar, u.handle), deco: readDeco(u.deco), house: readHouse(u.house), reading: u.readingNow && Date.now() - u.readingNow.since.getTime() < 3 * 3_600_000 ? { title: u.readingNow.title, coverUrl: u.readingNow.coverUrl } : null },
     books: theirs,
     portals,
     myWorkKeys: [...new Set(mine.map((b) => b.workKey))], // 이미 내 책장에 있는 책 (담기 버튼 대신 '내 책장에 있어요')
@@ -171,4 +172,7 @@ export async function unfriend(viewer: UserDoc, handle: string): Promise<void> {
   const u = await users.findOne({ handle });
   if (!u) throw new NotFoundError("그런 책장이 없어요");
   await friendships.deleteOne(pair(viewer._id, u._id));
+  // 둘만의 이야기도 지운다 (책마을)
+  const ids = [viewer._id.toHexString(), u._id.toHexString()].sort().join("|");
+  await (await getDb()).collection("chats").deleteMany({ pair: ids });
 }

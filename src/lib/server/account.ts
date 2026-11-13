@@ -47,6 +47,7 @@ export async function deleteAccount(user: UserDoc): Promise<Record<string, numbe
   await del("sessions", { userId: id });
   await del("userBooks", { userId: id });
   await del("friendships", { $or: [{ a: id }, { b: id }] });
+  await del("chats", { $or: [{ from: id }, { to: id }] }); // 책마을 이야기
   await del("invites", { inviterId: id });
   await del("visits", { $or: [{ visitorId: id }, { hostId: id }] });
   await del("stamps", { $or: [{ fromUserId: id }, { toUserId: id }] });

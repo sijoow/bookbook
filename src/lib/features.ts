@@ -7,4 +7,11 @@ export const FEATURES = {
    * true 면 꾸미기 창 '추천' 탭 맨 위에 '내 사진으로 만들기'가 나온다 (components/PhotoAvatar · lib/avatar/fromPhoto).
    */
   photoAvatar: false,
+  /**
+   * 홈 무대 귀퉁이의 '도서 정보·이미지 제공: YES24' (11-13 사용자: "베타라 깔끔하게 — 출시할 때 노출하면 돼") → 베타 동안 꺼 둠.
+   * ⚠ YES24 약관상 책 그림이 보이는 화면엔 출처가 있어야 한다 — **출시(가입 받기) 전에 반드시 true 로**. 책 상세·책 추가의 출처와 'YES24에서 보기'는 그대로 둔다.
+   */
+  yes24HomeCredit: false,
+  /** 옷 무늬 12 (GPT 천 무늬) — 11-13 사용자: "무늬가 아니라 일반적인 옷" → 숨기고 옷 모양을 늘림. true 면 꾸미기 창 옷 탭에 다시 나온다 */
+  patterns: false,
 } as const;

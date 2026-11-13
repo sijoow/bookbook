@@ -16,6 +16,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   themeColor: "#f7f1e3",
+  viewportFit: "cover", // 전체 화면 앱에서 노치 자리까지 그린다 (안 하면 검은 띠 — 11-13). 위쪽 요소는 env(safe-area-inset-top) 만큼 내린다
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

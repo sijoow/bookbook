@@ -75,13 +75,27 @@ export class Book3D {
   /** 책장 제자리로 (애니메이션 없이) */
   home() {
     this.group.position.set(this.slot.x, this.slot.y, this.slot.z);
-    this.group.quaternion.identity();
+    this.restRotation();
     this.group.scale.setScalar(1);
+  }
+
+  /** 꽂혀 있을 때 방향 — 보통은 책등이 앞, 넓은 책장(face)은 앞표지(오른쪽 면)가 앞 */
+  restRotation() {
+    this.group.quaternion.identity();
+    if (this.slot.face) {
+      this.group.rotation.y = -Math.PI / 2;
+      this.ensureCover(); // 표지가 앞이니 꽂혀 있을 때도 YES24 표지를 (보통은 꺼낼 때만)
+    }
+  }
+
+  /** 책장에서 앞으로 빼는 거리 */
+  pullDepth(): number {
+    return this.slot.face ? this.slot.t + 4 : this.slot.d * 0.6;
   }
 
   /** 책장에서 반쯤 빼낸 자리 */
   pulledPosition(out = new THREE.Vector3()): THREE.Vector3 {
-    return out.set(this.slot.x, this.slot.y, this.slot.z + this.slot.d * 0.6);
+    return out.set(this.slot.x, this.slot.y, this.slot.z + this.pullDepth());
   }
 
   /** 같은 책인데 정보가 바뀌었을 때 (상태·책등) */
@@ -203,8 +217,10 @@ export class Book3D {
   /** 책등 앞면 네 귀퉁이 (화면 좌표로 바꿔 누르기 판정) */
   spineCorners(): THREE.Vector3[] {
     const { x, y, z, t, h, d } = this.slot;
-    const zf = z + d / 2;
-    return [new THREE.Vector3(x - t / 2, y, zf), new THREE.Vector3(x + t / 2, y, zf), new THREE.Vector3(x - t / 2, y + h, zf), new THREE.Vector3(x + t / 2, y + h, zf)];
+    // 앞에서 보이는 면 — 보통은 책등(폭 t), 넓은 책장은 앞표지(폭 d)
+    const w = this.slot.face ? d : t;
+    const zf = z + (this.slot.face ? t : d) / 2;
+    return [new THREE.Vector3(x - w / 2, y, zf), new THREE.Vector3(x + w / 2, y, zf), new THREE.Vector3(x - w / 2, y + h, zf), new THREE.Vector3(x + w / 2, y + h, zf)];
   }
 
   dispose() {

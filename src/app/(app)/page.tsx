@@ -29,7 +29,8 @@ import { ReadingOverlay, ReadingPanel, reducedMotion, type FinishInput, type Flo
 import ui from "@/components/ui.module.css";
 import { defaultAvatar, type AvatarConfig } from "@/lib/avatar/config";
 import { api } from "@/lib/client/api";
-import type { MissionId, MissionsView } from "@/lib/missions/missions";
+import { FEATURES } from "@/lib/features";
+import type { ClaimId, MissionsView } from "@/lib/missions/missions";
 import { makeSaver } from "@/lib/client/saver";
 import { hasVoices, setSound, soundOn } from "@/lib/client/voice";
 import { musicOn, setMusic } from "@/lib/client/bgm";
@@ -450,12 +451,12 @@ export default function MyLibrary() {
   }, [drawer]);
 
   /** 미션 받기 — 받은 포인트(보너스 포함)를 돌려준다 */
-  const claimMission = useCallback(async (id: MissionId | "week") => {
+  const claimMission = useCallback(async (id: ClaimId) => {
     try {
       const r = await api<{ gained: number; bonus: number; view: MissionsView; points: number }>("/api/missions", { json: { id } });
       setMissions(r.view);
       setMe((m) => (m ? { ...m, points: r.points } : m));
-      if (r.bonus) setToast(`오늘의 미션을 모두 했어요! 보너스 +${r.bonus} ${POINT_NAME}`);
+      if (r.bonus) setToast(id === "attend" ? `${r.view.attend.streak}일 이어서 출석! 보너스 +${r.bonus} ${POINT_NAME}` : `오늘의 미션을 모두 했어요! 보너스 +${r.bonus} ${POINT_NAME}`);
       return r.gained + r.bonus;
     } catch (e) {
       setToast((e as Error).message);
@@ -556,7 +557,7 @@ export default function MyLibrary() {
                       }}
                     />
                   )}
-                  {showCredit && <HudCredit />}
+                  {showCredit && FEATURES.yes24HomeCredit && <HudCredit />}
                   {all.length === 0 && !tidy && <HudHint>&lsquo;책 꽂기&rsquo;로 첫 책을 꽂아 보세요</HudHint>}
                   {flow?.phase === "reading" && !closingSheet && !readBarOpen && <ReadHandle onOpen={() => setReadBarOpen(true)} />}
                   {tidy ? (

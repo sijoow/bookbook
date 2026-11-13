@@ -99,12 +99,15 @@ describe("layoutLibrary", () => {
 
 describe("책장 꾸미기 (넓은·높은 책장)", () => {
   const many = Array.from({ length: 60 }, (_, i) => book(`w${i}`, 20));
-  it("넓은 책장은 칸 폭 88 — 한 줄에 책이 더 들어가 줄이 준다", () => {
+  it("넓은 책장은 칸 폭 88 · 앞표지가 앞으로 — 한 권이 책 가로만큼 차지 (11-13)", () => {
     const base = layoutLibrary(many);
     const wide = layoutLibrary(many, true, { wide: true });
     expect(wide.units[0].innerW).toBe(SHELF_WIDE_INNER);
-    const lines = (l: typeof base) => l.units.reduce((n, u) => n + u.rows, 0);
-    expect(lines(wide)).toBeLessThan(lines(base));
+    expect(wide.slots.every((s) => s.face)).toBe(true);
+    expect(base.slots.some((s) => s.face)).toBe(false);
+    const row0 = wide.slots.filter((s) => s.unit === 0 && s.row === 0);
+    for (let i = 1; i < row0.length; i++) expect(row0[i].x - row0[i - 1].x).toBeGreaterThanOrEqual((row0[i].d + row0[i - 1].d) / 2); // 표지끼리 안 겹친다
+    expect(row0.length).toBeLessThanOrEqual(7); // 한 줄 5~6권 안팎
     expect(wide.units.length > 1 ? wide.units[1].x : unitX(1, SHELF_WIDE_INNER)).toBe(unitX(1, SHELF_WIDE_INNER));
   });
   it("높은 책장은 4줄까지 — 옆 책장이 늦게 생긴다", () => {

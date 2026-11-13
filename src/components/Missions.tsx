@@ -5,15 +5,15 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import type { MissionId, MissionsView } from "@/lib/missions/missions";
+import type { ClaimId, MissionsView } from "@/lib/missions/missions";
 import m from "./missions.module.css";
 
-export function MissionPanel({ view, onClaim, onGo }: { view: MissionsView; onClaim: (id: MissionId | "week") => Promise<number>; onGo?: () => void }) {
+export function MissionPanel({ view, onClaim, onGo }: { view: MissionsView; onClaim: (id: ClaimId) => Promise<number>; onGo?: () => void }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [pop, setPop] = useState<{ id: string; n: number } | null>(null);
   const doneCount = view.missions.filter((x) => x.done).length;
 
-  async function claim(id: MissionId | "week") {
+  async function claim(id: ClaimId) {
     if (busy) return;
     setBusy(id);
     try {
@@ -29,6 +29,35 @@ export function MissionPanel({ view, onClaim, onGo }: { view: MissionsView; onCl
 
   return (
     <section className={m.panel} aria-label="오늘의 미션">
+      {/* 출석 체크 — 하루 한 번 도장, 7일째마다 보너스 (11-13) */}
+      <div className={m.attend}>
+        <div className={m.head}>
+          <h3 className={m.title}>출석 체크</h3>
+          <span className={m.count}>
+            {view.attend.streak}일째 이어서 · {view.attend.goal}일마다 +{50}
+          </span>
+        </div>
+        <ol className={m.days}>
+          {view.attend.days.map((d) => (
+            <li key={d.day} className={`${m.day} ${d.on ? m.dayStamp : ""} ${d.today ? m.dayToday : ""} ${d.future ? m.dayFuture : ""}`} aria-label={`${d.label}요일 ${d.on ? "출석" : "결석"}`}>
+              <span>{d.label}</span>
+              <i aria-hidden>{d.on ? "★" : ""}</i>
+            </li>
+          ))}
+        </ol>
+        <div className={m.item}>
+          {view.attend.claimed ? (
+            <p className={m.sub}>오늘 출석 도장 쾅! 내일 또 만나요</p>
+          ) : (
+            <button type="button" className={`${m.claim} ${m.claimWide}`} disabled={busy === "attend"} onClick={() => claim("attend")}>
+              <i className={m.coin} aria-hidden />
+              오늘 출석 도장 찍기 +{view.attend.reward}
+              {view.attend.bonus ? ` · ${view.attend.streak}일 보너스 +${view.attend.bonus}` : ""}
+            </button>
+          )}
+          {pop?.id === "attend" && <span className={m.pop}>+{pop.n}</span>}
+        </div>
+      </div>
       <div className={m.head}>
         <h3 className={m.title}>오늘의 미션</h3>
         <span className={m.count}>
