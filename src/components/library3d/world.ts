@@ -2122,6 +2122,15 @@ export class LibraryWorld {
     }
   }
 
+  /** 화면의 점이 지금 책장 위인가 (두 번 눌러 크게 보기) */
+  private caseAt(x: number, y: number): boolean {
+    const u = this.layout.units[this.unit];
+    if (!u) return false;
+    const a = this.toScreen(new THREE.Vector3(u.x - u.innerW / 2 - 6, 0, 0));
+    const b = this.toScreen(new THREE.Vector3(u.x + u.innerW / 2 + 6, u.height, 0));
+    return x > Math.min(a.x, b.x) && x < Math.max(a.x, b.x) && y > Math.min(a.y, b.y) && y < Math.max(a.y, b.y);
+  }
+
   /** 꺼내 오기 — 고른 책을 제자리에 두고 크게 보기를 닫는다 (페이지가 방 보기로 돌려 아바타가 꺼내러 간다) */
   private fetchPicked(id: string) {
     this.peek(null);
@@ -2327,7 +2336,14 @@ export class LibraryWorld {
         this.events.itemDoubleTap?.(item);
         return;
       }
-      if (!this.bookAt(x, y)) {
+      // 책장을 두 번 누르면 크게 보기 — 책 위였으면 그 책을 골라 둔다
+      const onBook = this.bookAt(x, y);
+      if (!this.shelfView && (this.mode === "home" || this.mode === "visit") && (onBook || this.caseAt(x, y))) {
+        this.setShelfView(true);
+        if (onBook) this.peek(onBook);
+        return;
+      }
+      if (!onBook) {
         this.resetCamera();
         return;
       }
@@ -2362,11 +2378,7 @@ export class LibraryWorld {
     const hit = this.bookAt(x, y);
     if (hit) {
       // 방 보기에서 누르면 책장이 크게 다가오고 그 책이 살짝 나온다 → 꾹 누르면 꺼내 온다 (11-13 사용자)
-      if (!this.shelfView && (this.mode === "home" || this.mode === "visit")) {
-        this.setShelfView(true);
-        this.peek(hit);
-        return;
-      }
+      if (!this.shelfView && (this.mode === "home" || this.mode === "visit")) return; // 방 보기 — 두 번 눌러야 크게 보기 (한 번은 아무것도 안 함)
       // 크게 보기 — 처음 누르면 고르기(살짝 나옴), 고른 책을 한 번 더 누르거나 꾹 누르면 꺼내 오기 (11-13 사용자: "눌렀는데 안 빼 와")
       if (this.peeked?.id === hit) this.fetchPicked(hit);
       else this.peek(hit);

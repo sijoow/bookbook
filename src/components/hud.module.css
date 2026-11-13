@@ -181,18 +181,18 @@
   text-align: center;
   pointer-events: none;
 }
+/* YES24 출처 — 약관상 책 그림이 보이는 화면엔 있어야 해서 숨기진 않고 아주 작고 흐리게 (11-13 사용자: "깔끔하게, 자기 방이니까") */
 .credit {
   position: absolute;
-  right: 8px;
+  right: 6px;
   top: 52px;
   z-index: 3;
-  padding: 1px 6px;
-  border-radius: 6px;
-  background: rgba(253, 249, 240, 0.78);
-  font-size: 10px;
+  padding: 0 4px;
+  font-size: 8.5px;
+  line-height: 1.2;
   color: var(--ink-soft);
-  text-decoration: underline;
-  text-underline-offset: 2px;
+  opacity: 0.55;
+  text-decoration: none;
 }
 
 /* ── 옆 서랍 ── */

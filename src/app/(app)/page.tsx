@@ -518,7 +518,7 @@ export default function MyLibrary() {
               name={me.nickname}
               me
               house={me.house}
-              title={editing ? "책을 끌어서 옮겨요" : arranging ? "물건을 끌어서 옮겨요" : all.length ? "책장을 눌러 책을 골라요" : "나의 도서관"}
+              title={editing ? "책을 끌어서 옮겨요" : arranging ? "물건을 끌어서 옮겨요" : undefined} // 평소엔 이름판 없음 (11-13 사용자: "이런 말은 베타 때 잠깐 — 빼도 될 듯")
               editing={editing}
               onReorder={reorder}
               arranging={arranging}
@@ -601,7 +601,7 @@ export default function MyLibrary() {
           {err && <p className={`${ui.error} ${s.immersiveErr}`}>{err}</p>}
         </div>
 
-        <SideDrawer open={drawer} onClose={closeDrawer} title="나의 도서관">
+        <SideDrawer open={drawer} onClose={closeDrawer} title="나만의 공간">
           <Link href="/decorate" className={hud.pointRow}>
             <span>
               내 {POINT_NAME} <b>{me ? me.points.toLocaleString() : 0}</b>

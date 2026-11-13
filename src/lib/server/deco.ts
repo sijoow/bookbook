@@ -62,8 +62,8 @@ export async function awardWelcome(userId: ObjectId): Promise<number> {
 export async function ensureEconomy(user: UserDoc): Promise<UserDoc> {
   const raw = user.deco as unknown as Record<string, unknown> | undefined;
   const needDeco = !raw || !Array.isArray(raw.owned) || !Array.isArray(raw.boxes);
-  if (!needDeco && user.pointsInit) return user;
   const { users, books } = await cols();
+  if (!needDeco && user.pointsInit) return settle(user, users);
   if (needDeco) await users.updateOne({ _id: user._id }, { $set: { deco: readDeco(raw) } });
   if (!user.pointsInit) {
     const first = await users.updateOne({ _id: user._id, pointsInit: { $ne: true } }, { $set: { pointsInit: true } });
@@ -73,7 +73,17 @@ export async function ensureEconomy(user: UserDoc): Promise<UserDoc> {
       for (const b of done) await award(user._id, "finish", String(b._id), POINTS.finish); // 채우기는 하루 한도 없이
     }
   }
-  const fresh = (await users.findOne({ _id: user._id })) ?? user;
+  return settle((await users.findOne({ _id: user._id })) ?? user, users);
+}
+
+/** 마스터 포인트 채우기 · 남은 배달 상자 열기 — 이미 정리된 계정도 늘 거친다 */
+async function settle(fresh: UserDoc, users: Awaited<ReturnType<typeof cols>>["users"]): Promise<UserDoc> {
+  const user = fresh;
+  // 마스터(관리자 fe)는 포인트 무제한 — 10만 아래로 내려가면 999,999 로 채운다 (11-13 사용자: "fe 계정은 크레딧 무제한, 애는 마스터잖아")
+  if (process.env.ADMIN_ID && fresh.handle === process.env.ADMIN_ID && (fresh.points ?? 0) < 100_000) {
+    await users.updateOne({ _id: user._id }, { $set: { points: 999_999 } });
+    fresh.points = 999_999;
+  }
   // 배달 상자는 없앴다 — 남은 상자는 열어서 바로 입고/놓는다 (11-13 사용자: "상자 속 열기 이런 거 빼 줘, 바로 쓰게")
   let deco = readDeco(fresh.deco);
   if (deco.boxes.length) {

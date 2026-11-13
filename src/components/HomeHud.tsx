@@ -129,7 +129,7 @@ export function EditBar(p: EditBarProps) {
 }
 
 /** 왼쪽 가장자리 색인 탭 — 누르면 옆 서랍이 나온다 */
-export function SideTab({ open, onOpen, label = "나의 도서관", badge = 0 }: { open: boolean; onOpen: () => void; label?: string; badge?: number }) {
+export function SideTab({ open, onOpen, label = "나만의 공간", badge = 0 }: { open: boolean; onOpen: () => void; label?: string; badge?: number }) {
   return (
     <button
       type="button"
