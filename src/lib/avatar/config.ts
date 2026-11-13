@@ -18,6 +18,12 @@ export const CHEEKS = ["blush", "freckles", "both", "none"] as const;
 export const STICKERS = ["none", "mole", "star", "heart"] as const;
 export const EYE_COLORS = ["ink", "brown", "honey", "gray", "sea", "leaf"] as const; // 눈동자 색 (11-13)
 export const NOSES = ["dot", "round", "line", "none"] as const; // 코 (11-13)
+export const TOPS = ["dress", "tee", "collar", "hoodie", "cardigan"] as const; // 윗옷 (11-13) — 원피스면 아랫옷은 안 보인다
+export const BOTTOMS = ["shorts", "pants", "skirt", "jeans"] as const; // 아랫옷 (11-13)
+export const SHOES = ["flats", "sneakers", "boots", "rain"] as const; // 신발 (11-13)
+export const HATS = ["none", "cap", "bucket", "straw", "beret"] as const; // 모자 (11-13) — 털모자는 머리 모양(beanie)
+/** 윗옷 무늬 (11-13) — GPT 로 뽑은 천 무늬 (public/img/patterns/<id>.webp). none = 옷 색 그대로 */
+export const PATTERNS = ["none", "flower", "cherry", "strawberry", "bear", "bunny", "cloud", "starmoon", "heart", "lemon", "clover", "gingham", "rainbow"] as const;
 
 export type HairStyle = (typeof HAIR_STYLES)[number];
 export type HairColor = (typeof HAIR_COLORS)[number];
@@ -30,6 +36,11 @@ export type Cheeks = (typeof CHEEKS)[number];
 export type FaceSticker = (typeof STICKERS)[number];
 export type EyeColor = (typeof EYE_COLORS)[number];
 export type Nose = (typeof NOSES)[number];
+export type Top = (typeof TOPS)[number];
+export type Bottom = (typeof BOTTOMS)[number];
+export type Shoes = (typeof SHOES)[number];
+export type Hat = (typeof HATS)[number];
+export type Pattern = (typeof PATTERNS)[number];
 export type Gender = (typeof GENDERS)[number];
 export type Pet = (typeof PETS)[number];
 
@@ -46,6 +57,12 @@ export const avatarSchema = z.object({
   sticker: z.enum(STICKERS),
   eyeColor: z.enum(EYE_COLORS),
   nose: z.enum(NOSES),
+  top: z.enum(TOPS),
+  bottom: z.enum(BOTTOMS),
+  shoes: z.enum(SHOES),
+  hat: z.enum(HATS),
+  hatColor: z.enum(OUTFITS),
+  pattern: z.enum(PATTERNS),
   gender: z.enum(GENDERS),
   pet: z.enum(PETS),
 });
@@ -79,6 +96,13 @@ export const CHEEKS_LABEL: Record<Cheeks, string> = { blush: "발그레", freckl
 export const STICKER_LABEL: Record<FaceSticker, string> = { none: "없음", mole: "점", star: "별", heart: "하트" };
 export const EYE_COLOR_LABEL: Record<EyeColor, string> = { ink: "까망", brown: "갈색", honey: "꿀색", gray: "회색", sea: "바다", leaf: "풀잎" };
 export const NOSE_LABEL: Record<Nose, string> = { dot: "콩", round: "동글", line: "선", none: "없음" };
+export const TOP_LABEL: Record<Top, string> = { dress: "원피스", tee: "티셔츠", collar: "카라 셔츠", hoodie: "후드티", cardigan: "가디건" };
+export const BOTTOM_LABEL: Record<Bottom, string> = { shorts: "반바지", pants: "긴바지", skirt: "치마", jeans: "청바지" };
+export const SHOES_LABEL: Record<Shoes, string> = { flats: "단화", sneakers: "운동화", boots: "부츠", rain: "장화" };
+export const HAT_LABEL: Record<Hat, string> = { none: "모자 없음", cap: "캡모자", bucket: "벙거지", straw: "밀짚모자", beret: "베레모" };
+export const PATTERN_LABEL: Record<Pattern, string> = { none: "무늬 없음", flower: "작은 꽃", cherry: "체리", strawberry: "딸기", bear: "곰돌이", bunny: "토끼", cloud: "구름", starmoon: "별과 달", heart: "하트", lemon: "레몬", clover: "클로버", gingham: "깅엄 체크", rainbow: "무지개 줄" };
+/** 성별을 고르면 먼저 입혀 줄 옷 (다른 옷도 다 고를 수 있다) — 옛 아바타의 몸 그대로 */
+export const GENDER_TOP: Record<Gender, Top> = { girl: "dress", boy: "tee" };
 
 export const GENDER_LABEL: Record<Gender, string> = { girl: "여자아이", boy: "남자아이" };
 export const PET_LABEL: Record<Pet, string> = { none: "없음", dog: "강아지", cat: "고양이", rabbit: "토끼", hamster: "햄스터", chick: "병아리" };
@@ -120,6 +144,12 @@ export function defaultAvatar(handle: string): AvatarConfig {
     glasses: false,
     ...FACE_DEFAULT,
     gender: "girl", // 옛 아바타 몸은 여자아이 모양이었다 — 처음 가입 화면에서 고른다
+    top: "dress",
+    bottom: "shorts",
+    shoes: "flats",
+    hat: "none",
+    hatColor: "sky",
+    pattern: "none",
     pet: "none",
   };
 }
@@ -140,6 +170,8 @@ export function readAvatar(v: unknown, handle: string): AvatarConfig {
     const r = avatarSchema.shape[k].safeParse(src[k]);
     if (r.success) (out as Record<string, unknown>)[k] = r.data;
   }
+  // 옷 칸이 없는 옛 아바타 — 몸 모양 그대로 (여자아이 = 원피스, 남자아이 = 티셔츠 + 반바지)
+  if (!avatarSchema.shape.top.safeParse(src.top).success) out.top = GENDER_TOP[out.gender];
   return out;
 }
 
@@ -149,13 +181,13 @@ export function readAvatar(v: unknown, handle: string): AvatarConfig {
  * 처음 다섯은 점토 시험 그림(docs/design/concepts/characters/lineup.png)의 다섯 친구.
  */
 export const PRESETS: Array<{ id: string; name: string; look: Omit<AvatarConfig, "pet"> }> = [
-  { id: "reader", name: "책벌레 똥머리", look: { gender: "girl", hair: "bun", hairColor: "choco", skin: "light", outfit: "coral", glasses: false, eyes: "round", brows: "soft", mouth: "smile", cheeks: "blush", sticker: "none", eyeColor: "ink", nose: "dot" } },
-  { id: "glasses", name: "동그란 안경", look: { gender: "boy", hair: "bowl", hairColor: "brown", skin: "light", outfit: "mint", glasses: true, eyes: "dot", brows: "none", mouth: "smile", cheeks: "blush", sticker: "none", eyeColor: "brown", nose: "round" } },
-  { id: "pigtails", name: "양갈래 하늘", look: { gender: "girl", hair: "pigtails", hairColor: "black", skin: "light", outfit: "sky", glasses: false, eyes: "lash", brows: "soft", mouth: "smile", cheeks: "blush", sticker: "none", eyeColor: "ink", nose: "dot" } },
-  { id: "spiky", name: "삐죽 개구쟁이", look: { gender: "boy", hair: "spiky", hairColor: "caramel", skin: "tan", outfit: "butter", glasses: false, eyes: "round", brows: "straight", mouth: "open", cheeks: "blush", sticker: "none", eyeColor: "honey", nose: "round" } },
-  { id: "bob", name: "단발 살구", look: { gender: "girl", hair: "bob", hairColor: "brown", skin: "light", outfit: "apricot", glasses: false, eyes: "sparkle", brows: "soft", mouth: "smile", cheeks: "both", sticker: "none", eyeColor: "brown", nose: "dot" } },
-  { id: "beanie", name: "털모자 민트", look: { gender: "girl", hair: "beanie", hairColor: "caramel", skin: "tan", outfit: "mint", glasses: false, eyes: "round", brows: "none", mouth: "cat", cheeks: "freckles", sticker: "star", eyeColor: "leaf", nose: "line" } },
-  { id: "side", name: "가르마 하늘", look: { gender: "boy", hair: "side", hairColor: "choco", skin: "deep", outfit: "sky", glasses: false, eyes: "round", brows: "bold", mouth: "smile", cheeks: "blush", sticker: "none", eyeColor: "ink", nose: "round" } },
-  { id: "sleepy", name: "졸린 코랄", look: { gender: "boy", hair: "short", hairColor: "black", skin: "tan", outfit: "coral", glasses: false, eyes: "sleepy", brows: "soft", mouth: "line", cheeks: "blush", sticker: "mole", eyeColor: "gray", nose: "line" } },
-  { id: "star", name: "반짝 별", look: { gender: "girl", hair: "short", hairColor: "brown", skin: "deep", outfit: "butter", glasses: false, eyes: "sparkle", brows: "soft", mouth: "open", cheeks: "blush", sticker: "heart", eyeColor: "sea", nose: "dot" } },
+  { id: "reader", name: "책벌레 똥머리", look: { gender: "girl", hair: "bun", hairColor: "choco", skin: "light", outfit: "coral", glasses: false, eyes: "round", brows: "soft", mouth: "smile", cheeks: "blush", sticker: "none", eyeColor: "ink", nose: "dot", top: "dress", bottom: "shorts", shoes: "flats", pattern: "none", hat: "none", hatColor: "coral" } },
+  { id: "glasses", name: "동그란 안경", look: { gender: "boy", hair: "bowl", hairColor: "brown", skin: "light", outfit: "mint", glasses: true, eyes: "dot", brows: "none", mouth: "smile", cheeks: "blush", sticker: "none", eyeColor: "brown", nose: "round", top: "cardigan", bottom: "pants", shoes: "sneakers", pattern: "none", hat: "none", hatColor: "mint" } },
+  { id: "pigtails", name: "양갈래 하늘", look: { gender: "girl", hair: "pigtails", hairColor: "black", skin: "light", outfit: "sky", glasses: false, eyes: "lash", brows: "soft", mouth: "smile", cheeks: "blush", sticker: "none", eyeColor: "ink", nose: "dot", top: "dress", bottom: "shorts", shoes: "rain", pattern: "cloud", hat: "straw", hatColor: "sky" } },
+  { id: "spiky", name: "삐죽 개구쟁이", look: { gender: "boy", hair: "spiky", hairColor: "caramel", skin: "tan", outfit: "butter", glasses: false, eyes: "round", brows: "straight", mouth: "open", cheeks: "blush", sticker: "none", eyeColor: "honey", nose: "round", top: "hoodie", bottom: "shorts", shoes: "sneakers", pattern: "none", hat: "cap", hatColor: "sky" } },
+  { id: "bob", name: "단발 살구", look: { gender: "girl", hair: "bob", hairColor: "brown", skin: "light", outfit: "apricot", glasses: false, eyes: "sparkle", brows: "soft", mouth: "smile", cheeks: "both", sticker: "none", eyeColor: "brown", nose: "dot", top: "collar", bottom: "skirt", shoes: "flats", pattern: "flower", hat: "beret", hatColor: "coral" } },
+  { id: "beanie", name: "털모자 민트", look: { gender: "girl", hair: "beanie", hairColor: "caramel", skin: "tan", outfit: "mint", glasses: false, eyes: "round", brows: "none", mouth: "cat", cheeks: "freckles", sticker: "star", eyeColor: "leaf", nose: "line", top: "hoodie", bottom: "jeans", shoes: "boots", pattern: "gingham", hat: "none", hatColor: "mint" } },
+  { id: "side", name: "가르마 하늘", look: { gender: "boy", hair: "side", hairColor: "choco", skin: "deep", outfit: "sky", glasses: false, eyes: "round", brows: "bold", mouth: "smile", cheeks: "blush", sticker: "none", eyeColor: "ink", nose: "round", top: "collar", bottom: "pants", shoes: "flats", pattern: "none", hat: "none", hatColor: "sky" } },
+  { id: "sleepy", name: "졸린 코랄", look: { gender: "boy", hair: "short", hairColor: "black", skin: "tan", outfit: "coral", glasses: false, eyes: "sleepy", brows: "soft", mouth: "line", cheeks: "blush", sticker: "mole", eyeColor: "gray", nose: "line", top: "tee", bottom: "jeans", shoes: "sneakers", pattern: "starmoon", hat: "bucket", hatColor: "butter" } },
+  { id: "star", name: "반짝 별", look: { gender: "girl", hair: "short", hairColor: "brown", skin: "deep", outfit: "butter", glasses: false, eyes: "sparkle", brows: "soft", mouth: "open", cheeks: "blush", sticker: "heart", eyeColor: "sea", nose: "dot", top: "cardigan", bottom: "skirt", shoes: "boots", pattern: "heart", hat: "none", hatColor: "coral" } },
 ];

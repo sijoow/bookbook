@@ -5,7 +5,7 @@ import * as THREE from "three";
 import { AVATAR_COLOR, type AvatarConfig, type Outfit } from "@/lib/avatar/config";
 import { approach } from "@/lib/library3d/motion";
 import { buildWearable } from "./deco3d";
-import { FACE_EYE, PAL, clothTexture, faceTexture, hairTexture, type Expr } from "./textures";
+import { FACE_EYE, PAL, cachedPattern, clothTexture, faceTexture, hairTexture, loadPattern, type Expr } from "./textures";
 import { Kit } from "./toon";
 
 export type Pose = "stand" | "sit" | "sitwave" | "read" | "reach" | "pull" | "carry" | "cheer" | "wave" | "show";
@@ -44,6 +44,13 @@ const POSES: Record<Pose, Partial<J>> = {
   wave: { aRX: -2.75, aRZ: -0.45, headZ: 0.1 },
   show: { aLX: -1.8, aRX: -1.8, aLZ: -0.36, aRZ: 0.36, headX: -0.06 },
 };
+
+/** 색을 조금 진하게 (치마·주머니) */
+function darker(hex: string, k = 0.18): string {
+  const n = parseInt(hex.slice(1), 16);
+  const c = (v: number) => Math.round(v * (1 - k)).toString(16).padStart(2, "0");
+  return `#${c((n >> 16) & 255)}${c((n >> 8) & 255)}${c(n & 255)}`;
+}
 
 /** 옷 가게 옷 (lib/deco/items 의 자리 body) */
 const DRESS_IDS = new Set(["stripes", "overalls", "dots", "sweater", "raincoat", "spacesuit"]);
@@ -98,10 +105,13 @@ export class Avatar {
   private outlines = new Map<number, THREE.ShaderMaterial>();
   // 옷 가게 옷 (자리 body) — 입으면 기본 옷(cfg.outfit 색) 대신
   private clothMat!: THREE.Material;
+  private sleeveMat!: THREE.Material; // 소매 (무늬는 몸통보다 크게 반복)
   private pantsMat!: THREE.Material;
   private sleeves: THREE.Mesh[] = [];
   private legMeshes: THREE.Mesh[] = [];
   private shorts: THREE.Mesh | null = null;
+  private legBase!: THREE.Material; // 고른 아랫옷의 다리 (맨다리·바지·청바지·스타킹)
+  private shortsBase: THREE.Material | null = null; // 고른 아랫옷 (반바지·치마…)
   private profile: THREE.Vector2[] = [];
   private dressed: string | null = null;
   private dressKit: Kit | null = null;
@@ -245,15 +255,38 @@ export class Avatar {
     this.trash.push(hair.map);
     const cloth = this.toon(AVATAR_COLOR.outfit[cfg.outfit]);
     const pants = this.toon(PAL.pants);
+    // 윗옷 무늬 (11-13) — 있으면 몸통·소매를 무늬 그림으로 (옷 색 대신 무늬 색 그대로)
+    const sleeve = cfg.pattern && cfg.pattern !== "none" ? this.toon("#ffffff") : cloth;
+    if (cfg.pattern && cfg.pattern !== "none") {
+      cloth.color.set("#ffffff");
+      const apply = (t: THREE.Texture) => {
+        const a = t.clone();
+        a.repeat.set(2, 1); // 무늬 그림 = 옆으로 거울 2장 — 위아래 한 번 (이음매는 목·밑단)
+        a.needsUpdate = true;
+        const b = t.clone();
+        b.repeat.set(1, 1);
+        b.needsUpdate = true;
+        this.trash.push(a, b);
+        cloth.map = a;
+        (sleeve as THREE.MeshToonMaterial).map = b;
+        cloth.needsUpdate = true;
+        sleeve.needsUpdate = true;
+      };
+      const ready = cachedPattern(cfg.pattern);
+      if (ready) apply(ready);
+      else void loadPattern(cfg.pattern).then((t) => t && apply(t));
+    }
     this.clothMat = cloth;
+    this.sleeveMat = sleeve;
     this.pantsMat = pants;
     const shoe = this.toon(PAL.shoe);
     const ink = this.toon(PAL.ink);
 
     this.root.add(this.body);
 
-    // 몸통 — 여자아이: 아래가 넓은 종 모양(원피스) / 남자아이: 곧은 셔츠 + 반바지 (아기 비율)
-    const boy = cfg.gender === "boy";
+    // 몸통 — 원피스: 아래가 넓은 종 모양 / 그 밖의 윗옷: 곧은 셔츠 + 아랫옷 (아기 비율). 11-13 윗옷·아랫옷·신발을 따로 고른다
+    const top = cfg.top ?? (cfg.gender === "boy" ? "tee" : "dress");
+    const boy = top !== "dress";
     const prof = (
       boy
         ? [
@@ -282,21 +315,85 @@ export class Avatar {
     this.torso = this.part(new THREE.LatheGeometry(prof, 30), cloth, 0.38);
     this.torso.position.y = 5;
     this.body.add(this.torso);
+    // 아랫옷 — 반바지(맨다리) · 긴바지 · 치마(맨다리) · 청바지. 원피스면 안 보이고 다리는 스타킹 색
+    const bottom = cfg.bottom ?? "shorts";
+    const DENIM = "#6f93bf";
+    const legColor = !boy ? PAL.pants : bottom === "pants" ? "#7c7368" : bottom === "jeans" ? DENIM : AVATAR_COLOR.skin[cfg.skin];
+    const legMat = this.toon(legColor);
+    this.legBase = legMat;
     if (boy) {
-      // 반바지 — 셔츠 아래로 보이게
-      const shorts = this.part(new THREE.CylinderGeometry(5.75, 6.0, 3.0, 28), pants, 0.36);
-      shorts.position.y = 6.3;
-      this.body.add(shorts);
-      this.shorts = shorts;
+      if (bottom === "skirt") {
+        // 치마 — 셔츠 아래로 퍼지는 짧은 치마 (윗옷 색을 조금 진하게)
+        const skirt = this.part(new THREE.CylinderGeometry(5.9, 7.3, 3.6, 28, 1, true), this.toon(darker(AVATAR_COLOR.outfit[cfg.outfit])), 0.34);
+        skirt.position.y = 6.0;
+        this.body.add(skirt);
+        this.shorts = skirt;
+        this.shortsBase = skirt.material as THREE.Material;
+      } else {
+        const color = bottom === "jeans" ? DENIM : bottom === "pants" ? "#7c7368" : PAL.pants;
+        const shorts = this.part(new THREE.CylinderGeometry(5.75, 6.0, 3.0, 28), this.toon(color), 0.36);
+        shorts.position.y = 6.3;
+        this.body.add(shorts);
+        this.shorts = shorts;
+        this.shortsBase = shorts.material as THREE.Material;
+      }
     }
-    // 단추 두 개
-    for (const [y, r] of [
-      [4.6, 6.62],
-      [7.4, 6.05],
-    ]) {
-      const b = this.part(new THREE.SphereGeometry(0.62, 10, 8), ink, 0);
-      b.position.set(0, y, r + 0.12);
-      this.torso.add(b);
+    // 윗옷 꾸밈 — 티셔츠: 단추 둘 · 카라 셔츠: 흰 깃 · 후드티: 뒤 모자 + 앞 주머니 + 끈 · 가디건: 가운데 여밈 + 단추 셋 · 원피스: 단추 둘
+    const rAt = (y: number) => {
+      for (let i = 1; i < prof.length; i++) if (y <= prof[i].y) {
+        const k = (y - prof[i - 1].y) / Math.max(0.001, prof[i].y - prof[i - 1].y);
+        return prof[i - 1].x + (prof[i].x - prof[i - 1].x) * Math.max(0, Math.min(1, k));
+      }
+      return 0;
+    };
+    const onFront = (m: THREE.Mesh, x: number, y: number, out = 0.12) => {
+      m.position.set(x, y, Math.sqrt(Math.max(0, rAt(y) ** 2 - x * x)) + out);
+      this.torso.add(m);
+      return m;
+    };
+    const cream = this.toon(PAL.cream);
+    if (top === "collar") {
+      const ring = this.part(new THREE.TorusGeometry(2.5, 0.55, 8, 28), cream, 0.24);
+      ring.rotation.x = Math.PI / 2;
+      ring.position.y = 12.1;
+      this.torso.add(ring);
+      for (const s of [-1, 1]) {
+        const flap = this.part(new THREE.ConeGeometry(1.35, 2.6, 3), cream, 0.2);
+        flap.rotation.set(Math.PI / 2 + 0.5, 0, s * 0.5 + Math.PI);
+        onFront(flap, s * 1.1, 11.3, 0.25);
+      }
+      for (const y of [8.6, 6.2]) onFront(this.part(new THREE.SphereGeometry(0.5, 10, 8), ink, 0), 0, y, 0.1);
+    } else if (top === "hoodie") {
+      const hood = this.part(new THREE.SphereGeometry(4.4, 18, 12), cloth, 0.3);
+      hood.scale.set(1.35, 0.8, 0.7);
+      hood.position.set(0, 16.3, -4.9);
+      this.body.add(hood);
+      const pocket = this.part(new THREE.BoxGeometry(6.4, 2.6, 0.7), this.toon(darker(AVATAR_COLOR.outfit[cfg.outfit])), 0.2);
+      onFront(pocket, 0, 4.3, 0.05).rotation.x = -0.08;
+      for (const s of [-1, 1]) {
+        const str = this.part(new THREE.CapsuleGeometry(0.22, 2.4, 4, 6), cream, 0);
+        onFront(str, s * 1.0, 10.6, 0.2);
+      }
+    } else if (top === "cardigan") {
+      const band = this.part(new THREE.BoxGeometry(1.1, 10.6, 0.5), cream, 0.16);
+      onFront(band, 0, 6.6, -0.05).rotation.x = -0.12;
+      for (const y of [9.6, 7.0, 4.4]) onFront(this.part(new THREE.SphereGeometry(0.5, 10, 8), this.toon(PAL.woodDark), 0), 0, y, 0.3);
+      for (const arm of [this.armL, this.armR]) {
+        const cuff = this.part(new THREE.TorusGeometry(1.86, 0.45, 8, 20), cream, 0.18);
+        cuff.rotation.x = Math.PI / 2;
+        cuff.position.y = -5.6;
+        arm.add(cuff);
+      }
+    } else {
+      // 티셔츠·원피스 — 단추 둘
+      for (const [y, r] of [
+        [4.6, 6.62],
+        [7.4, 6.05],
+      ]) {
+        const b = this.part(new THREE.SphereGeometry(0.62, 10, 8), ink, 0);
+        b.position.set(0, y, (boy ? rAt(y) : r) + 0.12);
+        this.torso.add(b);
+      }
     }
 
     // 다리 (엉덩이 관절)
@@ -305,13 +402,11 @@ export class Avatar {
       [this.legR, -3.0],
     ] as const) {
       leg.position.set(x, 5.4, 0);
-      const l = this.part(new THREE.CapsuleGeometry(2.25, 2.0, 6, 14), pants, 0.34);
+      const l = this.part(new THREE.CapsuleGeometry(2.25, 2.0, 6, 14), legMat, 0.34);
       l.position.y = -2.3;
       this.legMeshes.push(l);
-      const s = this.part(new THREE.SphereGeometry(2.55, 16, 12), shoe, 0.3);
-      s.scale.set(1, 0.62, 1.32);
-      s.position.set(0, -4.75, 0.75);
-      leg.add(l, s);
+      leg.add(l);
+      this.buildShoe(leg, cfg.shoes ?? "flats", shoe);
       this.body.add(leg);
     }
 
@@ -321,7 +416,7 @@ export class Avatar {
       [this.armR, -6.0],
     ] as const) {
       arm.position.set(x, 14.6, 0);
-      const a = this.part(new THREE.CapsuleGeometry(1.85, 3.6, 6, 12), cloth, 0.32);
+      const a = this.part(new THREE.CapsuleGeometry(1.85, 3.6, 6, 12), sleeve, 0.32);
       a.position.y = -3.0;
       this.sleeves.push(a);
       const h = this.part(new THREE.SphereGeometry(2.1, 16, 12), skin, 0.3);
@@ -351,12 +446,114 @@ export class Avatar {
       hc.add(e);
     }
     this.buildHair(hc, hair);
+    this.buildHat(hc);
     if (cfg.glasses) this.buildGlasses(hc, ink);
 
     this.tagAnchor.position.set(0, 14, 0);
     hc.add(this.tagAnchor);
     this.hold.position.set(0, 12.5, 8.6);
     this.body.add(this.hold);
+  }
+
+  /** 모자를 쓰나 (털모자 머리면 이미 모자라 안 씌운다) */
+  private hatOn(): boolean {
+    return Boolean(this.cfg.hat && this.cfg.hat !== "none" && this.cfg.hair !== "beanie");
+  }
+
+  /** 모자 (11-13) — 캡모자(챙 + 꼭지 단추 + 작은 별 패치) · 벙거지 · 밀짚모자(넓은 챙 + 리본) · 베레모(옆으로 기울임) */
+  private buildHat(hc: THREE.Group) {
+    if (!this.hatOn()) return;
+    const color = AVATAR_COLOR.outfit[this.cfg.hatColor ?? "sky"];
+    const mat = this.toon(color);
+    const g = new THREE.Group();
+    const kind = this.cfg.hat;
+    if (kind === "cap") {
+      const crown = this.part(new THREE.SphereGeometry(10.75, 32, 14, 0, Math.PI * 2, 0, 1.2), mat, 0.32);
+      crown.rotation.x = -0.12;
+      const brim = this.part(new THREE.CylinderGeometry(7.2, 7.2, 0.7, 28, 1, false, -Math.PI / 2, Math.PI), mat, 0.28);
+      brim.scale.set(1, 1, 0.95);
+      brim.position.set(0, 3.9, 6.6);
+      brim.rotation.x = 0.22;
+      const knob = this.part(new THREE.SphereGeometry(1.0, 12, 8), this.toon(PAL.cream), 0.2);
+      knob.position.set(0, 10.6, -1.3);
+      const patch = this.part(new THREE.CylinderGeometry(1.6, 1.6, 0.4, 5), this.toon(PAL.butter), 0.15); // 앞 별 패치 (오각)
+      patch.rotation.x = Math.PI / 2 - 0.55;
+      patch.position.set(0, 7.9, 6.9);
+      g.add(crown, brim, knob, patch);
+    } else if (kind === "bucket") {
+      const crown = this.part(new THREE.CylinderGeometry(8.4, 10.6, 6.4, 30), mat, 0.3);
+      crown.position.y = 6.2;
+      const top = this.part(new THREE.SphereGeometry(8.4, 30, 8, 0, Math.PI * 2, 0, 0.5), mat, 0.26);
+      top.position.y = 6.2 + 3.2 - 8.4 * Math.cos(0.5);
+      const brim = this.part(new THREE.CylinderGeometry(11.0, 14.2, 2.6, 34, 1, true), mat, 0.26);
+      brim.position.y = 2.6;
+      const band = this.part(new THREE.TorusGeometry(10.5, 0.45, 8, 34), this.toon(PAL.cream), 0.14);
+      band.rotation.x = Math.PI / 2;
+      band.position.y = 3.6;
+      g.add(crown, top, brim, band);
+      g.rotation.x = -0.08;
+    } else if (kind === "straw") {
+      const straw = this.toon("#e8cf8a");
+      const brim = this.part(new THREE.CylinderGeometry(16.5, 16.5, 0.7, 40), straw, 0.26);
+      brim.position.y = 4.2;
+      const crown = this.part(new THREE.CylinderGeometry(8.6, 9.6, 5.6, 30), straw, 0.28);
+      crown.position.y = 7.3;
+      const ribbon = this.part(new THREE.TorusGeometry(9.45, 0.9, 8, 32), mat, 0.18);
+      ribbon.rotation.x = Math.PI / 2;
+      ribbon.position.y = 5.6;
+      const bow = this.part(new THREE.SphereGeometry(1.5, 12, 8), mat, 0.18);
+      bow.scale.set(1.5, 0.9, 0.6);
+      bow.position.set(6.6, 5.8, 6.4);
+      g.add(brim, crown, ribbon, bow);
+      g.rotation.x = -0.1;
+    } else if (kind === "beret") {
+      const top = this.part(new THREE.SphereGeometry(10.4, 30, 16), mat, 0.3);
+      top.scale.set(1.18, 0.42, 1.14);
+      top.position.y = 7.8;
+      const stem = this.part(new THREE.CylinderGeometry(0.45, 0.6, 1.6, 8), mat, 0.14);
+      stem.position.y = 12.3;
+      g.add(top, stem);
+      g.rotation.z = -0.22;
+      g.position.x = 0.9;
+    }
+    hc.add(g);
+  }
+
+  /** 신발 (11-13) — 단화(갈색 동글) · 운동화(흰 몸통 + 코랄 밑창) · 부츠(갈색 목) · 장화(노란 목) */
+  private buildShoe(leg: THREE.Group, kind: string, brown: THREE.Material) {
+    const foot = (mat: THREE.Material) => {
+      const s = this.part(new THREE.SphereGeometry(2.55, 16, 12), mat, 0.3);
+      s.scale.set(1, 0.62, 1.32);
+      s.position.set(0, -4.75, 0.75);
+      leg.add(s);
+      return s;
+    };
+    if (kind === "sneakers") {
+      foot(this.toon("#fbf6ee"));
+      const sole = this.part(new THREE.CylinderGeometry(2.6, 2.6, 0.55, 18), this.toon(PAL.coral), 0.16);
+      sole.scale.set(1, 1, 1.32);
+      sole.position.set(0, -6.05, 0.75);
+      leg.add(sole);
+      const lace = this.part(new THREE.BoxGeometry(1.3, 0.25, 0.9), this.toon(PAL.sky), 0);
+      lace.position.set(0, -3.95, 2.3);
+      leg.add(lace);
+      return;
+    }
+    if (kind === "boots" || kind === "rain") {
+      const mat = kind === "rain" ? this.toon(PAL.butter) : this.toon("#8a5f40");
+      foot(mat);
+      const shaft = this.part(new THREE.CylinderGeometry(2.45, 2.35, 3.6, 18), mat, 0.28);
+      shaft.position.set(0, -3.0, 0.1);
+      leg.add(shaft);
+      if (kind === "boots") {
+        const cuff = this.part(new THREE.TorusGeometry(2.45, 0.42, 8, 18), this.toon(PAL.cream), 0.16);
+        cuff.rotation.x = Math.PI / 2;
+        cuff.position.set(0, -1.2, 0.1);
+        leg.add(cuff);
+      }
+      return;
+    }
+    foot(brown);
   }
 
   /** 머리 위를 덮는 모자 모양 (앞쪽을 들어 이마가 보이게) */
@@ -444,9 +641,10 @@ export class Avatar {
       return;
     }
     if (style === "spiky") {
-      // 삐죽 — 짧은 머리 위로 뾰족뾰족
+      // 삐죽 — 짧은 머리 위로 뾰족뾰족 (모자를 쓰면 눌려서 안 보인다)
       this.cap(hc, hair, 10.05, 1.55, 0.4);
       bangs(3, 1.12);
+      if (this.hatOn()) return;
       const spikes: Array<[number, number]> = [
         [0.25, 0],
         [0.55, 0.9],
@@ -574,14 +772,15 @@ export class Avatar {
     this.dressParts = [];
     this.dressKit?.dispose();
     this.dressKit = null;
-    const set = (top: THREE.Material, arms: THREE.Material, legs: THREE.Material) => {
+    // legs 를 안 주면 고른 아랫옷 그대로 (다리·반바지/치마)
+    const set = (top: THREE.Material, arms: THREE.Material, legs?: THREE.Material) => {
       this.torso.material = top;
       for (const s of this.sleeves) s.material = arms;
-      for (const l of this.legMeshes) l.material = legs;
-      if (this.shorts) this.shorts.material = legs;
+      for (const l of this.legMeshes) l.material = legs ?? this.legBase;
+      if (this.shorts) this.shorts.material = legs ?? this.shortsBase ?? this.pantsMat;
     };
     if (!id || !DRESS_IDS.has(id)) {
-      set(this.clothMat, this.clothMat, this.pantsMat);
+      set(this.clothMat, this.sleeveMat);
       return;
     }
     const kit = (this.dressKit = new Kit(this.gradient));
@@ -621,7 +820,7 @@ export class Avatar {
     const wood = kit.toon(PAL.woodDark);
     switch (id) {
       case "stripes": {
-        set(pat("stripes", PAL.coral, PAL.cream, [1, 4]), pat("stripes", PAL.coral, PAL.cream, [1, 2]), this.pantsMat);
+        set(pat("stripes", PAL.coral, PAL.cream, [1, 4]), pat("stripes", PAL.coral, PAL.cream, [1, 2]));
         ring(12.25, 2.45, 0.42, kit.toon(PAL.coral)); // 목 둘레
         break;
       }
@@ -645,7 +844,7 @@ export class Avatar {
         break;
       }
       case "dots": {
-        set(pat("dots", PAL.coral, PAL.cream, [9, 3]), pat("dots", PAL.coral, PAL.cream, [3, 2]), this.pantsMat);
+        set(pat("dots", PAL.coral, PAL.cream, [9, 3]), pat("dots", PAL.coral, PAL.cream, [3, 2]));
         // 흰 동그란 깃 — 목 둘레 + 앞 두 날개
         ring(12.1, 2.55, 0.62, cream);
         for (const s of [-1, 1]) {
@@ -658,7 +857,7 @@ export class Avatar {
         break;
       }
       case "sweater": {
-        set(pat("knit", PAL.mint, "#5fa58c", [10, 1]), pat("knit", PAL.mint, "#5fa58c", [4, 1]), this.pantsMat);
+        set(pat("knit", PAL.mint, "#5fa58c", [10, 1]), pat("knit", PAL.mint, "#5fa58c", [4, 1]));
         ring(12.2, 2.75, 1.25, kit.toon(PAL.mint)); // 목 폴라
         ring(0.9, rAt(0.9) + 0.05, 0.55, kit.toon("#7fbfa6")); // 밑단 골
         for (const arm of [this.armL, this.armR]) {
@@ -671,7 +870,7 @@ export class Avatar {
       }
       case "raincoat": {
         const yellow = kit.toon(PAL.butter);
-        set(yellow, yellow, this.pantsMat);
+        set(yellow, yellow);
         ring(12.15, 2.7, 0.85, yellow); // 깃
         // 뒤로 넘긴 모자
         const hood = kit.part(new THREE.SphereGeometry(4.6, 20, 14), yellow, 0.3);
@@ -718,6 +917,7 @@ export class Avatar {
       if (DRESS_IDS.has(id)) continue;
       const w = buildWearable(id, this.wornKit, this.cfg.outfit);
       if (!w) continue;
+      if (w.anchor === "head" && this.hatOn()) continue; // 모자를 쓰면 머리 소품은 모자에 가려 숨김 (가진 건 그대로)
       (w.anchor === "head" ? this.headCenter : this.body).add(w.obj);
       this.worn.set(id, w.obj);
     }

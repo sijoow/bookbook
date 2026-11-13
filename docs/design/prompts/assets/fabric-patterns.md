@@ -1,0 +1,9 @@
+Use the reference image only as a style guide: its cute hand-drawn "dakku" scrapbook look — soft warm-brown pen lines, flat pastel colors with a subtle colored-pencil texture, cozy and simple. Do not copy any of its stickers.
+
+Create a sheet of exactly 12 separate SQUARE FABRIC SWATCHES on a fully transparent background, laid out in a strict grid of 4 columns and 3 rows. Each swatch is a flat, perfectly square tile completely filled edge to edge with a small, evenly spaced repeating pattern (like children's clothing fabric), seen straight on. Leave clear empty transparent gaps between the squares; squares do not touch. No borders, no frames, no shadows, no curling, no stitching around the edges. Motifs are small (about 8 to 12 repeats across each square) and evenly distributed so the tile can repeat. Use only these colors: apricot orange, mint green, butter yellow, soft coral, sky blue, cream, and warm brown ink for fine outlines.
+
+Row 1, left to right: tiny five-petal cream and coral flowers with butter centers on a mint background; little red-coral cherry pairs with green stems on a cream background; small coral strawberries with tiny cream seeds on a butter background; tiny round light-brown teddy bear faces on a sky-blue background.
+Row 2, left to right: tiny cream bunny faces with coral inner ears on a soft coral-pink background; small fluffy cream clouds on a sky-blue background; tiny butter stars and crescent moons on a sky-blue background; small coral hearts on a cream background.
+Row 3, left to right: small butter-yellow lemon slices on a mint background; tiny mint four-leaf clovers on a butter background; coral and cream gingham check; soft horizontal stripes repeating apricot, butter, mint, sky and coral.
+
+No text, no letters, no numbers, no labels, no grid lines. Not 3D, no glossy highlights, no gradients, no purple.

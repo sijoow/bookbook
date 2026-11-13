@@ -19,8 +19,11 @@ import {
   EYES_LABEL,
   EYE_COLORS,
   EYE_COLOR_LABEL,
+  BOTTOMS,
+  BOTTOM_LABEL,
   GENDERS,
   GENDER_LABEL,
+  GENDER_TOP,
   HAIR_COLORS,
   HAIR_COLOR_LABEL,
   HAIR_FOR,
@@ -32,16 +35,23 @@ import {
   NOSE_LABEL,
   OUTFITS,
   OUTFIT_LABEL,
+  PATTERNS,
+  PATTERN_LABEL,
   PETS,
   PET_LABEL,
   PRESETS,
+  SHOES,
+  SHOES_LABEL,
   SKINS,
   SKIN_LABEL,
   STICKERS,
   STICKER_LABEL,
+  TOPS,
+  TOP_LABEL,
   type AvatarConfig,
 } from "@/lib/avatar/config";
 import type { LibraryBook } from "@/lib/books/types";
+import { CLOTHES } from "@/lib/deco/items";
 import { FEATURES } from "@/lib/features";
 import type { DecoView, StageFocus } from "./library3d/world";
 import m from "./maker.module.css";
@@ -64,7 +74,19 @@ const TABS: Array<{ id: MakerTab; label: string; focus: StageFocus }> = [
 const ICON: Record<MakerTab, string> = { preset: "preset", face: "face", hair: "hair", eyes: "eyes", mouth: "mouth", outfit: "outfit", pet: "pet" };
 
 type Opt = { key: string; label: string; on: boolean; pick: () => void; img?: string; color?: string };
-type Group = { title: string; kind: "thumbs" | "swatches"; wide?: boolean; named?: boolean; opts: Opt[] }; // named = 그림 아래 이름 (예시 모습만 — 나머지는 그림으로만 고른다)
+type Group = { title: string; kind: "thumbs" | "swatches"; wide?: boolean; named?: boolean; cover?: boolean; opts: Opt[] }; // named = 그림 아래 이름 (예시 모습만 — 나머지는 그림으로만 고른다)
+
+/** 옷 탭 그림 칸 열쇠 — 그 칸이 바꾸는 값만 빼고 나머지가 같으면 같은 그림 */
+const outfitKeys = (v: AvatarConfig) => {
+  const j = (o: Partial<AvatarConfig>) => JSON.stringify({ ...v, ...o });
+  return {
+    top: j({ top: "dress" }),
+    bottom: j({ bottom: "shorts", top: v.top === "dress" ? "tee" : v.top }),
+    shoes: j({ shoes: "flats" }),
+    gender: j({ gender: "girl", top: "dress" }),
+    glasses: j({ glasses: false }),
+  };
+};
 
 /** 얼굴 그림 칸 열쇠 (같은 얼굴이면 다시 그리지 않는다) */
 const look = (v: AvatarConfig) => `${v.skin}|${v.eyes}|${v.brows}|${v.mouth}|${v.cheeks}|${v.sticker}|${v.eyeColor}|${v.nose}`;
@@ -92,6 +114,9 @@ export function AvatarMaker({
   const [thumbs, setThumbs] = useState<Record<string, string>>({});
   const swipe = useRef<{ x: number; y: number } | null>(null);
   const focus = TABS.find((t) => t.id === tab)?.focus ?? "body";
+  // 옷 탭에선 상점 옷(한 벌)을 잠깐 벗겨 기본 옷이 보이게
+  const shopWear = CLOTHES.find((c) => deco?.worn.includes(c.id)) ?? null;
+  const stageDeco = useMemo(() => (tab === "outfit" && deco && shopWear ? { ...deco, worn: deco.worn.filter((id) => id !== shopWear.id) } : deco), [tab, deco, shopWear]);
 
   // 그림 칸 — 고른 탭에 필요한 것만, 다 그린 것부터 보인다
   useEffect(() => {
@@ -140,19 +165,20 @@ export function AvatarMaker({
         );
         add(styles.map((h, i) => [`hair:${h}|${v.hairColor}|${v.skin}|${v.outfit}`, imgs[i]]));
       } else if (tab === "outfit") {
-        const bodies = await avatarThumbs(
-          GENDERS.map((g) => ({ ...v, gender: g })),
-          "bust",
-        );
-        const glasses = await avatarThumbs(
-          [false, true].map((g) => ({ ...v, glasses: g })),
-          "head",
-        );
-        const rest = JSON.stringify({ ...v, gender: "", glasses: false });
+        const k = outfitKeys(v);
+        // 윗옷 먼저 (가장 많이 고른다) → 아랫옷 · 신발 → 몸 · 안경
+        const tops = await avatarThumbs(TOPS.map((t) => ({ ...v, top: t })), "torso");
+        add(TOPS.map((t, i): [string, string] => [`top:${t}|${k.top}`, tops[i]]));
+        const bottoms = await avatarThumbs(BOTTOMS.map((b) => ({ ...v, top: v.top === "dress" ? "tee" : v.top, bottom: b })), "legs");
+        add(BOTTOMS.map((b, i): [string, string] => [`bottom:${b}|${k.bottom}`, bottoms[i]]));
+        const shoes = await avatarThumbs(SHOES.map((sh) => ({ ...v, shoes: sh })), "feet");
+        add(SHOES.map((sh, i): [string, string] => [`shoes:${sh}|${k.shoes}`, shoes[i]]));
+        const bodies = await avatarThumbs(GENDERS.map((g) => ({ ...v, gender: g, top: GENDER_TOP[g] })), "bust");
+        const glasses = await avatarThumbs([false, true].map((g) => ({ ...v, glasses: g })), "head");
         add([
-          ...GENDERS.map((g, i): [string, string] => [`gender:${g}|${rest}`, bodies[i]]),
-          [`glasses:0|${rest}|${v.gender}`, glasses[0]],
-          [`glasses:1|${rest}|${v.gender}`, glasses[1]],
+          ...GENDERS.map((g, i): [string, string] => [`gender:${g}|${k.gender}`, bodies[i]]),
+          [`glasses:0|${k.glasses}`, glasses[0]],
+          [`glasses:1|${k.glasses}`, glasses[1]],
         ]);
       }
     })().catch(() => {
@@ -208,10 +234,26 @@ export function AvatarMaker({
           { title: "입", kind: "thumbs", wide: true, opts: opt("mouth", MOUTHS, MOUTH_LABEL, v.mouth, (k) => `mouth:${k}|${look(v)}`, (mouth) => ({ mouth })) },
         ];
       case "outfit": {
-        const rest = JSON.stringify({ ...v, gender: "", glasses: false });
+        const k = outfitKeys(v);
         return [
-          { title: "몸", kind: "thumbs", opts: opt("gender", GENDERS, GENDER_LABEL, v.gender, (k) => `gender:${k}|${rest}`, (gender) => ({ gender })) },
-          { title: "옷 색", kind: "swatches", opts: OUTFITS.map((k) => ({ key: k, label: OUTFIT_LABEL[k], on: v.outfit === k, pick: () => onChange({ outfit: k }), color: AVATAR_COLOR.outfit[k] })) },
+          { title: "윗옷", kind: "thumbs", opts: opt("top", TOPS, TOP_LABEL, v.top, (x) => `top:${x}|${k.top}`, (top) => ({ top })) },
+          { title: v.pattern === "none" ? "윗옷 색" : "윗옷 색 (무늬를 고르면 무늬 색 그대로)", kind: "swatches", opts: OUTFITS.map((x) => ({ key: x, label: OUTFIT_LABEL[x], on: v.outfit === x, pick: () => onChange({ outfit: x, pattern: "none" }), color: AVATAR_COLOR.outfit[x] })) },
+          {
+            title: "무늬",
+            kind: "thumbs",
+            cover: true,
+            opts: PATTERNS.map((p) => ({
+              key: `pattern:${p}`,
+              label: PATTERN_LABEL[p],
+              on: v.pattern === p,
+              pick: () => onChange({ pattern: p }),
+              // 무늬 없음 = 지금 옷 색 한 장 (그림만으로 고르게)
+              img: p === "none" ? `data:image/svg+xml;utf8,<svg xmlns=%27http://www.w3.org/2000/svg%27 width=%2764%27 height=%2764%27><rect width=%2764%27 height=%2764%27 rx=%2710%27 fill=%27${encodeURIComponent(AVATAR_COLOR.outfit[v.outfit])}%27/></svg>` : `/img/patterns/${p}.webp`,
+            })),
+          },
+          { title: v.top === "dress" ? "아랫옷 (원피스엔 가려져요)" : "아랫옷", kind: "thumbs", opts: opt("bottom", BOTTOMS, BOTTOM_LABEL, v.bottom, (x) => `bottom:${x}|${k.bottom}`, (bottom) => ({ bottom, ...(v.top === "dress" ? { top: "tee" as const } : {}) })) },
+          { title: "신발", kind: "thumbs", opts: opt("shoes", SHOES, SHOES_LABEL, v.shoes, (x) => `shoes:${x}|${k.shoes}`, (shoes) => ({ shoes })) },
+          { title: "몸 · 목소리", kind: "thumbs", opts: opt("gender", GENDERS, GENDER_LABEL, v.gender, (x) => `gender:${x}|${k.gender}`, (gender) => ({ gender, top: GENDER_TOP[gender] })) },
           {
             title: "안경",
             kind: "thumbs",
@@ -220,7 +262,7 @@ export function AvatarMaker({
               label: g ? "안경" : "안경 없이",
               on: v.glasses === g,
               pick: () => onChange({ glasses: g }),
-              img: t(`glasses:${g ? 1 : 0}|${rest}|${v.gender}`),
+              img: t(`glasses:${g ? 1 : 0}|${k.glasses}`),
             })),
           },
         ];
@@ -242,7 +284,7 @@ export function AvatarMaker({
   return (
     <div className={m.maker}>
       <div className={m.stageCol}>
-        <LibraryStage mode="preview" books={NO_BOOKS} avatar={v} name={name} me deco={deco} focus={focus} stand className={m.stageSlot} />
+        <LibraryStage mode="preview" books={NO_BOOKS} avatar={v} name={name} me deco={stageDeco} focus={focus} stand className={m.stageSlot} />
       </div>
       <div className={m.panel}>
         <div className={m.tabs}>
@@ -274,12 +316,13 @@ export function AvatarMaker({
             if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(e.clientY - s.y) * 2) move(dx < 0 ? 1 : -1); // 좌우로 밀면 옆 탭
           }}
         >
+          {tab === "outfit" && shopWear && <p className={m.groupTitle}>상점 옷 &lsquo;{shopWear.label}&rsquo;을(를) 입고 있어요 — 여기선 벗고 기본 옷을 보여 줘요</p>}
           {FEATURES.photoAvatar && tab === "preset" && <PhotoAvatar value={v} onChange={onChange} onDone={() => setTab("face")} />}
           {groups.map((g) => (
             <section key={g.title}>
               <h4 className={m.groupTitle}>{g.title}</h4>
               {g.kind === "thumbs" ? (
-                <div className={`${m.grid} ${g.wide ? m.gridWide : ""}`}>
+                <div className={`${m.grid} ${g.wide ? m.gridWide : ""} ${g.cover ? m.gridCover : ""}`}>
                   {g.opts.map((o) => (
                     <button key={o.key} type="button" className={`${m.tile} ${o.on ? m.tileOn : ""}`} aria-pressed={o.on} aria-label={o.label} onClick={o.pick}>
                       {o.img ? <img src={o.img} alt="" /> : <span className={m.tileText}>{o.label.slice(0, 4)}</span>}

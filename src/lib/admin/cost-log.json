@@ -70,5 +70,13 @@
     "amount": 84,
     "unit": "credits",
     "note": "이번 달 사용 53428"
+  },
+  {
+    "date": "2026-11-13",
+    "what": "fabric-patterns.png (1536x1024, high)",
+    "tool": "GPT 그림",
+    "amount": 0.27,
+    "unit": "usd",
+    "note": "docs/design/prompts/assets/fabric-patterns.md"
   }
 ]

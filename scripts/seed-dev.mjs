@@ -3,8 +3,11 @@
 //   npm run dev:seed   임시 Mongo + 서버를 켜면서 채우기
 //   npm run seed       dev 서버가 이미 켜져 있을 때 (이미 책이 있는 계정은 건너뜀)
 // 책 정보는 YES24 에서 그때그때 찾는다 (키가 없으면 샘플 모드라 몇 권만 들어간다).
+//   --only=jimin,hyunwoo,mom   이 계정들만 (베타 계정 fe 를 채우기 전에 친구 셋만 — scripts/seed-beta.mjs)
 
 const B = process.env.SEED_BASE ?? "http://localhost:7000";
+const ONLY = process.argv.find((a) => a.startsWith("--only="))?.slice(7).split(",") ?? null;
+const want = (who) => !ONLY || ONLY.includes(who);
 
 async function call(who, method, path, body) {
   const r = await fetch(B + path, {
@@ -118,19 +121,22 @@ if (!health?.ok) {
   process.exit(1);
 }
 console.log(`시험 데이터 넣는 중 — ${B} (YES24: ${health.yes24})`);
-for (const who of Object.keys(PLAN)) await fill(who);
+for (const who of Object.keys(PLAN)) if (want(who)) await fill(who);
 
 // 친구: '나'가 초대 링크를 만들고 셋이 수락 (이미 친구면 그대로)
-const { code } = await call("dev", "POST", "/api/invites");
-for (const who of ["jimin", "hyunwoo", "mom"]) await call(who, "POST", `/api/invites/${code}`);
+if (want("dev")) {
+  const { code } = await call("dev", "POST", "/api/invites");
+  for (const who of ["jimin", "hyunwoo", "mom"]) if (want(who)) await call(who, "POST", `/api/invites/${code}`);
+}
 // 친구 집은 저마다 다르게 — 집(벽·바닥·창·구도·러그 색) · 아바타 소품 · 놓은 물건. 베타에서 꾸미기가 얼마나 다양한지 친구 집에서 보이게 (11-13 사용자)
 // 모자라는 포인트는 관리자('나')가 '시험 데이터'로 채워 주고, 상점에서 사서 배달 상자를 열고, 하고/놓을 것만 켠다. '나'는 직접 사 보게 남겨 둔다
 const LOOK = {
   jimin: { house: "attic", worn: ["flowers", "dots"], placed: ["lights", "frame", "plant"] }, // 다락방 — 꽃 화관·땡땡이 원피스, 줄 전구·액자·화분
-  hyunwoo: { house: "cabin", worn: ["scarf", "bag", "sweater"], placed: ["table", "lamp", "cat"] }, // 오두막 — 목도리·책가방·니트 스웨터, 탁자와 머그·스탠드·고양이
-  mom: { house: "sunny", worn: ["crown", "raincoat"], placed: ["plant", "table", "lights", "frame"] }, // 창가 원룸 — 왕관·노란 우비, 화분·탁자·줄 전구·액자
+  hyunwoo: { house: "cabin", worn: ["scarf", "bag", "sweater"], placed: ["table", "lamp", "cat", "shelf-wide", "paint", "ladder"], paint: "mint" }, // 오두막 — 목도리·책가방·니트 스웨터, 탁자와 머그·스탠드·고양이, 넓은 민트 책장·사다리
+  mom: { house: "sunny", worn: ["crown", "raincoat"], placed: ["plant", "table", "lights", "frame", "shelf-tall", "paint"], paint: "coral" }, // 창가 원룸 — 왕관·노란 우비, 화분·탁자·줄 전구·액자, 높은 코랄 책장
 };
 for (const [who, look] of Object.entries(LOOK)) {
+  if (!want(who)) continue;
   await call(who, "PATCH", "/api/me", { house: look.house });
   const shop = await call(who, "GET", "/api/shop");
   const item = (id) => shop.items.find((x) => x.id === id);
@@ -142,9 +148,10 @@ for (const [who, look] of Object.entries(LOOK)) {
     const r = await fetch(`${B}/api/me/gift`, { method: "POST", headers: { Cookie: `bb_dev=${who}` } });
     if (!r.ok) break;
   }
-  await call(who, "PATCH", "/api/me", { deco: { worn: look.worn, placed: look.placed } });
+  await call(who, "PATCH", "/api/me", { deco: { worn: look.worn, placed: look.placed, ...(look.paint ? { paint: look.paint } : {}) } });
   console.log(`  ${who}: ${look.house} · 소품 ${look.worn.join("·")} · 놓은 것 ${look.placed.join("·")}${need.length ? ` (새로 산 것 ${need.join("·")})` : ""}`);
 }
+if (!want("dev")) process.exit(0); // 친구만 채웠으면 여기까지
 const me = await call("dev", "GET", "/api/me");
 console.log(`'나' 포인트 ${me.points} · 배달 상자 ${me.pending}개 (꾸미기 · 상점에서 사면 상자로 와요)`);
 const { friends } = await call("dev", "GET", "/api/friends");

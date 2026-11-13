@@ -516,6 +516,32 @@ export function hairTexture(base: string): THREE.CanvasTexture {
   return t;
 }
 
+/** 옷 무늬 그림 (GPT 천 무늬 — 거울로 이어 붙여 반복해도 이음매가 없다). 한 번 불러온 건 아바타끼리 나눠 쓴다 */
+const patternCache = new Map<string, THREE.Texture>();
+const patternWait = new Map<string, Promise<THREE.Texture | null>>();
+export const patternUrl = (id: string) => `/img/patterns/${id}.webp`;
+export function cachedPattern(id: string): THREE.Texture | null {
+  return patternCache.get(id) ?? null;
+}
+export function loadPattern(id: string): Promise<THREE.Texture | null> {
+  if (!id || id === "none") return Promise.resolve(null);
+  const hit = patternCache.get(id);
+  if (hit) return Promise.resolve(hit);
+  let w = patternWait.get(id);
+  if (!w) {
+    w = loadTexture(patternUrl(id))
+      .then((t) => {
+        t.wrapS = THREE.RepeatWrapping;
+        t.wrapT = THREE.RepeatWrapping;
+        patternCache.set(id, t);
+        return t;
+      })
+      .catch(() => null);
+    patternWait.set(id, w);
+  }
+  return w;
+}
+
 /** 별 스티커 (다 읽은 책·축하) — 버터색 별 + 갈색 테두리 + 흰 테두리 */
 export function starTexture(fill = PAL.butter): THREE.CanvasTexture {
   const [c, x] = canvas(128, 128);

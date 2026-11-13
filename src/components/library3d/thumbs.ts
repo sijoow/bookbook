@@ -5,9 +5,9 @@
 import * as THREE from "three";
 import type { AvatarConfig } from "@/lib/avatar/config";
 import { Avatar } from "./avatar3d";
-import { toonGradient } from "./textures";
+import { loadPattern, toonGradient } from "./textures";
 
-export type ThumbShot = "head" | "bust";
+export type ThumbShot = "head" | "bust" | "torso" | "legs" | "feet"; // torso = 몸통 (윗옷), legs = 허리 아래 (아랫옷), feet = 발 (신발)
 
 /** 같은 그림을 다시 그리지 않게 (설정값 + 찍는 자리 → 그림) */
 const cache = new Map<string, string>();
@@ -18,6 +18,7 @@ export async function avatarThumbs(cfgs: AvatarConfig[], shot: ThumbShot, opts: 
   const keyOf = (c: AvatarConfig) => `${shot}|${face}|${size}|${JSON.stringify(c)}`;
   const todo = cfgs.filter((c) => !cache.has(keyOf(c)));
   if (todo.length) {
+    await Promise.all([...new Set(todo.map((c) => c.pattern ?? "none"))].map((p) => loadPattern(p))); // 무늬 그림을 먼저 받아 두고 찍는다
     let renderer: THREE.WebGLRenderer;
     const canvas = document.createElement("canvas");
     canvas.width = canvas.height = size;
@@ -39,6 +40,15 @@ export async function avatarThumbs(cfgs: AvatarConfig[], shot: ThumbShot, opts: 
       // 머리 가운데(바닥에서 ≈ 26cm) 조금 위, 비스듬히 오른쪽에서 — 포니테일·땋은 머리·긴 머리 뒷모습도 보이게 (11-13)
       cam.position.set(Math.sin(0.55) * 62, 29.5, Math.cos(0.55) * 62);
       cam.lookAt(0, 27.2, 0);
+    } else if (shot === "torso") {
+      cam.position.set(Math.sin(0.3) * 52, 17, Math.cos(0.3) * 52); // 몸통 — 윗옷 (얼굴은 위에 조금)
+      cam.lookAt(0, 12.8, 0);
+    } else if (shot === "legs") {
+      cam.position.set(Math.sin(0.35) * 50, 9, Math.cos(0.35) * 50); // 허리 아래 — 아랫옷
+      cam.lookAt(0, 5.2, 0);
+    } else if (shot === "feet") {
+      cam.position.set(Math.sin(0.5) * 34, 6, Math.cos(0.5) * 34); // 발 — 신발
+      cam.lookAt(0, 1.2, 1);
     } else {
       cam.position.set(0, 27, 86); // 머리부터 허리까지
       cam.lookAt(0, 23, 0);
