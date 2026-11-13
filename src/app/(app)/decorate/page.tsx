@@ -167,10 +167,11 @@ export default function Decorate() {
     if (me.deco.owned.includes(item.id)) {
       const on = item.kind === "avatar" ? me.deco.worn.includes(item.id) : me.deco.placed.includes(item.id);
       return (
-        <button key={item.id} type="button" className={`${ui.stickerTile} ${on ? ui.stickerOn : ""}`} onClick={() => toggle(item)} aria-pressed={on} aria-label={`${item.label} ${on ? "빼기" : "하기"}`}>
+        <button key={item.id} type="button" className={`${ui.stickerTile} ${on ? ui.stickerOn : ""}`} onClick={() => toggle(item)} aria-pressed={on} aria-label={`${item.label} ${on ? (item.kind === "room" ? "치우기" : "빼기") : item.kind === "room" ? "배치하기" : "하기"}`}>
           {img}
           <span>{item.label}</span>
-          <small>{on ? (item.kind === "avatar" ? (item.slot === "body" ? "입는 중" : `${SLOT_LABEL[item.slot ?? "head"]}에 하는 중`) : item.kind === "shelf" ? "쓰는 중" : "놓음") : "꺼 둠"}</small>
+          {/* 방 물건은 '배치됨 / 배치 전' — 누르면 바뀐다 (11-13 사용자: "누르면 쓰게, 배치·배치 전 이런 식으로 관리") */}
+          <small>{item.kind === "room" ? (on ? "배치됨" : "배치 전") : on ? (item.kind === "avatar" ? (item.slot === "body" ? "입는 중" : `${SLOT_LABEL[item.slot ?? "head"]}에 하는 중`) : "쓰는 중") : "꺼 둠"}</small>
         </button>
       );
     }
