@@ -14,4 +14,6 @@ export const FEATURES = {
   yes24HomeCredit: false,
   /** 옷 무늬 12 (GPT 천 무늬) — 11-13 사용자: "무늬가 아니라 일반적인 옷" → 숨기고 옷 모양을 늘림. true 면 꾸미기 창 옷 탭에 다시 나온다 */
   patterns: false,
+  /** Blender 로 만든 부위(GLB) — 단발 머리·베레모부터 (scripts/blender/parts.py → public/models/parts). false 면 예전 코드 모양 */
+  blenderParts: true,
 } as const;

@@ -29,8 +29,6 @@ import {
   HAIR_FOR,
   HAIR_LABEL,
   HAIR_STYLES,
-  HATS,
-  HAT_LABEL,
   MOUTHS,
   MOUTH_LABEL,
   NOSES,
@@ -166,10 +164,6 @@ export function AvatarMaker({
           { face: false },
         );
         add(styles.map((h, i) => [`hair:${h}|${v.hairColor}|${v.skin}|${v.outfit}`, imgs[i]]));
-        // 모자 — 지금 머리에 씌워 본 모습 (털모자 머리면 모자 대신 짧은 머리로)
-        const base = { ...v, hair: v.hair === "beanie" ? ("short" as const) : v.hair, glasses: false };
-        const hats = await avatarThumbs(HATS.map((h) => ({ ...base, hat: h })), "head", { face: false });
-        add(HATS.map((h, i): [string, string] => [`hat:${h}|${JSON.stringify({ ...base, hat: "" })}`, hats[i]]));
       } else if (tab === "outfit") {
         const k = outfitKeys(v);
         // 윗옷 먼저 (가장 많이 고른다) → 아랫옷 · 신발 → 몸 · 안경
@@ -226,15 +220,7 @@ export function AvatarMaker({
         return [
           { title: "머리 모양", kind: "thumbs", opts: opt("hair", styles, HAIR_LABEL, v.hair, (k) => `hair:${k}|${v.hairColor}|${v.skin}|${v.outfit}`, (hair) => ({ hair })) },
           { title: "머리 색", kind: "swatches", opts: HAIR_COLORS.map((k) => ({ key: k, label: HAIR_COLOR_LABEL[k], on: v.hairColor === k, pick: () => onChange({ hairColor: k }), color: AVATAR_COLOR.hair[k] })) },
-          {
-            title: v.hair === "beanie" ? "모자 (털모자 머리엔 안 씌워요)" : "모자",
-            kind: "thumbs",
-            opts: HATS.map((h) => {
-              const base = { ...v, hair: v.hair === "beanie" ? ("short" as const) : v.hair, glasses: false };
-              return { key: `hat:${h}`, label: HAT_LABEL[h], on: v.hat === h, pick: () => onChange({ hat: h, ...(v.hair === "beanie" && h !== "none" ? { hair: "short" as const } : {}) }), img: t(`hat:${h}|${JSON.stringify({ ...base, hat: "" })}`) };
-            }),
-          },
-          ...(v.hat !== "none" ? [{ title: "모자 색", kind: "swatches" as const, opts: OUTFITS.map((k) => ({ key: k, label: OUTFIT_LABEL[k], on: v.hatColor === k, pick: () => onChange({ hatColor: k }), color: AVATAR_COLOR.outfit[k] })) }] : []),
+          // 모자는 상점 머리 소품으로 옮김 (11-13 사용자: "모자는 악세사리처럼")
         ];
       }
       case "eyes":
@@ -347,7 +333,7 @@ export function AvatarMaker({
                   ))}
                 </div>
               ) : (
-                <div className={m.swatches}>
+                <div className={`${m.swatches} ${g.opts.length >= 12 ? m.swatchesMany : ""}`}>
                   {g.opts.map((o) => (
                     <button key={o.key} type="button" className={`${m.swatch} ${o.on ? m.swatchOn : ""}`} style={{ background: o.color }} aria-pressed={o.on} aria-label={o.label} title={o.label} onClick={o.pick} />
                   ))}

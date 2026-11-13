@@ -8,7 +8,7 @@ import { z } from "zod";
 export const HAIR_STYLES = ["bob", "short", "pigtails", "bun", "beanie", "bowl", "spiky", "side", "long", "ponytail", "braids", "curly", "wavy"] as const; // 11-13 뒤 다섯 더
 export const GENDERS = ["girl", "boy"] as const; // 11-12 사용자: "여자애만 있는데 남자 여자 있고"
 export const PETS = ["none", "dog", "cat", "rabbit", "hamster", "chick"] as const; // 11-12 사용자: "동반 애견이나 이런 요소도 고를 수 있게"
-export const HAIR_COLORS = ["choco", "brown", "black", "caramel", "auburn", "blonde", "ash", "rose"] as const; // 11-13 뒤 넷 더 (동물의 숲처럼 여러 색)
+export const HAIR_COLORS = ["choco", "brown", "black", "caramel", "auburn", "blonde", "ash", "rose", "cream", "silver", "sky", "blue", "mint", "green", "red", "orange"] as const; // 11-13 16색 — 8개씩 두 줄 (보라는 빼고)
 export const SKINS = ["light", "tan", "deep"] as const;
 export const OUTFITS = ["apricot", "mint", "butter", "coral", "sky"] as const;
 export const EYES = ["round", "dot", "sparkle", "lash", "sleepy"] as const;
@@ -86,7 +86,7 @@ export const HAIR_LABEL: Record<HairStyle, string> = {
   curly: "뽀글 머리",
   wavy: "웨이브 단발",
 };
-export const HAIR_COLOR_LABEL: Record<HairColor, string> = { choco: "초코", brown: "갈색", black: "검정", caramel: "캐러멜", auburn: "적갈색", blonde: "금발", ash: "잿빛", rose: "분홍" };
+export const HAIR_COLOR_LABEL: Record<HairColor, string> = { choco: "초코", brown: "갈색", black: "검정", caramel: "캐러멜", auburn: "적갈색", blonde: "금발", ash: "잿빛", rose: "분홍", cream: "크림", silver: "은발", sky: "하늘", blue: "파랑", mint: "민트", green: "초록", red: "빨강", orange: "주황" };
 export const SKIN_LABEL: Record<Skin, string> = { light: "밝은", tan: "중간", deep: "짙은" };
 export const OUTFIT_LABEL: Record<Outfit, string> = { apricot: "살구", mint: "민트", butter: "버터", coral: "코랄", sky: "하늘" };
 export const EYES_LABEL: Record<Eyes, string> = { round: "동글", dot: "콩알", sparkle: "반짝", lash: "속눈썹", sleepy: "졸린" };
@@ -121,7 +121,7 @@ export const FACE_DEFAULT = { eyes: "round", brows: "none", mouth: "smile", chee
 
 /** 색 — 앱 팔레트(globals.css)와 같은 값. 보라·형광 없음 */
 export const AVATAR_COLOR = {
-  hair: { choco: "#4a3426", brown: "#7a4f2e", black: "#2e2724", caramel: "#b9783f", auburn: "#a4492f", blonde: "#e0b860", ash: "#9a948e", rose: "#e3a0a6" } satisfies Record<HairColor, string>,
+  hair: { choco: "#4a3426", brown: "#7a4f2e", black: "#2e2724", caramel: "#b9783f", auburn: "#a4492f", blonde: "#e0b860", ash: "#9a948e", rose: "#e3a0a6", cream: "#efe0bd", silver: "#cfd0d2", sky: "#9cc9e4", blue: "#4f78b8", mint: "#8fd0bb", green: "#5c9a5e", red: "#d0574b", orange: "#ec8a45" } satisfies Record<HairColor, string>,
   eye: { ink: "#3d2c22", brown: "#6e4630", honey: "#a2702c", gray: "#5d6670", sea: "#3f7590", leaf: "#4c7c55" } satisfies Record<EyeColor, string>,
   skin: { light: "#f8dcc4", tan: "#e8bb93", deep: "#b98260" } satisfies Record<Skin, string>,
   outfit: { apricot: "#f0a35e", mint: "#8fcdb6", butter: "#f6d77c", coral: "#ef8f7c", sky: "#8cc3dc" } satisfies Record<Outfit, string>,

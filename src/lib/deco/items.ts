@@ -27,6 +27,11 @@ export const TRACK: DecoItem[] = [
   { id: "bear", kind: "avatar", slot: "head", label: "곰돌이 귀", price: 150 },
   { id: "table", kind: "room", label: "탁자와 머그", price: 200 },
   { id: "crown", kind: "avatar", slot: "head", label: "왕관", price: 500 },
+  // 모자 = 머리 소품 (11-13 — 기본 꾸미기에서 옮김). 입체는 Avatar 가 그린다(베레모는 Blender 부위)
+  { id: "hat-cap", kind: "avatar", slot: "head", label: "캡모자", price: 100 },
+  { id: "hat-bucket", kind: "avatar", slot: "head", label: "벙거지", price: 100 },
+  { id: "hat-straw", kind: "avatar", slot: "head", label: "밀짚모자", price: 120 },
+  { id: "hat-beret", kind: "avatar", slot: "head", label: "베레모", price: 120 },
   // 옷 가게 (11-13 사용자: "옷도 사게 해서 입히는 것도") — 한 벌만 입는다(자리 body). 안 입으면 아바타 꾸미기에서 고른 옷 색 그대로
   { id: "stripes", kind: "avatar", slot: "body", label: "줄무늬 티", price: 120 },
   { id: "overalls", kind: "avatar", slot: "body", label: "멜빵바지", price: 180 },

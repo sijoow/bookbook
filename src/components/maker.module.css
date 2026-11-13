@@ -409,3 +409,17 @@
   object-fit: cover;
   border-radius: 10px;
 }
+
+/* 색이 많을 때 (머리 색 16) — 8개씩 두 줄로 동그랗게 (11-13 사용자: 동물의 숲 머리 색 배치처럼) */
+.swatchesMany {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 7px 5px;
+  justify-items: center;
+}
+.swatchesMany .swatch {
+  width: 100%;
+  max-width: 30px;
+  height: auto;
+  aspect-ratio: 1;
+}

@@ -3,7 +3,8 @@ import { CLOTHES, EMPTY_DECO, ITEM, POINTS, TRACK, canBuy, decoPatchSchema, kstD
 
 describe("상점 물건", () => {
   it("처음 14개는 아바타 소품과 도서관 물건이 번갈아, 뒤는 옷 가게 · 값은 모두 양수", () => {
-    expect(TRACK).toHaveLength(24);
+    expect(TRACK).toHaveLength(28); // + 모자 4 (머리 소품, 11-13)
+    expect(TRACK.filter((t) => t.id.startsWith("hat-")).every((t) => t.kind === "avatar" && t.slot === "head")).toBe(true);
     TRACK.slice(0, 14).forEach((t, i) => expect(t.kind).toBe(i % 2 ? "avatar" : "room"));
     expect(CLOTHES.map((t) => t.id)).toEqual(["stripes", "overalls", "dots", "sweater", "raincoat", "spacesuit"]);
     expect(CLOTHES.every((t) => t.kind === "avatar" && t.slot === "body")).toBe(true);

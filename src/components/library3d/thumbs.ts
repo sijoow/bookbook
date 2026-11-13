@@ -4,7 +4,7 @@
 
 import * as THREE from "three";
 import type { AvatarConfig } from "@/lib/avatar/config";
-import { Avatar } from "./avatar3d";
+import { Avatar, preloadParts } from "./avatar3d";
 import { loadPattern, toonGradient } from "./textures";
 
 export type ThumbShot = "head" | "bust" | "torso" | "legs" | "feet"; // torso = 몸통 (윗옷), legs = 허리 아래 (아랫옷), feet = 발 (신발)
@@ -19,6 +19,7 @@ export async function avatarThumbs(cfgs: AvatarConfig[], shot: ThumbShot, opts: 
   const todo = cfgs.filter((c) => !cache.has(keyOf(c)));
   if (todo.length) {
     await Promise.all([...new Set(todo.map((c) => c.pattern ?? "none"))].map((p) => loadPattern(p))); // 무늬 그림을 먼저 받아 두고 찍는다
+    await preloadParts(); // Blender 부위도 (11-13)
     let renderer: THREE.WebGLRenderer;
     const canvas = document.createElement("canvas");
     canvas.width = canvas.height = size;

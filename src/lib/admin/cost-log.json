@@ -118,5 +118,13 @@
     "amount": 18,
     "unit": "credits",
     "note": "이번 달 사용 53582"
+  },
+  {
+    "date": "2026-11-13",
+    "what": "shop-hats.png (1024x1024, high)",
+    "tool": "GPT 그림",
+    "amount": 0.186,
+    "unit": "usd",
+    "note": "docs/design/prompts/assets/shop-hats.md"
   }
 ]

@@ -4,6 +4,32 @@
 import * as THREE from "three";
 import { AVATAR_COLOR, type AvatarConfig, type Outfit } from "@/lib/avatar/config";
 import { FEATURES } from "@/lib/features";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+
+/** Blender 부위 — 이름마다 한 번만 받는다 (public/models/parts/{이름}.glb) */
+const PARTS = new Map<string, Promise<THREE.Object3D | null>>();
+const PART_READY = new Map<string, THREE.Object3D | null>(); // 받은 것 — 바로 붙인다 (미리보기 그림이 대머리로 찍히지 않게)
+export const BLENDER_PARTS = { hair: { bob: "hair-bob", long: "hair-long", pigtails: "hair-pigtails", bun: "hair-bun", short: "hair-short" } as Record<string, string>, hat: { beret: "hat-beret", cap: "hat-cap", bucket: "hat-bucket", straw: "hat-straw" } as Record<string, string> };
+export function loadPart(name: string): Promise<THREE.Object3D | null> {
+  let p = PARTS.get(name);
+  if (!p) {
+    p = new GLTFLoader()
+      .loadAsync(`/models/parts/${name}.glb`)
+      .then((g) => g.scene as THREE.Object3D)
+      .catch(() => null)
+      .then((o) => {
+        PART_READY.set(name, o);
+        return o;
+      });
+    PARTS.set(name, p);
+  }
+  return p;
+}
+/** 미리보기 그림을 찍기 전에 — 쓰는 부위를 다 받아 둔다 */
+export function preloadParts(): Promise<unknown> {
+  if (!FEATURES.blenderParts) return Promise.resolve();
+  return Promise.all([...Object.values(BLENDER_PARTS.hair), ...Object.values(BLENDER_PARTS.hat)].map(loadPart));
+}
 import { approach } from "@/lib/library3d/motion";
 import { buildWearable } from "./deco3d";
 import { FACE_EYE, PAL, cachedPattern, clothTexture, faceTexture, hairTexture, loadPattern, type Expr } from "./textures";
@@ -235,6 +261,34 @@ export class Avatar {
     }
     return m;
   }
+
+  /** Blender 부위 붙이기 — 받아지면 모양을 굳혀(노드 변형까지) 만화 재질 + 갈색 펜 테두리로. 바로 돌려주는 빈 묶음에 나중에 들어간다 */
+  private attachPart(parent: THREE.Object3D, name: string, mat: THREE.Material, line: number, scale = 10.05, accent?: THREE.Material): THREE.Group {
+    const g = new THREE.Group();
+    g.scale.setScalar(scale);
+    parent.add(g);
+    const fill = (src: THREE.Object3D | null) => {
+      if (!src || this.gone) return;
+      src.updateMatrixWorld(true);
+      src.traverse((o) => {
+        const mesh = o as THREE.Mesh;
+        if (!mesh.isMesh) return;
+        const geo = (mesh.geometry as THREE.BufferGeometry).clone();
+        geo.applyMatrix4(mesh.matrixWorld);
+        if (!geo.getAttribute("normal")) geo.computeVertexNormals();
+        g.add(this.part(geo, accent && mesh.name.includes("accent") ? accent : mat, line / scale)); // 두 색 부위 — accent 덩어리는 포인트 색
+      });
+      this.onPartReady?.();
+    };
+    const ready = PART_READY.get(name);
+    if (ready !== undefined) fill(ready);
+    else void loadPart(name).then(fill);
+    return g;
+  }
+
+  /** 부위가 늦게 붙었을 때 (무대가 한 번 더 그리게) */
+  onPartReady: (() => void) | null = null;
+  private gone = false;
 
   /** 겉면 + 갈색 펜 테두리 */
   private part(geo: THREE.BufferGeometry, mat: THREE.Material, line = 0.4): THREE.Mesh {
@@ -586,7 +640,7 @@ export class Avatar {
       hc.add(e);
     }
     this.buildHair(hc, hair);
-    this.buildHat(hc);
+    // 모자는 머리 소품(상점)으로만 — 설정의 hat 은 안 그린다 (11-13)
     if (cfg.glasses) this.buildGlasses(hc, ink);
 
     this.tagAnchor.position.set(0, 14, 0);
@@ -597,16 +651,38 @@ export class Avatar {
 
   /** 모자를 쓰나 (털모자 머리면 이미 모자라 안 씌운다) */
   private hatOn(): boolean {
-    return Boolean(this.cfg.hat && this.cfg.hat !== "none" && this.cfg.hair !== "beanie");
+    return false; // 설정의 모자는 안 쓴다 (모자 = 머리 소품, 11-13)
+  }
+
+  /** 머리 소품 모자 — hat-cap·hat-bucket·hat-straw·hat-beret (상점) */
+  private hatItem: THREE.Group | null = null;
+  private wearHat(id: string | undefined) {
+    this.hatItem?.removeFromParent();
+    this.hatItem = null;
+    if (!id) return;
+    const kind = id.slice(4) as "cap" | "bucket" | "straw" | "beret";
+    const color = { cap: PAL.sky, bucket: PAL.butter, straw: PAL.sky, beret: PAL.coral }[kind] ?? PAL.sky;
+    const before = this.hatGroup;
+    this.buildHat(this.headCenter, kind, color);
+    this.hatItem = this.hatGroup;
+    this.hatGroup = before === this.hatItem ? null : before;
   }
 
   /** 모자 (11-13) — 캡모자(챙 + 꼭지 단추 + 작은 별 패치) · 벙거지 · 밀짚모자(넓은 챙 + 리본) · 베레모(옆으로 기울임) */
-  private buildHat(hc: THREE.Group) {
-    if (!this.hatOn()) return;
-    const color = AVATAR_COLOR.outfit[this.cfg.hatColor ?? "sky"];
+  private buildHat(hc: THREE.Group, hatKind?: "cap" | "bucket" | "straw" | "beret", colorHex?: string) {
+    if (!hatKind) return;
+    const color = colorHex ?? PAL.sky;
     const mat = this.toon(color);
+    const bp = FEATURES.blenderParts ? BLENDER_PARTS.hat[hatKind] : undefined;
+    if (bp) {
+      // Blender 모자 (11-13) — 본체 + 포인트 색(캡 단추·별 패치 / 벙거지 띠 / 밀짚모자 리본)
+      const main = hatKind === "straw" ? this.toon("#e8cf8a") : mat;
+      const acc = this.toon(hatKind === "cap" ? PAL.butter : hatKind === "bucket" ? PAL.cream : color);
+      this.hatGroup = this.attachPart(hc, bp, main, 0.32, 10.05, acc);
+      return;
+    }
     const g = new THREE.Group();
-    const kind = this.cfg.hat;
+    const kind = hatKind;
     if (kind === "cap") {
       const crown = this.part(new THREE.SphereGeometry(10.75, 32, 14, 0, Math.PI * 2, 0, 1.2), mat, 0.32);
       crown.rotation.x = -0.12;
@@ -752,6 +828,12 @@ export class Avatar {
 
   private buildHair(hc: THREE.Group, hair: THREE.Material) {
     const style = this.cfg.hair;
+    // Blender 로 만든 머리 모양이 있으면 그걸로 (11-13)
+    const bp = FEATURES.blenderParts ? BLENDER_PARTS.hair[style] : undefined;
+    if (bp) {
+      this.attachPart(hc, bp, hair, 0.34, 10.05, this.toon(HAT[this.cfg.outfit])); // 머리끈(양갈래·똥머리)은 옷 색
+      return;
+    }
     // 앞머리 — 끝이 뾰족한 다발 여럿 (가운데가 조금 짧고, 바깥쪽은 옆으로 살짝 기운다)
     const bangs = (n: 3 | 4, theta: number) => {
       const phis = n === 4 ? [-0.7, -0.35, 0, 0.35, 0.7] : [-0.5, -0.17, 0.17, 0.5];
@@ -1055,8 +1137,9 @@ export class Avatar {
     this.wornKit?.dispose();
     this.wornKit = new Kit(this.gradient);
     let headOn = false;
+    this.wearHat(ids.find((id) => id.startsWith("hat-")));
     for (const id of ids) {
-      if (DRESS_IDS.has(id)) continue;
+      if (DRESS_IDS.has(id) || id.startsWith("hat-")) continue;
       const w = buildWearable(id, this.wornKit, this.cfg.outfit);
       if (!w) continue;
       if (w.anchor === "head") headOn = true;
@@ -1069,6 +1152,7 @@ export class Avatar {
   }
 
   dispose() {
+    this.gone = true;
     for (const d of this.trash) d.dispose();
     this.trash = [];
     this.wornKit?.dispose();
