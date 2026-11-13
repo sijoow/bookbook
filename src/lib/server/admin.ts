@@ -13,7 +13,7 @@ import { resetPassword } from "./members";
 import { award } from "./deco";
 import { getDb, type ActiveDayDoc, type PointLogDoc, type ReadingSessionDoc, type StampDoc, type UserBookDoc, type UserDoc } from "./db";
 import { BadRequestError, NotFoundError } from "./errors";
-import { currentUser, devAllowed } from "./session";
+import { currentUserVia, devAllowed } from "./session";
 
 const list = (v: string | undefined) => (v ?? "").split(",").map((x) => x.trim().toLowerCase()).filter(Boolean);
 
@@ -26,11 +26,11 @@ export function isAdmin(u: UserDoc): boolean {
   return (Boolean(u.email) && emails.includes(u.email!.toLowerCase())) || handles.includes(u.handle.toLowerCase());
 }
 
-/** 관리자만 — 아니면 404 */
+/** 관리자만 — 아니면 404. 베타 모드로 저절로 들어온 것만으론 안 된다 (fe 비밀번호로 로그인해야) */
 export async function requireAdmin(): Promise<UserDoc> {
-  const u = await currentUser();
-  if (!isAdmin(u)) throw new NotFoundError();
-  return u;
+  const { user, via } = await currentUserVia();
+  if (!isAdmin(user) || via === "beta") throw new NotFoundError();
+  return user;
 }
 
 async function cols() {

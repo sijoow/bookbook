@@ -29,6 +29,7 @@ import { defaultAvatar, type AvatarConfig } from "@/lib/avatar/config";
 import { api } from "@/lib/client/api";
 import { makeSaver } from "@/lib/client/saver";
 import { hasVoices, setSound, soundOn } from "@/lib/client/voice";
+import { musicOn, setMusic } from "@/lib/client/bgm";
 import { hasWebGL } from "@/lib/client/webgl";
 import { formatMinutes, lastWeek, minutesLeft, minutesPerBook, readingSpeed } from "@/lib/books/reading";
 import { SORTS, SORT_LABEL, sortBooks } from "@/lib/books/sort";
@@ -110,6 +111,7 @@ export default function MyLibrary() {
   const [shelf, setShelf] = useState(false); // 크게 보기 중
   const [closingSheet, setClosingSheet] = useState(false);
   const [readBarOpen, setReadBarOpen] = useState(false);
+  const [music, setMusicState] = useState(true); // 배경 음악 (이 기기에만 기억 — 불러온 뒤 읽는다)
   const [sound, setSoundState] = useState(true); // 캐릭터 목소리 (이 기기에만 기억 — 불러온 뒤 읽는다) // 읽는 동안 ^ 를 눌러 꺼낸 읽기 줄 (11-13 사용자: "퀵메뉴가 아래로 떨어지고 ^ 버튼이 생긴다 정도로만")
   const [notice, setNotice] = useState<{ id: string; text: string; level: "info" | "event" | "warn" } | null>(null); // 관리자 공지 (닫으면 이 기기에선 안 보임) // 읽다가 '책 덮기' → '몇 쪽까지' 창 (11-13: 읽는 동안엔 작은 줄 + 머리 위 타이머)
   // 입체 도서관 (못 열면 2D 책장). 서버와 첫 화면은 둘 다 '입체'로 같게 그리고(하이드레이션이 어긋나지 않게), 불러온 뒤 실제로 잰다
@@ -226,6 +228,7 @@ export default function MyLibrary() {
         if (!alive) return;
         setGl(hasWebGL());
         setSoundState(soundOn());
+        setMusicState(musicOn());
         // 처음 가입을 안 마쳤으면 (닉네임·약관·아바타) 가입 화면으로
         if (who && who.onboarded === false) {
           router.replace("/welcome");
@@ -633,6 +636,17 @@ export default function MyLibrary() {
             <Link href="/log" className={hud.link}>
               읽은 기록 <span aria-hidden>›</span>
             </Link>
+            <button
+              type="button"
+              className={`${hud.link} ${hud.linkBtn}`}
+              aria-pressed={music}
+              onClick={() => {
+                setMusic(!music);
+                setMusicState(!music);
+              }}
+            >
+              배경 음악 <span className={hud.small}>{music ? "켜짐" : "꺼짐"}</span>
+            </button>
             {hasVoices() && (
               <button
                 type="button"

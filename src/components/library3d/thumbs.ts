@@ -36,7 +36,8 @@ export async function avatarThumbs(cfgs: AvatarConfig[], shot: ThumbShot, opts: 
     scene.add(sun);
     const cam = new THREE.PerspectiveCamera(24, 1, 1, 1000);
     if (shot === "head") {
-      cam.position.set(0, 29.5, 62); // 머리 가운데(바닥에서 ≈ 26cm) 조금 위에서
+      // 머리 가운데(바닥에서 ≈ 26cm) 조금 위, 비스듬히 오른쪽에서 — 포니테일·땋은 머리·긴 머리 뒷모습도 보이게 (11-13)
+      cam.position.set(Math.sin(0.55) * 62, 29.5, Math.cos(0.55) * 62);
       cam.lookAt(0, 27.2, 0);
     } else {
       cam.position.set(0, 27, 86); // 머리부터 허리까지

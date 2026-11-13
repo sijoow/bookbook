@@ -31,7 +31,7 @@ const LibraryStage = dynamic(() => import("@/components/library3d/LibraryStage")
   loading: () => <div className={`${stage.slot} ${stage.previewSlot}`} />,
 });
 
-type DevAccounts = { accounts: Array<{ handle: string; nickname: string }>; current: string | null };
+type DevAccounts = { accounts: Array<{ handle: string; nickname: string }>; current: string | null; beta?: boolean };
 type Me = {
   handle: string;
   nickname: string;
@@ -45,6 +45,7 @@ type Me = {
   house: HouseId;
   email: string | null;
   admin?: boolean;
+  adminLogin?: boolean; // 베타로 들어온 관리자 — fe 비밀번호로 로그인하면 관리자 화면이 열린다
 };
 const NO_BOOKS: LibraryBook[] = [];
 const LOGIN_LABEL: Record<string, string> = { dev: "시험 계정 (개발용)", password: "아이디 · 비밀번호", kakao: "카카오", google: "구글" };
@@ -372,6 +373,12 @@ export default function MyPage() {
             <span>알림 (친구가 놀러 오면)</span>
             <span className={ui.muted}>준비 중</span>
           </div>
+          {me?.adminLogin && (
+            <Link href="/login?next=/admin" className={s.settingRow}>
+              <span>관리자 페이지</span>
+              <span className={ui.muted}>fe 비밀번호로 열기 ›</span>
+            </Link>
+          )}
           {me?.admin && (
             <Link href="/admin" className={s.settingRow}>
               <span>관리자 페이지</span>
@@ -422,9 +429,11 @@ export default function MyPage() {
                   {a.nickname}
                 </button>
               ))}
-              <button type="button" className={ui.chip} onClick={freshAccount}>
-                + 새로 가입해 보기
-              </button>
+              {!dev.beta && (
+                <button type="button" className={ui.chip} onClick={freshAccount}>
+                  + 새로 가입해 보기
+                </button>
+              )}
             </div>
           </>
         )}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { AVATAR_COLOR, FACE_DEFAULT, HAIR_STYLES, OUTFITS, PRESETS, avatarPatchSchema, avatarSchema, defaultAvatar, randomFace, readAvatar } from "./config";
+import { AVATAR_COLOR, EYE_COLORS, FACE_DEFAULT, HAIR_COLORS, HAIR_STYLES, OUTFITS, PRESETS, avatarPatchSchema, avatarSchema, defaultAvatar, randomFace, readAvatar } from "./config";
 
 describe("아바타 설정", () => {
   it("처음 아바타는 아이디마다 정해지고 늘 같다", () => {
@@ -31,7 +31,9 @@ describe("아바타 설정", () => {
 
   it("고를 수 있는 모든 값에 색이 있다 (보라 없음)", () => {
     for (const o of OUTFITS) expect(AVATAR_COLOR.outfit[o]).toMatch(/^#[0-9a-f]{6}$/);
-    expect(HAIR_STYLES.length).toBe(8); // 여자아이 5 + 남자아이 3 (11-12)
+    expect(HAIR_STYLES.length).toBe(13); // 11-12 여덟 + 11-13 다섯 (긴 생머리·포니테일·땋은 머리·뽀글·웨이브)
+    for (const c of HAIR_COLORS) expect(AVATAR_COLOR.hair[c]).toMatch(/^#[0-9a-f]{6}$/);
+    for (const c of EYE_COLORS) expect(AVATAR_COLOR.eye[c]).toMatch(/^#[0-9a-f]{6}$/);
   });
 
   it("얼굴 칸이 없는 옛 아바타는 첫 얼굴 그대로 (눈 동글·눈썹 없음·미소·발그레·스티커 없음)", () => {

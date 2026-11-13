@@ -7,12 +7,14 @@ import { handleSchema, passwordSchema } from "@/lib/auth/password";
 import { sessionCookie } from "@/lib/server/auth";
 import { errorResponse } from "@/lib/server/http";
 import { signUpWithPassword } from "@/lib/server/members";
-import { DEV_COOKIE, OUT_COOKIE } from "@/lib/server/session";
+import { DEV_COOKIE, OUT_COOKIE, betaUser } from "@/lib/server/session";
+import { BadRequestError } from "@/lib/server/errors";
 
 const Body = z.object({ handle: handleSchema, password: passwordSchema });
 
 export async function POST(req: Request) {
   try {
+    if (betaUser()) throw new BadRequestError("지금은 베타라 새 가입을 받지 않아요");
     const b = Body.parse(await req.json());
     const { user, token } = await signUpWithPassword(b.handle, b.password, req.headers.get("user-agent"));
     const jar = await cookies();

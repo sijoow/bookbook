@@ -29,6 +29,7 @@ export default function Login() {
   const [dev, setDev] = useState<DevAccounts | null>(null);
   const [bye, setBye] = useState(false);
   const [next, setNext] = useState("/");
+  const [beta, setBeta] = useState(false); // 베타 모드 — 앱은 로그인 없이 열리고, 여기선 관리자(fe) 로그인만 (11-13)
 
   useEffect(() => {
     let alive = true;
@@ -44,6 +45,13 @@ export default function Login() {
     });
     api<DevAccounts>("/api/dev/login")
       .then((d) => alive && setDev(d))
+      .catch(() => {});
+    api<{ beta?: boolean }>("/api/auth/providers")
+      .then((p) => {
+        if (!alive || !p.beta) return;
+        setBeta(true);
+        setMode("login");
+      })
       .catch(() => {});
     return () => {
       alive = false;
@@ -108,8 +116,18 @@ export default function Login() {
       </p>
       {bye && <p className={s.bye}>탈퇴했어요. 그동안 고마웠어요.</p>}
 
+      {beta && (
+        <p className={ui.muted} style={{ textAlign: "center", lineHeight: 1.6, marginBottom: 10 }}>
+          지금은 베타예요 — 앱은 로그인 없이 바로 열려요.
+          <br />
+          여기서는 관리자(개발자) 로그인만 해요 ·{" "}
+          <Link href="/" className={ui.textBtn}>
+            앱으로 ›
+          </Link>
+        </p>
+      )}
       <section className={`${ui.paper} ${s.authBox}`}>
-        <div className={s.authTabs} role="tablist" aria-label="로그인 · 회원가입">
+        <div className={s.authTabs} role="tablist" aria-label="로그인 · 회원가입" hidden={beta}>
           <button type="button" role="tab" aria-selected={!join} className={`${s.authTab} ${!join ? s.authTabOn : ""}`} onClick={() => switchTo("login")}>
             로그인
           </button>
@@ -184,9 +202,11 @@ export default function Login() {
               </button>
             ))}
           </div>
-          <button type="button" className={`${ui.btn} ${ui.btnGhost} ${ui.btnWide}`} style={{ marginTop: 12 }} onClick={fresh}>
-            새로 가입해 보기 (시험) ▸
-          </button>
+          {!beta && (
+            <button type="button" className={`${ui.btn} ${ui.btnGhost} ${ui.btnWide}`} style={{ marginTop: 12 }} onClick={fresh}>
+              새로 가입해 보기 (시험) ▸
+            </button>
+          )}
         </div>
       )}
 

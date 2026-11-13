@@ -3,9 +3,9 @@
 
 import { connection } from "next/server";
 import { googleKeys } from "@/lib/server/auth";
-import { devAllowed } from "@/lib/server/session";
+import { betaUser, devAllowed } from "@/lib/server/session";
 
 export async function GET() {
   await connection(); // 키는 실행할 때 읽는다 (빌드 때 굳히지 않게)
-  return Response.json({ google: googleKeys() != null, kakao: false, dev: devAllowed() });
+  return Response.json({ google: googleKeys() != null, kakao: false, dev: devAllowed(), beta: Boolean(betaUser()) });
 }

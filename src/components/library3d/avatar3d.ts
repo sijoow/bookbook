@@ -5,7 +5,7 @@ import * as THREE from "three";
 import { AVATAR_COLOR, type AvatarConfig, type Outfit } from "@/lib/avatar/config";
 import { approach } from "@/lib/library3d/motion";
 import { buildWearable } from "./deco3d";
-import { FACE_EYE, PAL, clothTexture, faceTexture, type Expr } from "./textures";
+import { FACE_EYE, PAL, clothTexture, faceTexture, hairTexture, type Expr } from "./textures";
 import { Kit } from "./toon";
 
 export type Pose = "stand" | "sit" | "sitwave" | "read" | "reach" | "pull" | "carry" | "cheer" | "wave" | "show";
@@ -240,7 +240,9 @@ export class Avatar {
   private build() {
     const { cfg } = this;
     const skin = this.toon(AVATAR_COLOR.skin[cfg.skin]);
-    const hair = this.toon(AVATAR_COLOR.hair[cfg.hairColor], THREE.DoubleSide);
+    const hair = this.toon("#ffffff", THREE.DoubleSide); // 머리카락 — 결 무늬 그림 (11-13)
+    hair.map = hairTexture(AVATAR_COLOR.hair[cfg.hairColor]);
+    this.trash.push(hair.map);
     const cloth = this.toon(AVATAR_COLOR.outfit[cfg.outfit]);
     const pants = this.toon(PAL.pants);
     this.clothMat = cloth;
@@ -375,6 +377,33 @@ export class Avatar {
     hc.add(m);
   }
 
+  /**
+   * 끝이 뾰족한 머리 다발 (앞머리·옆머리) — 위가 둥글고 아래로 갈수록 가늘어지는 물방울. theta·phi 자리에서 머리 겉을 따라 아래로 흘러내린다.
+   * len = 다발 길이 배율, w = 폭 배율, tilt = 옆으로 기울기(라디안)
+   */
+  private lock(hc: THREE.Group, mat: THREE.Material, theta: number, phi: number, r: number, len = 1, w = 1, tilt = 0) {
+    const prof = [
+      [0, 1.0],
+      [0.55, 0.86],
+      [0.92, 0.46],
+      [1.0, 0.0],
+      [0.86, -0.62],
+      [0.56, -1.22],
+      [0.22, -1.72],
+      [0, -1.95],
+    ].map(([a, b]) => new THREE.Vector2(a * r, b * r));
+    const m = this.part(new THREE.LatheGeometry(prof, 14), mat, 0.26);
+    const n = new THREE.Vector3(Math.sin(theta) * Math.sin(phi), Math.cos(theta), Math.sin(theta) * Math.cos(phi));
+    const down = new THREE.Vector3(0, -1, 0).addScaledVector(n, n.y).normalize(); // 머리 겉을 따라 아래로
+    const yAxis = down.clone().negate().applyAxisAngle(n, tilt); // 다발의 위쪽 (끝은 -y)
+    const xAxis = new THREE.Vector3().crossVectors(yAxis, n).normalize();
+    m.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(xAxis, yAxis, n));
+    m.position.copy(n).multiplyScalar(9.9);
+    m.scale.set(w, len, 0.58);
+    hc.add(m);
+    return m;
+  }
+
   private blob(hc: THREE.Group, mat: THREE.Material, r: number, pos: [number, number, number], scale: [number, number, number] = [1, 1, 1]) {
     const m = this.part(new THREE.SphereGeometry(r, 18, 14), mat, 0.3);
     m.position.set(...pos);
@@ -385,9 +414,10 @@ export class Avatar {
 
   private buildHair(hc: THREE.Group, hair: THREE.Material) {
     const style = this.cfg.hair;
+    // 앞머리 — 끝이 뾰족한 다발 여럿 (가운데가 조금 짧고, 바깥쪽은 옆으로 살짝 기운다)
     const bangs = (n: 3 | 4, theta: number) => {
-      const phis = n === 4 ? [-0.66, -0.22, 0.22, 0.66] : [-0.46, 0, 0.46];
-      for (const p of phis) this.tuft(hc, hair, theta, p, n === 4 ? 3.1 : 2.9, 1.35, 0.82);
+      const phis = n === 4 ? [-0.7, -0.35, 0, 0.35, 0.7] : [-0.5, -0.17, 0.17, 0.5];
+      phis.forEach((p, i) => this.lock(hc, hair, theta - (i % 2) * 0.04, p, n === 4 ? 2.3 : 2.2, 1.0 + (i % 2) * 0.12, 1.15, p * 0.35));
     };
     if (style === "beanie") {
       const knit = this.toon(HAT[this.cfg.outfit]);
@@ -442,9 +472,62 @@ export class Avatar {
       this.tuft(hc, hair, 1.16, -0.55, 2.6, 1.2, 0.8);
       return;
     }
+    if (style === "curly") {
+      // 뽀글 머리 — 작은 동글이를 머리 위에 빼곡히 (얼굴 앞은 비운다)
+      for (let i = 0; i < 64; i++) {
+        const theta = Math.acos(1 - (i + 0.5) / 64 * 1.18); // 위쪽 반구 조금 아래까지 고르게
+        const phi = i * 2.39996; // 해바라기 씨 배치
+        const front = Math.cos(phi) > 0.35 && theta > 1.02; // 얼굴 자리
+        if (front) continue;
+        const n = new THREE.Vector3(Math.sin(theta) * Math.sin(phi), Math.cos(theta), Math.sin(theta) * Math.cos(phi));
+        const m = this.part(new THREE.SphereGeometry(2.55 + (i % 3) * 0.25, 14, 10), hair, 0.22);
+        m.position.copy(n).multiplyScalar(10.15);
+        hc.add(m);
+      }
+      return;
+    }
     this.cap(hc, hair, 10.2, 1.7, 0.56);
-    bangs(4, 1.12);
-    if (style === "bob") {
+    bangs(4, 1.04);
+    if (style === "long") {
+      // 긴 생머리 — 등 뒤로 길게 + 양옆으로 내려오는 머리
+      this.blob(hc, hair, 7.2, [0, -6.8, -4.6], [1.42, 1.8, 0.78]);
+      for (const s of [-1, 1]) {
+        this.blob(hc, hair, 3.4, [s * 8.9, -5.2, -0.6], [0.62, 2.15, 0.85]);
+        this.lock(hc, hair, 1.45, s * 1.05, 2.4, 1.6, 1.0, s * 0.1);
+      }
+    } else if (style === "ponytail") {
+      // 포니테일 — 뒤통수 위에서 묶어 아래로
+      const tie = this.part(new THREE.TorusGeometry(1.7, 0.6, 8, 18), this.toon(HAT[this.cfg.outfit]), 0.2);
+      tie.position.set(0, 4.6, -9.4);
+      tie.rotation.x = 0.5;
+      hc.add(tie);
+      const tail = this.lock(hc, hair, 2.15, Math.PI, 3.3, 2.0, 1.0);
+      tail.position.set(0, 2.4, -11.4);
+      for (const s of [-1, 1]) this.lock(hc, hair, 1.42, s * 1.08, 2.0, 1.15, 0.9, s * 0.12); // 옆 잔머리
+    } else if (style === "braids") {
+      // 땋은 머리 — 귀 뒤에서 양쪽으로 땋아 내린다 (끝에 리본)
+      const ribbon = this.toon(HAT[this.cfg.outfit]);
+      for (const s of [-1, 1]) {
+        for (let k = 0; k < 6; k++) {
+          const b = this.part(new THREE.SphereGeometry(2.15 - k * 0.12, 12, 10), hair, 0.22);
+          b.position.set(s * (8.3 + (k % 2) * 0.55), -3.2 - k * 2.45, -2.4 + k * 0.25);
+          b.scale.set(1, 0.9, 0.95);
+          hc.add(b);
+        }
+        const bow = this.part(new THREE.SphereGeometry(1.2, 10, 8), ribbon, 0.18);
+        bow.position.set(s * 8.6, -17.6, -1.0);
+        bow.scale.set(1.6, 0.8, 0.7);
+        hc.add(bow);
+      }
+    } else if (style === "wavy") {
+      // 웨이브 단발 — 옆머리가 물결처럼 세 번 굽이친다
+      for (const s of [-1, 1]) {
+        this.blob(hc, hair, 3.3, [s * 8.7, -1.4, -1.3], [0.75, 0.95, 0.95]);
+        this.blob(hc, hair, 3.1, [s * 9.5, -4.3, -1.5], [0.72, 0.95, 0.95]);
+        this.blob(hc, hair, 2.8, [s * 8.9, -7.0, -1.2], [0.72, 0.95, 0.9]);
+      }
+      this.blob(hc, hair, 6.6, [0, -3.8, -5.2], [1.38, 1.05, 0.75]); // 뒷머리
+    } else if (style === "bob") {
       for (const s of [-1, 1]) this.blob(hc, hair, 4.3, [s * 8.6, -2.4, -1.4], [0.72, 1.5, 0.95]);
     } else if (style === "pigtails") {
       const tie = this.toon(HAT[this.cfg.outfit]);

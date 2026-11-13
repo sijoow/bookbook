@@ -4,6 +4,7 @@
 import type { Gender } from "@/lib/avatar/config";
 import manifest from "@/lib/voice/manifest.json";
 import type { VoiceManifest } from "@/lib/voice/lines";
+import { duckMusic } from "./bgm";
 
 const KEY = "bookbook.sound";
 const files = manifest as VoiceManifest;
@@ -40,6 +41,7 @@ export function speak(text: string, gender: Gender) {
     const a = new Audio(`/voice/${gender}/${file}`);
     a.volume = 0.9;
     playing = a;
+    duckMusic(); // 배경 음악은 잠깐 작게
     void a.play().catch(() => {}); // 첫 터치 전엔 브라우저가 막는다 — 말풍선만
   } catch {
     // 소리를 못 내는 기기

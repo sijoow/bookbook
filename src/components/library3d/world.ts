@@ -1959,8 +1959,8 @@ export class LibraryWorld {
       // 꾸미기 창 — 서 있는 아바타 (머리 가운데 ≈ 25.8cm · 눈 ≈ 24.8 · 코 ≈ 23.9 · 입 ≈ 22.8, 얼굴 앞 z ≈ 9)
       // 11-13 사용자: "부위별로 확대 확대 되면서 고르게" → 탭마다 그 부위로 다가간다 (좁고 긴 칸이라 폭에 맞춰 — 좁게 잡을수록 크게)
       const zoom: Partial<Record<typeof this.focus, { x: number; y0: number; y1: number; rect: [number, number, number, number] }>> = {
-        hair: { x: 12.5, y0: 15, y1: 42, rect: [-0.96, 0.96, -0.3, 0.78] }, // 머리 전체 (똥머리·모자까지)
-        face: { x: 10.2, y0: 16.5, y1: 35, rect: [-0.99, 0.99, -0.15, 0.66] }, // 얼굴 가득
+        hair: { x: 10.6, y0: 17, y1: 42, rect: [-1, 1, -0.25, 0.8] }, // 머리 전체 (똥머리·모자까지) — 비스듬히(뒷머리가 보이게)
+        face: { x: 9.4, y0: 17.5, y1: 35, rect: [-1, 1, -0.15, 0.66] }, // 얼굴 가득
         eyes: { x: 6.8, y0: 23.2, y1: 26.4, rect: [-1, 1, 0.08, 0.42] }, // 두 눈만 (얼굴 양옆은 잘린다)
         mouth: { x: 5, y0: 21.2, y1: 25, rect: [-1, 1, 0.02, 0.4] }, // 코·입
       };
@@ -1969,7 +1969,7 @@ export class LibraryWorld {
         pts = box(c.x - z.x, c.x + z.x, z.y0, z.y1, c.z + 2, c.z + 9.5);
         rect = z.rect;
         tilt = 0.04;
-        yaw = 0;
+        yaw = this.focus === "hair" ? 0.5 : 0; // 머리는 비스듬히 — 포니테일·땋은 머리·긴 머리가 보이게
       } else {
         pts = box(c.x - 10.5, c.x + 10.5, 0, 41, c.z - 5, c.z + 7);
         if (this.pet && this.focus === "pet") pts.push(...box(c.x + 10, c.x + 24, 0, 16, c.z + 2, c.z + 16));

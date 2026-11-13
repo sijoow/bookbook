@@ -469,6 +469,53 @@ export function clothTexture(kind: "stripes" | "dots" | "knit", base: string, ma
   return t;
 }
 
+/** 색을 밝게(+)·어둡게(-) */
+function shade(hex: string, k: number): string {
+  const n = parseInt(hex.slice(1), 16);
+  const ch = (v: number) => Math.round(k >= 0 ? v + (255 - v) * k : v * (1 + k));
+  const r = ch((n >> 16) & 255);
+  const g = ch((n >> 8) & 255);
+  const b = ch(n & 255);
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+/**
+ * 머리카락 결 (11-13 — "모습이 너무 단순해서") — 정수리에서 흘러내리는 가는 선 + 연필로 칠한 듯한 밝은 띠 (광택 아님, 납작하게).
+ * 공(구) 조각의 uv: 위쪽 = 정수리. 앞머리 다발에도 같은 무늬가 흐른다.
+ */
+export function hairTexture(base: string): THREE.CanvasTexture {
+  const [c, x] = canvas(256, 256);
+  x.fillStyle = base;
+  x.fillRect(0, 0, 256, 256);
+  x.lineCap = "round";
+  // 결 — 조금 어두운 가는 선
+  x.strokeStyle = shade(base, -0.28);
+  for (let i = 0; i < 34; i++) {
+    const u = (i / 34) * 256 + ((i * 37) % 7);
+    x.globalAlpha = 0.35 + ((i * 13) % 5) * 0.06;
+    x.lineWidth = 1.4 + ((i * 7) % 3) * 0.5;
+    x.beginPath();
+    x.moveTo(u, 0);
+    x.bezierCurveTo(u + 5, 70, u - 5, 150, u + 2, 256);
+    x.stroke();
+  }
+  // 밝은 띠 — 정수리 조금 아래를 빙 두른 짧은 빗금들
+  x.strokeStyle = shade(base, 0.32);
+  for (let i = 0; i < 46; i++) {
+    const u = (i / 46) * 256;
+    x.globalAlpha = 0.55;
+    x.lineWidth = 2.4;
+    x.beginPath();
+    x.moveTo(u, 38 + ((i * 11) % 6));
+    x.lineTo(u + 2, 56 + ((i * 5) % 7));
+    x.stroke();
+  }
+  x.globalAlpha = 1;
+  const t = tex(c);
+  t.wrapS = THREE.RepeatWrapping;
+  return t;
+}
+
 /** 별 스티커 (다 읽은 책·축하) — 버터색 별 + 갈색 테두리 + 흰 테두리 */
 export function starTexture(fill = PAL.butter): THREE.CanvasTexture {
   const [c, x] = canvas(128, 128);

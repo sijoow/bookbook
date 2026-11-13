@@ -14,12 +14,12 @@ import { awardWelcome, decoState, saveDeco } from "@/lib/server/deco";
 import { errorResponse } from "@/lib/server/http";
 import { isAdmin } from "@/lib/server/admin";
 import { SESSION_COOKIE } from "@/lib/server/auth";
-import { DEV_COOKIE, OUT_COOKIE, currentUser, devAllowed } from "@/lib/server/session";
+import { DEV_COOKIE, OUT_COOKIE, betaUser, currentUser, currentUserVia, devAllowed } from "@/lib/server/session";
 
 export async function GET() {
   await connection(); // 빌드 때 미리 만들지 않게 (try 밖에)
   try {
-    const u = await currentUser();
+    const { user: u, via } = await currentUserVia();
     return Response.json({
       handle: u.handle,
       nickname: u.nickname,
@@ -32,7 +32,9 @@ export async function GET() {
       house: readHouse(u.house),
       ...(await decoState(u)),
       dev: devAllowed(),
-      admin: isAdmin(u), // 마이페이지에 '관리자' 줄
+      beta: Boolean(betaUser()), // 베타 모드 — 가입 없이 개발자 계정으로
+      admin: isAdmin(u) && via !== "beta", // 마이페이지에 '관리자' 줄
+      adminLogin: isAdmin(u) && via === "beta", // 베타로 들어온 관리자 — 비밀번호로 로그인하면 열린다
     });
   } catch (e) {
     return errorResponse(e);

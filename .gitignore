@@ -51,3 +51,6 @@ next-env.d.ts
 
 # APK 결과물 (scripts/apk.cjs) — 서명 키는 저장소 밖(bookbook-apk 폴더)
 /release
+
+# 배경 음악 원본 (영상 82MB) — 앱엔 public/music/bgm.m4a 만
+/music/

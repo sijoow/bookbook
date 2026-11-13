@@ -5,7 +5,7 @@
 
 import { z } from "zod";
 
-export const HAIR_STYLES = ["bob", "short", "pigtails", "bun", "beanie", "bowl", "spiky", "side"] as const;
+export const HAIR_STYLES = ["bob", "short", "pigtails", "bun", "beanie", "bowl", "spiky", "side", "long", "ponytail", "braids", "curly", "wavy"] as const; // 11-13 뒤 다섯 더
 export const GENDERS = ["girl", "boy"] as const; // 11-12 사용자: "여자애만 있는데 남자 여자 있고"
 export const PETS = ["none", "dog", "cat", "rabbit", "hamster", "chick"] as const; // 11-12 사용자: "동반 애견이나 이런 요소도 고를 수 있게"
 export const HAIR_COLORS = ["choco", "brown", "black", "caramel", "auburn", "blonde", "ash", "rose"] as const; // 11-13 뒤 넷 더 (동물의 숲처럼 여러 색)
@@ -63,6 +63,11 @@ export const HAIR_LABEL: Record<HairStyle, string> = {
   bowl: "바가지",
   spiky: "삐죽",
   side: "가르마",
+  long: "긴 생머리",
+  ponytail: "포니테일",
+  braids: "땋은 머리",
+  curly: "뽀글 머리",
+  wavy: "웨이브 단발",
 };
 export const HAIR_COLOR_LABEL: Record<HairColor, string> = { choco: "초코", brown: "갈색", black: "검정", caramel: "캐러멜", auburn: "적갈색", blonde: "금발", ash: "잿빛", rose: "분홍" };
 export const SKIN_LABEL: Record<Skin, string> = { light: "밝은", tan: "중간", deep: "짙은" };
@@ -79,8 +84,8 @@ export const GENDER_LABEL: Record<Gender, string> = { girl: "여자아이", boy:
 export const PET_LABEL: Record<Pet, string> = { none: "없음", dog: "강아지", cat: "고양이", rabbit: "토끼", hamster: "햄스터", chick: "병아리" };
 /** 성별을 고르면 먼저 보여 줄 머리 (다른 머리도 다 고를 수 있다) */
 export const HAIR_FOR: Record<Gender, HairStyle[]> = {
-  girl: ["bob", "pigtails", "bun", "beanie", "short", "bowl", "spiky", "side"],
-  boy: ["short", "bowl", "spiky", "side", "beanie", "bob", "pigtails", "bun"],
+  girl: ["bob", "long", "pigtails", "ponytail", "braids", "bun", "wavy", "curly", "beanie", "short", "bowl", "spiky", "side"],
+  boy: ["short", "bowl", "spiky", "side", "curly", "beanie", "bob", "wavy", "long", "ponytail", "pigtails", "braids", "bun"],
 };
 export const GENDER_HAIR: Record<Gender, HairStyle> = { girl: "bob", boy: "short" };
 
@@ -108,8 +113,8 @@ function hash(str: string): number {
 export function defaultAvatar(handle: string): AvatarConfig {
   const h = hash(handle || "me");
   return {
-    hair: HAIR_STYLES[h % HAIR_STYLES.length],
-    hairColor: HAIR_COLORS[(h >>> 3) % HAIR_COLORS.length],
+    hair: HAIR_STYLES[h % 8], // 처음 8 가지 안에서 (머리를 더해도 옛 기본 모습이 안 바뀌게)
+    hairColor: HAIR_COLORS[(h >>> 3) % 4],
     skin: SKINS[(h >>> 6) % 2], // 처음엔 밝은·중간 중 하나, 바꾸기는 셋 다
     outfit: OUTFITS[(h >>> 9) % OUTFITS.length],
     glasses: false,

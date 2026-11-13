@@ -7,7 +7,7 @@ import { connection, type NextRequest } from "next/server";
 import { z } from "zod";
 import { errorResponse } from "@/lib/server/http";
 import { SESSION_COOKIE, createLogin, endLogin, googleUser, sessionCookie } from "@/lib/server/auth";
-import { DEV_ACCOUNTS, DEV_COOKIE, OUT_COOKIE, currentUser, devAllowed } from "@/lib/server/session";
+import { DEV_ACCOUNTS, DEV_COOKIE, OUT_COOKIE, currentUser, betaUser, devAllowed } from "@/lib/server/session";
 
 const notFound = () => Response.json({ error: "NOT_FOUND", message: "개발 중에만 쓰는 기능이에요" }, { status: 404 });
 
@@ -15,7 +15,7 @@ export async function GET() {
   await connection(); // 쿠키를 읽는다 (try 밖에)
   if (!devAllowed()) return notFound();
   const me = await currentUser().catch(() => null);
-  return Response.json({ accounts: DEV_ACCOUNTS, current: me?.handle ?? null });
+  return Response.json({ accounts: DEV_ACCOUNTS, current: me?.handle ?? null, beta: Boolean(betaUser()) }); // 베타면 '새로 가입해 보기' 꺼짐
 }
 
 const Body = z.union([
