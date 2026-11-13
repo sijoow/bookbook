@@ -291,3 +291,87 @@ objs = [hair_shell(-0.05, open_z=0.5)] + bangs(4, 0.52, 0.18)
 objs.append(sphere(0.14, (0.06, 0.1, 1.2), (0.7, 0.7, 1.6), rot=(0.4, 0, 0.3)))
 fuse_export(objs, "hair-short")
 print("done hair")
+
+# ── 머리 8가지 더 (11-13 사용자: "나머지 머리도 블렌더로") ──
+def on_shell(theta, phi, r=1.13):
+    """머리 위 구면의 점 — theta: 위에서 내려온 각, phi: 앞(-y)에서 돈 각"""
+    return Vector((math.sin(theta) * math.sin(phi) * r, -math.sin(theta) * math.cos(phi) * r + 0.05, math.cos(theta) * r + 0.07))
+
+# 포니테일 — 묶은 머리끈(포인트) + 뒤로 늘어진 꼬리
+clear()
+objs = [hair_shell(-0.45)] + bangs(5)
+objs.append(sphere(0.34, (0, 1.32, -0.35), (0.9, 0.85, 1.55), rot=(-0.35, 0, 0)))
+objs.append(sphere(0.24, (0, 1.12, 0.22), (1, 1, 1)))
+bpy.ops.mesh.primitive_torus_add(major_radius=0.2, minor_radius=0.075, location=(0, 1.15, 0.16), rotation=(1.2, 0, 0))
+fuse_export(objs, "hair-ponytail", accent=[bpy.context.active_object])
+
+# 땋은 머리 — 양옆으로 동글동글 이어진 땋은 다발 + 끝 머리끈(포인트)
+clear()
+objs = [hair_shell(-0.45)] + bangs(5)
+ties = []
+for s in (-1, 1):
+    for i in range(5):
+        objs.append(sphere(0.19 - i * 0.012, (s * (0.98 - i * 0.03), 0.12, -0.32 - i * 0.24), (1, 0.9, 1.15)))
+    bpy.ops.mesh.primitive_torus_add(major_radius=0.13, minor_radius=0.055, location=(s * 0.84, 0.12, -1.48))
+    ties.append(bpy.context.active_object)
+fuse_export(objs, "hair-braids", accent=ties)
+
+# 뽀글 — 머리 위를 작은 동그라미가 빽빽이 덮는다
+clear()
+objs = [hair_shell(-0.4)]
+for i, th in enumerate([0.15, 0.45, 0.75, 1.05, 1.35, 1.6]):
+    n = max(6, int(14 * math.sin(th) + 4))
+    for k in range(n):
+        ph = (k + (i % 2) * 0.5) / n * 2 * math.pi
+        if th > 1.0 and abs(((ph + math.pi) % (2 * math.pi)) - math.pi) < 0.75:
+            continue  # 얼굴 자리는 비운다
+        objs.append(sphere(0.2, on_shell(th, ph, 1.12), (1, 1, 1), seg=12, rings=6))
+fuse_export(objs, "hair-curly", faces=7000)
+
+# 웨이브 단발 — 단발보다 조금 길고 물결치는 큰 덩어리
+clear()
+objs = [hair_shell(-0.75)] + bangs(5)
+for i in range(13):
+    a = math.radians(46 + i * 22.3)
+    for j, z in enumerate((-0.25, -0.62)):
+        rr = 1.08 + (0.06 if (i + j) % 2 else 0.0)
+        objs.append(sphere(0.2, (math.sin(a) * rr, -math.cos(a) * rr + 0.05, z), (1, 1, 1.15), seg=14, rings=7))
+fuse_export(objs, "hair-wavy", faces=7000)
+
+# 가르마 — 짧은 머리 + 한쪽으로 크게 넘긴 앞머리 덩어리
+clear()
+objs = [hair_shell(-0.2, open_z=0.5)]
+objs.append(sphere(0.42, (0.18, -0.85, 0.62), (1.5, 0.55, 0.62), rot=(0.35, 0.0, -0.22)))
+objs.append(sphere(0.3, (-0.62, -0.72, 0.62), (0.9, 0.5, 0.7), rot=(0.3, 0, 0.3)))
+fuse_export(objs, "hair-side")
+
+# 삐죽 — 짧은 머리 위로 뾰족뾰족
+clear()
+objs = [hair_shell(-0.05, open_z=0.5)] + bangs(4, 0.52, 0.17)
+for k, (th, ph) in enumerate([(0.2, 0), (0.35, 1.2), (0.35, -1.2), (0.5, 2.4), (0.5, -2.4), (0.25, 3.14), (0.55, 0.6), (0.55, -0.6)]):
+    p = on_shell(th, ph, 1.05)
+    bpy.ops.mesh.primitive_cone_add(vertices=10, radius1=0.2, radius2=0.0, depth=0.5, location=p + (p - Vector((0, 0.05, 0.07))).normalized() * 0.18)
+    c = bpy.context.active_object
+    c.rotation_mode = "QUATERNION"
+    c.rotation_quaternion = Vector((0, 0, 1)).rotation_difference((p - Vector((0, 0.05, 0.07))).normalized())
+    objs.append(c)
+fuse_export(objs, "hair-spiky")
+
+# 바가지 — 동그란 머리 + 일자로 자른 앞머리 띠
+clear()
+objs = [hair_shell(-0.15, open_z=0.42)]
+for k in range(13):
+    x = -0.66 + k * 0.11
+    p = front(x, 0.45 - abs(x) * 0.12, 1.06)
+    objs.append(sphere(0.12, p + Vector((0, -0.02, 0)), (1, 0.6, 1.3), seg=12, rings=6))
+fuse_export(objs, "hair-bowl")
+
+# 털모자 — 양옆 머리만(main) + 털모자(포인트: 몸통·테·방울)
+clear()
+objs = [sphere(0.3, (s * 0.95, -0.1, -0.35), (0.7, 0.8, 1.2)) for s in (-1, 1)]
+knit = [dome(1.17, 0.15, (0, 0.03, 0.05), (1.0, 1.0, 1.0), thick=0.06)]
+bpy.ops.mesh.primitive_torus_add(major_radius=1.15, minor_radius=0.16, location=(0, 0.03, 0.2))
+knit.append(bpy.context.active_object)
+knit.append(sphere(0.3, (0, 0.05, 1.3)))
+fuse_export(objs, "hair-beanie", accent=knit, faces=3000)
+print("done hair2")

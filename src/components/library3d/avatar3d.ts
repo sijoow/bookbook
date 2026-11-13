@@ -9,7 +9,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 /** Blender 부위 — 이름마다 한 번만 받는다 (public/models/parts/{이름}.glb) */
 const PARTS = new Map<string, Promise<THREE.Object3D | null>>();
 const PART_READY = new Map<string, THREE.Object3D | null>(); // 받은 것 — 바로 붙인다 (미리보기 그림이 대머리로 찍히지 않게)
-export const BLENDER_PARTS = { hair: { bob: "hair-bob", long: "hair-long", pigtails: "hair-pigtails", bun: "hair-bun", short: "hair-short" } as Record<string, string>, hat: { beret: "hat-beret", cap: "hat-cap", bucket: "hat-bucket", straw: "hat-straw" } as Record<string, string> };
+export const BLENDER_PARTS = { hair: Object.fromEntries(["bob", "short", "pigtails", "bun", "beanie", "bowl", "spiky", "side", "long", "ponytail", "braids", "curly", "wavy"].map((h) => [h, `hair-${h}`])) as Record<string, string>, hat: { beret: "hat-beret", cap: "hat-cap", bucket: "hat-bucket", straw: "hat-straw" } as Record<string, string> };
 export function loadPart(name: string): Promise<THREE.Object3D | null> {
   let p = PARTS.get(name);
   if (!p) {
