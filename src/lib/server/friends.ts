@@ -94,7 +94,7 @@ export async function acceptInvite(viewer: UserDoc, code: string): Promise<{ han
 
 // ── 친구 ──
 
-async function friendIds(user: UserDoc): Promise<ObjectId[]> {
+export async function friendIds(user: UserDoc): Promise<ObjectId[]> {
   const { friendships } = await cols();
   const fs = await friendships.find({ $or: [{ a: user._id }, { b: user._id }] }).toArray();
   return fs.map((f) => (f.a.equals(user._id) ? f.b : f.a));

@@ -7,6 +7,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { TopBar } from "@/components/Bars";
 import { CoverSticker, Progress, Stars } from "@/components/Bits";
 import { Tape, Yes24Credit } from "@/components/Deco";
+import { RelatedBooks } from "@/components/Picks";
 import ui from "@/components/ui.module.css";
 import Link from "next/link";
 import { api } from "@/lib/client/api";
@@ -279,6 +280,9 @@ export default function BookDetail() {
           )}
         </section>
       )}
+
+      {/* 이어지는 책 — 같은 책을 읽은 친구 · 그 친구들이 좋아한 책 · 같은 작가의 다른 책 (11-13) */}
+      <RelatedBooks bookId={book.id} className={`${ui.paper} ${s.section}`} />
 
       <div style={{ textAlign: "center", marginTop: 22 }}>
         <button type="button" className={ui.textBtn} onClick={removeBook}>

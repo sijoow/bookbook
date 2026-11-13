@@ -112,7 +112,7 @@ export type NotificationDoc = {
 export type PointLogDoc = {
   _id: ObjectId;
   userId: ObjectId;
-  reason: "welcome" | "finish" | "shelve" | "read" | "buy" | "admin";
+  reason: "welcome" | "finish" | "shelve" | "read" | "buy" | "admin" | "mission"; // mission = 오늘의 미션·이번 주 도장 (ref = 날짜:미션)
   ref: string; // 무엇 때문에 — 책 id · 기록 id · 물건 id …
   delta: number; // + 받음 / - 씀
   day: string; // 한국 날짜 (하루 한도 세기)

@@ -38,6 +38,7 @@ export type WorldEvents = {
   reorder?: (ids: string[]) => void; // 순서 바꾸기에서 책을 옮겨 놓았다
   arrange?: (id: string, pos: ItemPos) => void; // 물건 자리에서 방 물건을 옮겨 놓았다
   itemDoubleTap?: (id: string) => void; // 방 물건을 두 번 눌렀다 (홈 — 물건 자리로)
+  cam?: (moved: boolean) => void; // 손으로 카메라를 옮겼나 (제자리 버튼)
   say?: (text: string) => void;
   sayGuest?: (text: string) => void; // 손님(나) 말풍선
   units?: (count: number, current: number) => void;
@@ -2164,11 +2165,15 @@ export class LibraryWorld {
     this.userCam.yaw = clamp(o.yaw - (this.layout.units.length > 1 ? 0 : dx * 0.0042), -0.75, 0.75);
     this.userCam.tilt = clamp(o.tilt + dy * 0.0032, -0.32, 0.38);
     this.goalKey = "";
+    this.camNote();
   };
+
+  /** 화면 가득한 무대(홈·친구 집)에서만 휠로 가까이/멀리 — 꾸미기·상점처럼 화면이 내려가는 곳에선 휠은 화면 내리기 (11-13 사용자: 상점에서 아래로 안 내려감) */
+  wheelZoom = false;
 
   /** 마우스 휠 — 가까이/멀리 */
   private onWheel = (e: WheelEvent) => {
-    if (!this.camAdjustable()) return;
+    if (!this.wheelZoom || !this.camAdjustable()) return;
     e.preventDefault();
     this.setUserZoom(this.userCam.zoom * Math.exp(e.deltaY * 0.0012));
   };
@@ -2181,12 +2186,30 @@ export class LibraryWorld {
   private setUserZoom(z: number) {
     this.userCam.zoom = clamp(z, 0.62, 1.7);
     this.goalKey = "";
+    this.camNote();
+  }
+
+  /** 확대·축소 버튼 (휴대폰엔 휠이 없어서) — +1 이면 다가가고 −1 이면 물러난다 */
+  zoomStep(dir: 1 | -1) {
+    if (!this.camAdjustable()) return;
+    this.setUserZoom(this.userCam.zoom * (dir > 0 ? 0.8 : 1.25));
   }
 
   /** 카메라를 처음 구도로 */
   resetCamera() {
     this.userCam = { yaw: 0, tilt: 0, zoom: 1 };
     this.goalKey = "";
+    this.camNote();
+  }
+
+  private camWasMoved = false;
+  /** 손으로 옮겼는지 바뀌었을 때만 알린다 (제자리 버튼을 보이고 숨기기) */
+  private camNote() {
+    const u = this.userCam;
+    const moved = Math.abs(u.zoom - 1) > 0.02 || Math.abs(u.yaw) > 0.02 || Math.abs(u.tilt) > 0.02;
+    if (moved === this.camWasMoved) return;
+    this.camWasMoved = moved;
+    this.events.cam?.(moved);
   }
 
   private onCancel = (e?: PointerEvent) => {

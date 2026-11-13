@@ -33,7 +33,7 @@ type Me = { handle: string; nickname: string; avatar: AvatarConfig; deco: Deco; 
 type History = { reason: string; delta: number; ref: string; at: string; note: string | null };
 
 const SLOT_LABEL = { head: "머리", neck: "목", back: "등", body: "몸" } as const;
-const REASON: Record<string, string> = { welcome: "처음 가입", finish: "책을 다 읽음", shelve: "책을 꽂음", read: "읽은 시간", buy: "샀어요", admin: "선물 (운영)" };
+const REASON: Record<string, string> = { welcome: "처음 가입", finish: "책을 다 읽음", shelve: "책을 꽂음", read: "읽은 시간", buy: "샀어요", admin: "선물 (운영)", mission: "오늘의 미션" };
 
 export default function Decorate() {
   const [me, setMe] = useState<Me | null>(null);

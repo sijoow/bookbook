@@ -84,6 +84,7 @@ export default function LibraryStage(p: StageProps) {
   const props = useRef(p);
   const [units, setUnits] = useState({ count: 1, current: 0 });
   const [shelf, setShelf] = useState(false); // 책장 크게 보기 중
+  const [camMoved, setCamMoved] = useState(false); // 손으로 카메라를 옮겼나 — 제자리 버튼
 
   useLayoutEffect(() => {
     props.current = p;
@@ -201,6 +202,7 @@ export default function LibraryStage(p: StageProps) {
             avatarTap: () => props.current.onAvatar?.(),
             arrange: (id, pos) => props.current.onArrange?.(id, pos),
             itemDoubleTap: (id) => props.current.onItemDoubleTap?.(id),
+            cam: (moved) => setCamMoved(moved),
           },
           font,
         );
@@ -211,6 +213,7 @@ export default function LibraryStage(p: StageProps) {
         return;
       }
       cv.addEventListener("webglcontextlost", onLost);
+      lw.wheelZoom = Boolean(props.current.immersive);
       world.current = lw;
       // 개발 중 시험 스크립트가 책 자리를 묻는다 (scripts/shot-3d.mjs)
       if (process.env.NODE_ENV !== "production") (window as unknown as { __library3d?: LibraryWorld }).__library3d = lw;
@@ -268,6 +271,7 @@ export default function LibraryStage(p: StageProps) {
 
   useEffect(() => {
     canvasEl.current?.classList.toggle(s.canvasEditing, Boolean(p.editing || p.arranging || p.immersive));
+    if (world.current) world.current.wheelZoom = Boolean(p.immersive);
   }, [p.editing, p.arranging, p.immersive]);
 
   const label = labelOf(p);
@@ -381,6 +385,15 @@ export default function LibraryStage(p: StageProps) {
       )}
         {p.hint && !p.reading && units.count <= 1 && <p className={s.hint}>{p.hint}</p>}
         {p.hud && (!p.reading || p.inPlace) && p.hud}
+        {/* 처음 구도로 — 손가락으로 돌리거나 당겼을 때만 (가까이·멀리는 두 손가락 벌리기·오므리기, PC 는 휠). 11-13 사용자: 앱에선 손가락이라 +/- 는 필요 없다 */}
+        {p.immersive && camMoved && !p.reading && !p.editing && !p.arranging && !shelf && (
+          <button type="button" className={s.camReset} style={{ bottom: ib + 12 }} onClick={() => world.current?.resetCamera()} aria-label="처음 구도로" title="처음 구도로">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M4.5 12a7.5 7.5 0 1 0 2.4-5.5" />
+              <path d="M4.5 4.5v4h4" />
+            </svg>
+          </button>
+        )}
         {p.mode !== "preview" && !p.immersive && !p.reading && !p.editing && (
           <button type="button" className={s.zoomBtn} onClick={() => world.current?.setShelfView(!shelf)} aria-pressed={shelf}>
             {shelf ? "방 보기" : "크게 보기"}

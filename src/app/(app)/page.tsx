@@ -19,6 +19,7 @@ import { CoverSticker, Progress } from "@/components/Bits";
 import { Bookshelf } from "@/components/Bookshelf";
 import { Sparkle, StarDoodle, Tape, Yes24Credit } from "@/components/Deco";
 import { EditBar, HudCredit, HudHint, HudNotice, HudPoints, QuickMenu, ReadHandle, SideDrawer, SideTab, Stat, hud } from "@/components/HomeHud";
+import { MissionPanel } from "@/components/Missions";
 import { ShareLibrary, useShareLibrary } from "@/components/ShareLibrary";
 import { StampIcon } from "@/components/Stamp";
 import type { StageApi } from "@/components/library3d/LibraryStage";
@@ -27,6 +28,7 @@ import { ReadingOverlay, ReadingPanel, reducedMotion, type FinishInput, type Flo
 import ui from "@/components/ui.module.css";
 import { defaultAvatar, type AvatarConfig } from "@/lib/avatar/config";
 import { api } from "@/lib/client/api";
+import type { MissionId, MissionsView } from "@/lib/missions/missions";
 import { makeSaver } from "@/lib/client/saver";
 import { hasVoices, setSound, soundOn } from "@/lib/client/voice";
 import { musicOn, setMusic } from "@/lib/client/bgm";
@@ -108,6 +110,7 @@ export default function MyLibrary() {
   const [editing, setEditing] = useState(false); // 책장 순서 바꾸기
   const [arranging, setArranging] = useState(false); // 방 물건 자리 옮기기 (11-13)
   const [drawer, setDrawer] = useState(false); // 옆 서랍 (나의 도서관)
+  const [missions, setMissions] = useState<MissionsView | null>(null); // 오늘의 미션 (서랍 맨 위, 받을 게 있으면 색인 탭에 점)
   const [shelf, setShelf] = useState(false); // 크게 보기 중
   const [closingSheet, setClosingSheet] = useState(false);
   const [readBarOpen, setReadBarOpen] = useState(false);
@@ -239,6 +242,9 @@ export default function MyLibrary() {
         api<{ guests: Guest[] }>("/api/visits")
           .then((g) => alive && setGuests(g.guests))
           .catch(() => {});
+        api<MissionsView>("/api/missions")
+          .then((x) => alive && setMissions(x))
+          .catch(() => {});
         api<{ notice: { id: string; text: string; level: "info" | "event" | "warn" } | null }>("/api/notice")
           .then((n) => {
             let closed: string | null = null;
@@ -331,6 +337,9 @@ export default function MyLibrary() {
       const done = f.book.status !== "read" && r.book.status === "read";
       const got = (r.points?.read ?? 0) + (r.points?.finish ?? 0);
       if (r.points) setMe((m) => (m ? { ...m, points: r.points!.balance } : m));
+      api<MissionsView>("/api/missions") // 읽은 쪽이 미션을 채웠을 수도
+        .then(setMissions)
+        .catch(() => {});
       const plus = got > 0 ? ` · +${got} ${POINT_NAME}` : "";
       setToast(done ? `『${r.book.title}』 다 읽었어요! 책등에 별을 붙였어요${plus}` : `${formatMinutes(r.session.minutes)} 읽고 ${r.book.currentPage ?? 0}쪽까지 · 책장에 꽂았어요${plus}`);
       if (gl) void back3d(r.book, done);
@@ -417,6 +426,32 @@ export default function MyLibrary() {
   const canItems = gl && !flow && (myDeco?.placed ?? []).some((id) => ROOM_SURFACES[id]);
   const stageInsets = tidy && canBooks && canItems ? TIDY_INSETS : HUD_INSETS;
   const closeDrawer = useCallback(() => setDrawer(false), []);
+
+  // 오늘의 미션 다시 세기 — 서랍을 열 때 (책을 덮은 뒤엔 finish 에서)
+  useEffect(() => {
+    if (!drawer) return;
+    let alive = true;
+    api<MissionsView>("/api/missions")
+      .then((x) => alive && setMissions(x))
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [drawer]);
+
+  /** 미션 받기 — 받은 포인트(보너스 포함)를 돌려준다 */
+  const claimMission = useCallback(async (id: MissionId | "week") => {
+    try {
+      const r = await api<{ gained: number; bonus: number; view: MissionsView; points: number }>("/api/missions", { json: { id } });
+      setMissions(r.view);
+      setMe((m) => (m ? { ...m, points: r.points } : m));
+      if (r.bonus) setToast(`오늘의 미션을 모두 했어요! 보너스 +${r.bonus} ${POINT_NAME}`);
+      return r.gained + r.bonus;
+    } catch (e) {
+      setToast((e as Error).message);
+      return 0;
+    }
+  }, []);
   const say = useCallback((m: string) => {
     setToast(m);
     setTimeout(() => setToast(null), 3000);
@@ -496,7 +531,7 @@ export default function MyLibrary() {
               onView={setShelf}
               hud={
                 <>
-                  {!tidy && <SideTab open={drawer} onOpen={() => setDrawer(true)} />}
+                  {!tidy && <SideTab open={drawer} onOpen={() => setDrawer(true)} badge={missions?.ready ?? 0} />}
                   {!tidy && <HudPoints points={me.points} />}
                   {!tidy && notice && (
                     <HudNotice
@@ -561,6 +596,7 @@ export default function MyLibrary() {
             </span>
             <span className={hud.small}>상점 가기 ›</span>
           </Link>
+          {missions && <MissionPanel view={missions} onClaim={claimMission} onGo={closeDrawer} />}
           <div className={hud.stats}>
             <Stat value={`${all.length}권`} label="꽂은 책" />
             <Stat value={`${readCount}권`} label="다 읽은 책" />

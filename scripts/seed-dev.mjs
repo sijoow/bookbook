@@ -48,6 +48,8 @@ const PLAN = {
     { q: "불편한 편의점 김호연", st: "read", min: 260, ago: 3, rating: 4 },
     { q: "이방인 카뮈", st: "reading", sessions: [[90, 70, 1]] },
     { q: "모순 양귀자", st: "want" },
+    { q: "채식주의자 한강", st: "read", min: 230, ago: 11, rating: 5, one: "문장이 오래 남아요" }, // 11-13 더함 — fe 에게 없는 책 (맞춤 추천)
+    { isbn: "9788954682152", st: "reading", sessions: [[120, 90, 1]] }, // 작별하지 않는다 (검색하면 세트가 먼저 나와서 ISBN 으로)
   ],
   hyunwoo: [
     { q: "프로젝트 헤일메리", st: "read", min: 620, ago: 30, rating: 5, one: "로키 때문에 울었다" },
@@ -56,11 +58,15 @@ const PLAN = {
     { q: "급류 정대건", st: "read", min: 250, ago: 6, rating: 4, one: "여름 냄새가 나는 소설" },
     { q: "코스모스 칼 세이건", st: "reading", sessions: [[180, 160, 2]] },
     { q: "가호 무라카미 하루키", st: "reading", sessions: [[120, 110, 0]] },
+    { q: "수레바퀴 아래서 헤르만 헤세", st: "read", min: 240, ago: 9, rating: 4.5, one: "헤세 책 중에 제일 아팠다" },
+    { q: "마션 앤디 위어", st: "read", min: 520, ago: 40, rating: 5, one: "감자가 먹고 싶어지는 책" },
   ],
   mom: [
     { isbn: "9788936434120", st: "read", min: 230, ago: 15, rating: 5, one: "마음이 아팠다" },
     { q: "불편한 편의점 김호연", st: "read", min: 210, ago: 7, rating: 4 },
     { q: "급류 정대건", st: "reading", sessions: [[100, 90, 1]] },
+    { q: "나의 라임 오렌지나무", st: "read", min: 260, ago: 20, rating: 5, one: "제제를 꼭 안아 주고 싶다" },
+    { q: "긴긴밤 루리", st: "read", min: 90, ago: 5, rating: 4.5, one: "짧은데 오래 울었다" },
   ],
 };
 
@@ -81,11 +87,8 @@ async function findBook(who, p) {
 
 async function fill(who) {
   const lib = await call(who, "GET", "/api/library");
-  if (lib.books.length) {
-    console.log(`  ${who}: 이미 책 ${lib.books.length}권 — 건너뜀`);
-    return;
-  }
-  if (AVATARS[who]) await call(who, "PATCH", "/api/me", { avatar: AVATARS[who] });
+  // 이미 책이 있으면 아바타는 그대로 두고, 계획에 있는데 없는 책만 채운다 (같은 책은 서버가 duplicate)
+  if (AVATARS[who] && !lib.books.length) await call(who, "PATCH", "/api/me", { avatar: AVATARS[who] });
   for (const p of PLAN[who]) {
     const ref = await findBook(who, p);
     if (!ref) {
@@ -93,7 +96,8 @@ async function fill(who) {
       continue;
     }
     // 다 읽은 책도 '읽는 중'으로 넣고 끝 쪽까지 읽은 기록을 남긴다 → 읽는 속도·걸린 시간이 실제처럼 쌓인다
-    const { book } = await call(who, "POST", "/api/library", { ...ref, status: p.st === "want" ? "want" : "reading" });
+    const { book, duplicate } = await call(who, "POST", "/api/library", { ...ref, status: p.st === "want" ? "want" : "reading" });
+    if (duplicate) continue; // 이미 꽂힌 책 — 기록·별점 그대로
     if (p.st === "read") {
       // 며칠에 나눠 읽은 것처럼 (한 번 기록은 12시간까지) — 하루 4시간 안쪽씩, 마지막 날 끝 쪽
       const pages = book.pages ?? 300;

@@ -579,3 +579,34 @@
 .editChip:disabled {
   opacity: 0.45;
 }
+
+/* 색인 탭 — 받을 미션이 있으면 빨간 점 (11-13) */
+.sideBadge {
+  position: absolute;
+  top: -9px;
+  right: -9px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: var(--coral);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-weight: 800;
+  font-size: 11px;
+  line-height: 1;
+  animation: badgeBob 1.8s ease-in-out infinite;
+}
+@keyframes badgeBob {
+  50% {
+    transform: translateY(-2px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sideBadge {
+    animation: none;
+  }
+}

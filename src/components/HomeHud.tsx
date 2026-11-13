@@ -129,9 +129,17 @@ export function EditBar(p: EditBarProps) {
 }
 
 /** 왼쪽 가장자리 색인 탭 — 누르면 옆 서랍이 나온다 */
-export function SideTab({ open, onOpen, label = "나의 도서관" }: { open: boolean; onOpen: () => void; label?: string }) {
+export function SideTab({ open, onOpen, label = "나의 도서관", badge = 0 }: { open: boolean; onOpen: () => void; label?: string; badge?: number }) {
   return (
-    <button type="button" className={h.sideTab} onClick={onOpen} aria-expanded={open} aria-controls="home-drawer">
+    <button
+      type="button"
+      className={h.sideTab}
+      onClick={onOpen}
+      aria-expanded={open}
+      aria-controls="home-drawer"
+      aria-label={badge ? `${label} — 받을 미션 ${badge}개` : undefined}
+    >
+      {badge > 0 && <b className={h.sideBadge}>{badge}</b>}
       <span className={h.sideTabText}>{label}</span>
       <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden>
         <path d="M4 2.5 7.8 6 4 9.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />

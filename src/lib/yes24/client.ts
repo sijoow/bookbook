@@ -93,7 +93,8 @@ function callCached(path: string, params: Record<string, string>) {
 
 export type SearchResult = { source: BookSource; items: BookCandidate[]; totalCount: number | null; cached: boolean };
 
-export async function searchBooks(query: string, page = 1, pageSize = 20): Promise<SearchResult> {
+/** sort: RELATION = 정확도순(검색창) · DEFAULT = 인기순(같은 작가의 다른 책 추천 — 대표작이 먼저) */
+export async function searchBooks(query: string, page = 1, pageSize = 20, sort: "RELATION" | "DEFAULT" = "RELATION"): Promise<SearchResult> {
   const source = yes24Mode();
   if (source === "mock") {
     const items = mockSearch(query)
@@ -104,7 +105,7 @@ export async function searchBooks(query: string, page = 1, pageSize = 20): Promi
   const { value: data, hit } = await callCached("/goods/itemList", {
     query,
     category: "BOOK", // 국내도서
-    sort: "RELATION", // 정확도순
+    sort,
     page: String(page),
     pageSize: String(pageSize),
     detail: "N", // 목록은 가볍게, 쪽수·크기·책등은 고를 때 상세로
@@ -114,7 +115,7 @@ export async function searchBooks(query: string, page = 1, pageSize = 20): Promi
     .filter((b): b is BookCandidate => b !== null && isReadable(b)); // 클래스24 같은 책 아닌 상품 빼기
   const total = data && typeof data === "object" ? Number((data as { totalCount?: unknown }).totalCount) : NaN;
   // 정확도순 1위가 딴 책일 때가 있어 제목이 맞는 책을 위로 (예: '이방인 카뮈' → 『필사의 힘』이 1위)
-  return { source, items: rankByTitle(items, query), totalCount: Number.isFinite(total) ? total : null, cached: hit };
+  return { source, items: sort === "RELATION" ? rankByTitle(items, query) : items, totalCount: Number.isFinite(total) ? total : null, cached: hit };
 }
 
 export type DetailResult = { source: BookSource; item: BookCandidate | null; cached: boolean };

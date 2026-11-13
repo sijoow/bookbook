@@ -5,14 +5,17 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { TopBar } from "@/components/Bars";
 import { CoverSticker } from "@/components/Bits";
 import { Tape, Yes24Credit } from "@/components/Deco";
 import { MenuIcon } from "@/components/MenuIcon";
+import { PickRow, friendCards } from "@/components/Picks";
+import pk from "@/components/picks.module.css";
 import ui from "@/components/ui.module.css";
 import { api } from "@/lib/client/api";
+import { genreShort, type PickBook, type PicksView } from "@/lib/books/picks";
 import { STATUS_LABEL, shortAuthor, type BookStatus, type LibraryBook } from "@/lib/books/types";
 import type { BookCandidate } from "@/lib/yes24/candidate";
 import s from "../screens.module.css";
@@ -35,6 +38,27 @@ export default function AddBook() {
   const [from, setFrom] = useState<"search" | "barcode">("search");
   const [manualIsbn, setManualIsbn] = useState<string | null>(null); // 바코드는 찍었는데 YES24 에 없는 책
   const [note, setNote] = useState<string | null>(null);
+  const [picks, setPicks] = useState<PicksView | null>(null);
+
+  // 맞춤 추천 (내 책장·친구 책장·YES24) — 없어도 그만. 책 상세 '이어지는 책'에서 왔으면 (?isbn=·?q=) 그 책을 바로
+  useEffect(() => {
+    let alive = true;
+    api<PicksView>("/api/books/picks")
+      .then((r) => alive && setPicks(r))
+      .catch(() => {});
+    const sp = new URLSearchParams(window.location.search);
+    const isbn = sp.get("isbn");
+    const text = sp.get("q");
+    if (isbn) void Promise.resolve().then(() => openPick({ title: "", author: null, coverUrl: null, isbn13: isbn, itemId: null, workKey: "" }));
+    else if (text) void Promise.resolve().then(() => {
+      setQ(text);
+      return runSearch(text);
+    });
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 처음 한 번만
+  }, []);
 
   /** 바코드를 읽으면 — 상세(쪽수·두께·책등)를 불러와 고르기 카드로. YES24 에 없으면 직접 적기로 (ISBN 은 같이 저장) */
   async function onBarcode(isbn: string) {
@@ -86,6 +110,48 @@ export default function AddBook() {
     }
   }
 
+  /** 추천에서 고른 책 — 상세를 불러와 그 책 하나만 보여 주고 고르기 카드를 연다 (ISBN 이 없으면 제목으로 찾기) */
+  async function openPick(b: PickBook) {
+    setErr(null);
+    setDup(null);
+    setNote(null);
+    setManual(false);
+    setFrom("search");
+    if (!b.isbn13) {
+      setQ(b.title);
+      await runSearch(`${b.title} ${shortAuthor(b.author)}`.trim());
+      return;
+    }
+    setBusy(true);
+    try {
+      const r = await api<{ item: BookCandidate | null }>(`/api/books/isbn/${b.isbn13}`);
+      if (!r.item) throw new Error("없음");
+      setResults([r.item]);
+      setPicked(r.item);
+      setDetail(r.item);
+      setStatus("want");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch {
+      if (b.title) {
+        setQ(b.title);
+        await runSearch(b.title);
+      } else setErr("책을 찾지 못했어요. 제목으로 찾아 주세요.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /** 처음으로 — 찾은 것 지우고 추천 다시 */
+  function reset() {
+    setResults(null);
+    setPicked(null);
+    setDetail(null);
+    setDup(null);
+    setErr(null);
+    setNote(null);
+    setQ("");
+  }
+
   async function pick(b: BookCandidate) {
     setPicked(b);
     setDetail(null);
@@ -134,6 +200,7 @@ export default function AddBook() {
   }
 
   const shown = detail ?? picked;
+  const personal = Boolean(picks && (picks.friends.length > 0 || picks.authors.length > 0));
 
   return (
     <>
@@ -149,9 +216,15 @@ export default function AddBook() {
       ) : null}
 
       <div className={s.row2} style={{ justifyContent: "space-between" }}>
-        <button type="button" className={ui.textBtn} onClick={() => setManual((v) => !v)}>
-          {manual ? "← 검색으로 찾기" : "찾는 책이 없나요? 직접 적기"}
-        </button>
+        {results && !manual ? (
+          <button type="button" className={ui.textBtn} onClick={reset}>
+            ← 처음으로
+          </button>
+        ) : (
+          <button type="button" className={ui.textBtn} onClick={() => setManual((v) => !v)}>
+            {manual ? "← 검색으로 찾기" : "찾는 책이 없나요? 직접 적기"}
+          </button>
+        )}
         <button type="button" className={`${ui.btn} ${ui.btnGhost}`} style={{ minHeight: 40, fontSize: 18 }} onClick={() => setScanning(true)}>
           바코드로 찾기
         </button>
@@ -259,6 +332,8 @@ export default function AddBook() {
               <span>찾는 책이 없을 때</span>
             </button>
           </div>
+          {!personal && (
+            <>
           <p className={s.addAsk}>이런 책은 어때요?</p>
           <div className={s.addChips}>
             {PICKS.map((t) => (
@@ -275,7 +350,49 @@ export default function AddBook() {
               </button>
             ))}
           </div>
+            </>
+          )}
         </section>
+      )}
+
+      {/* 맞춤 추천 — 내 책장을 읽고 고른 책 (11-13) */}
+      {!manual && !results && !busy && !scanning && personal && picks && (
+        <>
+          {picks.taste.line && (
+            <section className={`${ui.paper} ${s.section}`}>
+              <Tape color="apricot" />
+              <span className={ui.paperLabel}>나의 독서 취향</span>
+              <p className={pk.taste}>{picks.taste.line}</p>
+              {picks.taste.genres.length > 1 && (
+                <div className={pk.genres}>
+                  {picks.taste.genres.map((g) => (
+                    <span key={g.name} className={pk.genre}>
+                      <b>{genreShort(g.name)}</b> {Math.max(1, Math.round(g.share * 100))}%
+                    </span>
+                  ))}
+                </div>
+              )}
+              <p className={pk.sub}>다 읽은 책·별점을 더 무겁게 봐요 · 책 {picks.taste.books}권</p>
+            </section>
+          )}
+          {picks.friends.length > 0 && (
+            <section className={`${ui.paper} ${s.section}`}>
+              <Tape color="mint" />
+              <span className={ui.paperLabel}>친구 책장에서</span>
+              <p className={pk.sub}>꽂으면 그 친구 책장으로 통로가 열려요</p>
+              <PickRow items={friendCards(picks.friends)} onPick={openPick} label="친구 책장에서 고른 책" />
+            </section>
+          )}
+          {picks.authors.map((a, i) => (
+            <section key={a.name} className={`${ui.paper} ${s.section}`}>
+              <Tape color={i ? "sky" : "butter"} />
+              <span className={ui.paperLabel}>{a.name} 작가의 다른 책</span>
+              <p className={pk.sub}>내 책장에 {picks.taste.authors.find((t) => t.name === a.name)?.count ?? 1}권 꽂힌 작가예요</p>
+              <PickRow items={a.items.map((b) => ({ key: b.workKey, book: b }))} onPick={openPick} label={`${a.name} 작가의 다른 책`} />
+            </section>
+          ))}
+          <Yes24Credit />
+        </>
       )}
 
       {results && results.length > 0 && <Yes24Credit />}
