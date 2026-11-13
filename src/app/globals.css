@@ -69,3 +69,15 @@ button {
 img {
   max-width: 100%;
 }
+
+/* 친구 집에 놀러 가면 아래 탭 막대를 숨긴다 — 잘못 눌러 '우리 집' 인사 없이 바로 가 버리지 않게 (11-13 사용자). 방은 그 자리까지 */
+body.visiting [data-tabbar] {
+  transform: translate(-50%, 110%);
+  pointer-events: none;
+}
+[data-tabbar] {
+  transition: transform 0.28s ease;
+}
+body.visiting [data-immersive] {
+  height: calc(100dvh - env(safe-area-inset-bottom, 0px));
+}

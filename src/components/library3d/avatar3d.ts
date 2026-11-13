@@ -25,10 +25,12 @@ export function loadPart(name: string): Promise<THREE.Object3D | null> {
   }
   return p;
 }
+/** 받아 둔 부위 (없으면 undefined) — 동물처럼 바로 바꿔 끼울 때 */
+export const partReady = (name: string) => PART_READY.get(name);
 /** 미리보기 그림을 찍기 전에 — 쓰는 부위를 다 받아 둔다 */
 export function preloadParts(): Promise<unknown> {
   if (!FEATURES.blenderParts) return Promise.resolve();
-  return Promise.all([...Object.values(BLENDER_PARTS.hair), ...Object.values(BLENDER_PARTS.hat), "eye"].map(loadPart));
+  return Promise.all([...Object.values(BLENDER_PARTS.hair), ...Object.values(BLENDER_PARTS.hat), "eye", ...["dog", "cat", "rabbit", "hamster", "chick"].map((k) => `pet-${k}`)].map(loadPart));
 }
 import { approach } from "@/lib/library3d/motion";
 import { buildWearable } from "./deco3d";

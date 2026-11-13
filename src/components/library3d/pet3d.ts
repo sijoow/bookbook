@@ -6,6 +6,19 @@ import type { Pet as PetKind } from "@/lib/avatar/config";
 import { approach, turnDelta } from "@/lib/library3d/motion";
 import { PAL } from "./textures";
 import { Kit } from "./toon";
+import { FEATURES } from "@/lib/features";
+import { loadPart, partReady } from "./avatar3d";
+
+/** Blender 동물 덩어리 색 (scripts/blender/pets.py 이름: main·accent·pink·nose·beak·earL/R·tail) */
+const PET_COLORS: Record<string, { main: string; accent?: string; pink?: string; nose?: string; beak?: string; ear?: string; tail?: string }> = {
+  dog: { main: "#f3dcb6", accent: "#fbecd2", nose: PAL.inkDeep, ear: "#b98552", tail: "#b98552" },
+  cat: { main: "#f2b56b", accent: "#fbecd2", nose: PAL.coral },
+  rabbit: { main: "#fbf7f2", pink: "#f6b8b0", nose: PAL.coral },
+  hamster: { main: "#e9b46e", accent: "#fbf3e3", pink: "#f6b8b0", nose: PAL.coral },
+  chick: { main: PAL.butter, beak: PAL.apricot },
+};
+/** 눈 자리 — 코드 몸과 같다 (y, z, 사이, 크기) */
+const PET_FACE: Record<string, [number, number, number, number?]> = { dog: [10.2, 6.9, 1.55], cat: [9.9, 6.6, 1.45], rabbit: [10.4, 5.9, 1.5], hamster: [5.9, 4.85, 1.45, 0.5], chick: [8.7, 3.6, 1.2, 0.45] };
 
 const sphere = (r: number, w = 16, h = 12) => new THREE.SphereGeometry(r, w, h);
 
@@ -34,6 +47,13 @@ export class Pet {
     this.kit = new Kit(gradient);
     this.root.add(this.body);
     this.build();
+    // Blender 몸 — 받아 둔 게 있으면 바로, 아니면 받은 뒤 바꿔 끼운다 (그동안은 코드 몸)
+    if (FEATURES.blenderParts) {
+      const name = `pet-${this.kind}`;
+      const ready = partReady(name);
+      if (ready) this.useBlender(ready);
+      else void loadPart(name).then((src) => src && !this.gone && this.useBlender(src));
+    }
   }
 
   /** target 쪽으로 따라간다. 가까우면 멈춰 face 쪽을 본다 */
@@ -77,7 +97,36 @@ export class Pet {
     for (const e of this.eyes) e.scale.y = (this.sleeping && this.react === 0) || blink ? 0.18 : 1;
   }
 
+  private gone = false;
+
+  /** Blender 몸으로 — 코드 몸을 치우고, 덩어리마다 만화 재질 + 갈색 펜 테두리. 귀(earL·earR)·꼬리(tail)는 축이 붙는 곳이라 그대로 흔든다 */
+  private useBlender(src: THREE.Object3D) {
+    for (const c of [...this.body.children]) c.removeFromParent();
+    this.ears = [];
+    this.tail = null;
+    this.eyes = [];
+    const C = PET_COLORS[this.kind] ?? { main: "#ffffff" };
+    const root = src.clone(true);
+    const named: THREE.Object3D[] = [];
+    root.traverse((o) => named.push(o));
+    for (const o of named) {
+      const m = o as THREE.Mesh;
+      if (!m.isMesh) continue;
+      const n = m.name;
+      const color = n.startsWith("ear") ? (C.ear ?? C.main) : n === "tail" ? (C.tail ?? C.main) : n.startsWith("pink") ? (C.pink ?? C.main) : n === "accent" ? (C.accent ?? C.main) : n === "nose" ? (C.nose ?? PAL.inkDeep) : n === "beak" ? (C.beak ?? C.main) : C.main;
+      m.material = this.kit.toon(color);
+      m.castShadow = true;
+      if (n !== "nose") m.add(new THREE.Mesh(m.geometry, this.kit.outline(n === "main" ? 0.26 : 0.18)));
+      if (n === "earL" || n === "earR") this.ears.push(m);
+      if (n === "tail") this.tail = m;
+    }
+    this.body.add(root);
+    const f = PET_FACE[this.kind];
+    if (f) this.face(f[0], f[1], f[2], f[3]);
+  }
+
   dispose() {
+    this.gone = true;
     this.root.removeFromParent();
     this.kit.dispose();
   }

@@ -143,6 +143,7 @@ export class LibraryWorld {
   private active = false;
   private disposed = false;
   private down: { x: number; y: number; id: number } | null = null;
+  private spin: { id: number; x: number; rot: number; moved: boolean } | null = null; // 미리보기 — 끌어서 아바타 돌리기 (옆모습)
   private peeked: { id: string; obj: THREE.Group; base: THREE.Vector3 } | null = null; // 크게 보기에서 고른 책 (살짝 나와 있다)
   private pressTimer = 0; // 꾹 누르기 — 0.45초 그대로 누르고 있으면 꺼내 오기
   private pressed = false; // 꾹 눌러서 이미 꺼냈다 (손을 뗀 건 누르기가 아니다)
@@ -2230,6 +2231,11 @@ export class LibraryWorld {
       }
     }
     this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    // 꾸미기 창 미리보기 — 좌우로 끌면 아바타가 빙글 (옆모습 보기, 11-13 사용자)
+    if (this.mode === "preview" && this.avatar && !this.running) {
+      this.spin = { id: e.pointerId, x: e.clientX, rot: this.avatar.root.rotation.y, moved: false };
+      return;
+    }
     if (this.pointers.size === 2 && this.camAdjustable()) {
       // 두 손가락 — 가까이/멀리 시작 (끌던 건 멈춘다)
       const [a, b] = [...this.pointers.values()];
@@ -2262,6 +2268,15 @@ export class LibraryWorld {
 
   private onMove = (e: PointerEvent) => {
     if (this.pointers.has(e.pointerId)) this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (this.spin && this.spin.id === e.pointerId && this.avatar) {
+      const dx = e.clientX - this.spin.x;
+      if (Math.abs(dx) > 6) this.spin.moved = true;
+      if (this.spin.moved) {
+        this.avatar.root.rotation.y = this.spin.rot + dx * 0.012;
+        if (!this.active) this.renderOnce();
+      }
+      return;
+    }
     if (this.down && this.down.id === e.pointerId && Math.hypot(e.clientX - this.down.x, e.clientY - this.down.y) > 10) window.clearTimeout(this.pressTimer); // 움직이면 꾹 누르기가 아니다
     if (this.itemDrag && e.pointerId === this.itemDrag.pointerId) {
       this.moveItemDrag(e);
@@ -2339,6 +2354,7 @@ export class LibraryWorld {
 
   private onCancel = (e?: PointerEvent) => {
     this.down = null;
+    this.spin = null;
     window.clearTimeout(this.pressTimer);
     if (e) this.pointers.delete(e.pointerId);
     this.pinch = null;
@@ -2350,6 +2366,12 @@ export class LibraryWorld {
   private onUp = (e: PointerEvent) => {
     const d = this.down;
     this.down = null;
+    if (this.spin && this.spin.id === e.pointerId) {
+      const moved = this.spin.moved;
+      this.spin = null;
+      this.pointers.delete(e.pointerId);
+      if (moved) return; // 돌린 건 누르기가 아니다
+    }
     window.clearTimeout(this.pressTimer);
     if (this.pressed) {
       this.pressed = false;
@@ -2415,6 +2437,10 @@ export class LibraryWorld {
       if (!this.shelfView && (this.mode === "home" || this.mode === "visit") && (onBook || this.caseAt(x, y))) {
         this.setShelfView(true);
         if (onBook) this.peek(onBook);
+        return;
+      }
+      if (this.mode === "preview" && this.avatar) {
+        this.avatar.root.rotation.y = 0; // 정면으로
         return;
       }
       if (!onBook) {

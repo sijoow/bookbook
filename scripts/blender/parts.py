@@ -75,7 +75,7 @@ shell.scale = (1.06, 1.03, 1.0)
 bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
 bm = bmesh.new()
 bm.from_mesh(shell.data)
-kill = [v for v in bm.verts if (v.co.y < -0.2 and v.co.z < 0.45) or v.co.z < -0.6]
+kill = [v for v in bm.verts if (v.co.y < -0.2 and v.co.z < 0.42 and abs(v.co.x) < 0.74) or v.co.z < -0.6]  # 얼굴 자리만 좁게 — 관자놀이 머리는 남겨 앞머리와 이어지게 (11-13: 옆이 비어 보였다)
 bmesh.ops.delete(bm, geom=kill, context="VERTS")
 bm.to_mesh(shell.data)
 bm.free()
@@ -88,7 +88,7 @@ for i in range(15):
     x, y = math.sin(a) * 1.03, -math.cos(a) * 1.03 + 0.05
     parts.append(sphere(0.13, (x * 0.99, y, -0.56), (1.15, 0.8, 1.0)))  # 작게 — 크면 양옆 똥머리처럼 보였다 (11-13)
 # 앞머리 — 끝이 둥근 다발 (가운데가 조금 길게)
-for i, x in enumerate((-0.6, -0.31, 0.0, 0.31, 0.6)):
+for i, x in enumerate((-0.68, -0.35, 0.0, 0.35, 0.68)):
     z = 0.5 - abs(x) * 0.18
     p = front(x, z, 1.04)
     parts.append(sphere(0.2, p + Vector((0, -0.03, -0.02)), (1.12, 0.5, 1.3), rot=(0.3, 0, -x * 0.45)))
@@ -198,7 +198,7 @@ def hair_shell(cut_z, open_z=0.45, r=1.1):
     bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
     bm = bmesh.new()
     bm.from_mesh(o.data)
-    bmesh.ops.delete(bm, geom=[v for v in bm.verts if (v.co.y < -0.2 and v.co.z < open_z) or v.co.z < cut_z], context="VERTS")
+    bmesh.ops.delete(bm, geom=[v for v in bm.verts if (v.co.y < -0.2 and v.co.z < open_z and abs(v.co.x) < 0.74) or v.co.z < cut_z], context="VERTS")
     bm.to_mesh(o.data)
     bm.free()
     s = o.modifiers.new("solid", "SOLIDIFY")
@@ -206,7 +206,7 @@ def hair_shell(cut_z, open_z=0.45, r=1.1):
     return o
 
 def bangs(n=5, z0=0.5, size=0.2):
-    xs = [-0.6, -0.31, 0.0, 0.31, 0.6] if n == 5 else [-0.45, -0.15, 0.15, 0.45]
+    xs = [-0.68, -0.35, 0.0, 0.35, 0.68] if n == 5 else [-0.6, -0.2, 0.2, 0.6]
     out = []
     for x in xs:
         p = front(x, z0 - abs(x) * 0.18, 1.04)
@@ -287,7 +287,7 @@ fuse_export(objs, "hair-bun", accent=[bpy.context.active_object])
 
 # 짧은 머리 — 귀 위까지 + 앞머리 넷 + 삐친 머리 한 가닥
 clear()
-objs = [hair_shell(-0.05, open_z=0.5)] + bangs(4, 0.52, 0.18)
+objs = [hair_shell(-0.05, open_z=0.4)] + bangs(4, 0.47, 0.19)  # 껍데기를 앞머리까지 내려 덮는다 (11-13: 잘린 단면이 밝은 띠로 보였다)
 objs.append(sphere(0.14, (0.06, 0.1, 1.2), (0.7, 0.7, 1.6), rot=(0.4, 0, 0.3)))
 fuse_export(objs, "hair-short")
 print("done hair")
@@ -340,14 +340,24 @@ fuse_export(objs, "hair-wavy", faces=7000)
 
 # 가르마 — 짧은 머리 + 한쪽으로 크게 넘긴 앞머리 덩어리
 clear()
-objs = [hair_shell(-0.2, open_z=0.5)]
-objs.append(sphere(0.42, (0.18, -0.85, 0.62), (1.5, 0.55, 0.62), rot=(0.35, 0.0, -0.22)))
-objs.append(sphere(0.3, (-0.62, -0.72, 0.62), (0.9, 0.5, 0.7), rot=(0.3, 0, 0.3)))
+objs = [hair_shell(-0.2, open_z=0.42)]
+# 한쪽으로 쓸어 넘긴 앞머리 — 왼쪽 관자놀이에서 오른쪽 눈썹 위로 이어지는 작은 다발 여섯 (11-13: 소시지 하나는 떠 보였다)
+for k in range(6):
+    t = k / 5
+    x = -0.66 + t * 1.22
+    z = 0.66 - t * 0.26
+    p = front(x, z, 1.04)
+    objs.append(sphere(0.23 - t * 0.05, p + Vector((0, -0.02, 0)), (1.25, 0.55, 0.95), rot=(0.3, 0, -0.35)))
 fuse_export(objs, "hair-side")
 
 # 삐죽 — 짧은 머리 위로 뾰족뾰족
 clear()
-objs = [hair_shell(-0.05, open_z=0.5)] + bangs(4, 0.52, 0.17)
+objs = [hair_shell(-0.05, open_z=0.4)]
+# 앞머리도 짧고 뾰족하게 — 이마 위로 아래를 향한 작은 뿔 다섯 (11-13: 둥근 다발이 따로 놀았다)
+for x in (-0.56, -0.28, 0.0, 0.28, 0.56):
+    p = front(x, 0.5 - abs(x) * 0.1, 1.02)
+    bpy.ops.mesh.primitive_cone_add(vertices=10, radius1=0.17, radius2=0.0, depth=0.42, location=p + Vector((0, -0.05, -0.12)), rotation=(math.pi - 0.35, 0, 0))
+    objs.append(bpy.context.active_object)
 for k, (th, ph) in enumerate([(0.2, 0), (0.35, 1.2), (0.35, -1.2), (0.5, 2.4), (0.5, -2.4), (0.25, 3.14), (0.55, 0.6), (0.55, -0.6)]):
     p = on_shell(th, ph, 1.05)
     bpy.ops.mesh.primitive_cone_add(vertices=10, radius1=0.2, radius2=0.0, depth=0.5, location=p + (p - Vector((0, 0.05, 0.07))).normalized() * 0.18)

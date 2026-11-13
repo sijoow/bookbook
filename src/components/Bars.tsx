@@ -35,7 +35,7 @@ const TABS: Array<{ href: string; label: string; icon: MenuIconName; match: (p: 
 /** 탭 모양만 — path 가 없으면(미리 그릴 때) 아무 탭도 켜지 않는다 */
 export function TabNav({ path }: { path: string | null }) {
   return (
-    <nav className={s.tabbar} aria-label="메뉴">
+    <nav className={s.tabbar} aria-label="메뉴" data-tabbar>
       {TABS.map((t) => (
         <Link key={t.href} href={t.href} className={`${s.tab} ${path && t.match(path) ? s.tabOn : ""}`} aria-current={path && t.match(path) ? "page" : undefined}>
           <span className={s.tabIcon}>

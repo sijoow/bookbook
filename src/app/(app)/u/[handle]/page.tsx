@@ -64,6 +64,11 @@ export default function FriendLibrary() {
   const [err, setErr] = useState<string | null>(null);
   const [leaving, setLeaving] = useState(false); // '우리 집' — 인사하고 나가는 중
   const [chatOpen, setChatOpen] = useState(false); // 책마을 — 둘만의 이야기
+  // 친구 집에선 아래 탭 막대를 숨긴다 (집에 갈 땐 '우리 집'·‹ 로 — 인사하고 나가게, 11-13 사용자)
+  useEffect(() => {
+    document.body.classList.add("visiting");
+    return () => document.body.classList.remove("visiting");
+  }, []);
   const [giftOpen, setGiftOpen] = useState(false); // 책마을 — 선물 보내기
   const onStageReady = useCallback((a: StageApi) => {
     stageApi.current = a;
