@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     const u = await currentUser();
     const { id } = Body.parse(await req.json());
     const r = await buyItem(u, id);
-    return Response.json({ item: r.item, points: r.points, pending: r.deco.boxes.length }, { status: 201 });
+    return Response.json({ item: r.item, points: r.points, pending: r.deco.boxes.length, deco: r.deco }, { status: 201 });
   } catch (e) {
     return errorResponse(e);
   }

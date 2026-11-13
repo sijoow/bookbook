@@ -4,7 +4,7 @@
 // 옷 가게 — 11-13 사용자: "옷도 사게 해서 입히는 것도" + 동물의 숲 옷 가게처럼 "가운데 캐릭터, 둘레에 옷과 값, 아래 합계"
 // 가운데 = 서 있는 내 아바타(누른 옷을 바로 입어 봄), 양옆 = 옷 6벌(스티커 + 값), 아래 = 고른 옷 · 값 · 사기/입기/벗기.
 // 그 게임의 그림·색은 따라 하지 않는다 — 배치만, 그림체는 우리 다꾸.
-// 사면 배달 상자로 방에 오고(상자를 열면 바로 입는다), 가진 옷은 여기서 바로 입고 벗는다. 한 벌만 (자리 body).
+// 사면 바로 입는다(배달 상자는 선물일 때만), 가진 옷은 여기서 바로 입고 벗는다. 한 벌만 (자리 body).
 
 import dynamic from "next/dynamic";
 import { useMemo, useState } from "react";
@@ -61,7 +61,7 @@ export function ClothesShop({
     if (deco.owned.includes(item.id)) action = wearing === item.id ? { label: "벗기", run: () => onWear(item), note: "기본 옷으로 돌아가요" } : { label: "입기", run: () => onWear(item) };
     else if (deco.boxes.includes(item.id)) action = { label: "닫고 상자 열기", run: onClose, note: "방에 온 배달 상자를 열면 바로 입어요" };
     else if (points < item.price) action = { label: "사기", run: () => {}, off: true, note: `${POINT_NAME}가 ${item.price - points} 모자라요 — 책을 읽으면 쌓여요` };
-    else action = { label: "사기", run: () => onBuy(item), note: `사면 배달 상자로 방에 와요 · 남는 ${POINT_NAME} ${points - item.price}` };
+    else action = { label: "사기", run: () => onBuy(item), note: `사면 바로 입어요 · 남는 ${POINT_NAME} ${points - item.price}` };
   }
 
   return (

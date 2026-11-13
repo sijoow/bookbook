@@ -594,7 +594,9 @@ export default function MyLibrary() {
               }
             />
           ) : (
-            <div className={`${stage.slot} ${stage.immersiveSlot}`} />
+            <div className={`${stage.slot} ${stage.immersiveSlot}`}>
+              <StageLoading />
+            </div>
           )}
           {err && <p className={`${ui.error} ${s.immersiveErr}`}>{err}</p>}
         </div>

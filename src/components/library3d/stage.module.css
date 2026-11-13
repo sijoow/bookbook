@@ -348,8 +348,8 @@
   z-index: 5;
 }
 .loadingPlanet {
-  width: 78px;
-  height: 78px;
+  width: 112px;
+  height: 150px;
   object-fit: contain;
   animation: loadBob 0.9s ease-in-out infinite alternate;
 }

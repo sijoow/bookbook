@@ -7,7 +7,7 @@ import s from "./stage.module.css";
 export function StageLoading({ text = "도서관을 불러오는 중…", overlay = false }: { text?: string; overlay?: boolean }) {
   return (
     <div className={`${s.loading} ${overlay ? s.loadingOver : ""}`} role="status" aria-live="polite">
-      <img src="/img/planet-home.webp" alt="" className={s.loadingPlanet} />
+      <img src="/img/loading-reader.webp" alt="" className={s.loadingPlanet} />
       <i className={s.loadingShadow} aria-hidden />
       <span>{text}</span>
     </div>

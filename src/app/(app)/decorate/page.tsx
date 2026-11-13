@@ -2,7 +2,7 @@
 /* eslint-disable @next/next/no-img-element -- 우리 스티커 그림 (작은 webp) */
 
 // 꾸미기 · 상점 — 11-13 사용자: "책을 다 읽거나 할 때마다 포인트가 쌓이고, 장식품을 구매해서 내 집을 꾸미는 시스템"
-// 위 무대는 내 방 그대로 — 산 물건은 배달 상자로 방에 오고, 상자를 누르면 아바타가 열어 바로 하고/놓는다.
+// 위 무대는 내 방 그대로 — 산 물건은 바로 하고/놓는다 (배달 상자는 선물일 때만 — 누르면 아바타가 열어 바로 하고/놓는다).
 // 물건 칸: 가진 것(누르면 하기/빼기) · 상자 속(누르면 열기) · 아직(값 — 누르면 '살까요?')
 // 내 집(벽·바닥·창·구도)도 여기서 바꾼다. 얼굴·머리·옷 색은 마이페이지. 옷 가게(옷 한 벌 사서 입기, 11-13)는 화면 가득 창으로.
 
@@ -21,6 +21,7 @@ import { api } from "@/lib/client/api";
 import { makeSaver } from "@/lib/client/saver";
 import { hasWebGL } from "@/lib/client/webgl";
 import { CLOTHES, PAINTS, PAINT_COLOR, PAINT_LABEL, POINTS, POINT_NAME, ROOM_SURFACES, SHELF_ITEMS, TRACK, wear, type Deco, type DecoItem, type PaintId } from "@/lib/deco/items";
+import { josa } from "@/lib/ko";
 import { HOUSE, HOUSES, type HouseId } from "@/lib/house/houses";
 import type { LibraryBook } from "@/lib/books/types";
 import s from "../screens.module.css";
@@ -112,18 +113,18 @@ export default function Decorate() {
     }
   }
 
-  /** 사기 — 포인트를 빼고 배달 상자가 방에 온다 (위로 올라가 상자를 보여 준다) */
+  /** 사기 — 포인트를 빼고 바로 하고/놓는다 (위로 올라가 방을 보여 준다) */
   async function buy(item: DecoItem) {
     if (!me || buying) return;
     setBuying(true);
     setErr(null);
     try {
-      const r = await api<{ points: number; pending: number }>("/api/shop", { json: { id: item.id } });
-      setMe((m) => (m ? { ...m, points: r.points, pending: r.pending, deco: { ...m.deco, boxes: [...m.deco.boxes, item.id] } } : m));
+      const r = await api<{ points: number; pending: number; deco: Deco }>("/api/shop", { json: { id: item.id } });
+      setMe((m) => (m ? { ...m, points: r.points, pending: r.pending, deco: r.deco } : m));
       setHistory((h) => [{ reason: "buy", delta: -item.price, ref: item.id, at: new Date().toISOString(), note: null }, ...h]);
       setAsking(null);
       window.scrollTo({ top: 0, behavior: "smooth" });
-      say(`${item.label} 배달 상자가 왔어요 — 상자를 눌러 열어요`, item.id);
+      say(item.kind === "avatar" ? `${item.label}${josa(item.label, "을", "를")} 입었어요` : `${item.label}${josa(item.label, "을", "를")} 놓았어요 — 자리는 방에서 옮길 수 있어요`, item.id);
     } catch (e) {
       setErr((e as Error).message);
       setAsking(null);
@@ -380,7 +381,7 @@ export default function Decorate() {
             {asking.price} {POINT_NAME}
           </p>
           <p className={ui.muted} style={{ marginTop: 6 }}>
-            {me.points >= asking.price ? `사고 나면 ${(me.points - asking.price).toLocaleString()} ${POINT_NAME}가 남아요 · 배달 상자로 와요` : `${(asking.price - me.points).toLocaleString()} ${POINT_NAME}가 모자라요 — 책을 읽으면 쌓여요`}
+            {me.points >= asking.price ? `사고 나면 ${(me.points - asking.price).toLocaleString()} ${POINT_NAME}가 남아요 · 사면 바로 하고/놓아요` : `${(asking.price - me.points).toLocaleString()} ${POINT_NAME}가 모자라요 — 책을 읽으면 쌓여요`}
           </p>
           <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 14 }}>
             <button type="button" className={ui.btn} disabled={buying || me.points < asking.price} onClick={() => void buy(asking)}>

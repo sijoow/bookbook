@@ -86,5 +86,13 @@
     "amount": 0.185,
     "unit": "usd",
     "note": "docs/design/prompts/assets/add-hero.md"
+  },
+  {
+    "date": "2026-11-13",
+    "what": "loading-reader.png (1024x1024, high)",
+    "tool": "GPT 그림",
+    "amount": 0.185,
+    "unit": "usd",
+    "note": "docs/design/prompts/assets/loading-reader.md"
   }
 ]
