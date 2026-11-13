@@ -24,6 +24,7 @@ import { ShareLibrary, useShareLibrary } from "@/components/ShareLibrary";
 import { StampIcon } from "@/components/Stamp";
 import type { StageApi } from "@/components/library3d/LibraryStage";
 import stage from "@/components/library3d/stage.module.css";
+import { StageLoading } from "@/components/library3d/StageLoading";
 import { ReadingOverlay, ReadingPanel, reducedMotion, type FinishInput, type Flow } from "@/components/ReadingOverlay";
 import ui from "@/components/ui.module.css";
 import { defaultAvatar, type AvatarConfig } from "@/lib/avatar/config";
@@ -43,12 +44,20 @@ import s from "./screens.module.css";
 // three.js 는 무거워서 따로 (서버에서 미리 그리지 않는다)
 const LibraryStage = dynamic(() => import("@/components/library3d/LibraryStage"), {
   ssr: false,
-  loading: () => <div className={stage.slot} />,
+  loading: () => (
+    <div className={stage.slot}>
+      <StageLoading />
+    </div>
+  ),
 });
 // 홈(화면 가득)용 — 불러오는 동안 자리도 화면 가득
 const ImmersiveStage = dynamic(() => import("@/components/library3d/LibraryStage"), {
   ssr: false,
-  loading: () => <div className={`${stage.slot} ${stage.immersiveSlot}`} />,
+  loading: () => (
+    <div className={`${stage.slot} ${stage.immersiveSlot}`}>
+      <StageLoading />
+    </div>
+  ),
 });
 // 무대 가장자리에서 버튼이 덮는 자리(px) — 카메라가 방을 그 안쪽에 맞춘다 (위: 이름판, 아래: 퀵메뉴)
 const HUD_INSETS = { top: 50, bottom: 96, left: 0 };

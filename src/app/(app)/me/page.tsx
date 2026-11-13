@@ -15,6 +15,7 @@ import { TopBar } from "@/components/Bars";
 import { Sparkle, Tape } from "@/components/Deco";
 import { ShareLibrary } from "@/components/ShareLibrary";
 import stage from "@/components/library3d/stage.module.css";
+import { StageLoading } from "@/components/library3d/StageLoading";
 import ui from "@/components/ui.module.css";
 import { EYES_LABEL, GENDER_LABEL, HAIR_LABEL, PET_LABEL, type AvatarConfig } from "@/lib/avatar/config";
 import { api } from "@/lib/client/api";
@@ -28,7 +29,11 @@ import s from "../screens.module.css";
 
 const LibraryStage = dynamic(() => import("@/components/library3d/LibraryStage"), {
   ssr: false,
-  loading: () => <div className={`${stage.slot} ${stage.previewSlot}`} />,
+  loading: () => (
+    <div className={`${stage.slot} ${stage.previewSlot}`}>
+      <StageLoading />
+    </div>
+  ),
 });
 
 type DevAccounts = { accounts: Array<{ handle: string; nickname: string }>; current: string | null; beta?: boolean };

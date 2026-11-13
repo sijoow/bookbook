@@ -21,6 +21,7 @@ import { MenuIcon } from "@/components/MenuIcon";
 import { STAMPS, STAMP_LABEL, StampIcon } from "@/components/Stamp";
 import type { StageApi } from "@/components/library3d/LibraryStage";
 import stage from "@/components/library3d/stage.module.css";
+import { StageLoading } from "@/components/library3d/StageLoading";
 import ui from "@/components/ui.module.css";
 import { readAvatar, type AvatarConfig } from "@/lib/avatar/config";
 import { readDeco, type Deco } from "@/lib/deco/items";
@@ -34,7 +35,11 @@ import s from "../../screens.module.css";
 
 const LibraryStage = dynamic(() => import("@/components/library3d/LibraryStage"), {
   ssr: false,
-  loading: () => <div className={`${stage.slot} ${stage.immersiveSlot}`} />,
+  loading: () => (
+    <div className={`${stage.slot} ${stage.immersiveSlot}`}>
+      <StageLoading />
+    </div>
+  ),
 });
 const HUD_INSETS = { top: 50, bottom: 96, left: 0 };
 

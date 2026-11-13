@@ -14,6 +14,7 @@ import { ClothesShop } from "@/components/ClothesShop";
 import { Sparkle, Tape } from "@/components/Deco";
 import type { StageApi } from "@/components/library3d/LibraryStage";
 import stage from "@/components/library3d/stage.module.css";
+import { StageLoading } from "@/components/library3d/StageLoading";
 import ui from "@/components/ui.module.css";
 import type { AvatarConfig } from "@/lib/avatar/config";
 import { api } from "@/lib/client/api";
@@ -26,7 +27,11 @@ import s from "../screens.module.css";
 
 const LibraryStage = dynamic(() => import("@/components/library3d/LibraryStage"), {
   ssr: false,
-  loading: () => <div className={stage.slot} />,
+  loading: () => (
+    <div className={stage.slot}>
+      <StageLoading />
+    </div>
+  ),
 });
 
 type Me = { handle: string; nickname: string; avatar: AvatarConfig; deco: Deco; points: number; house: HouseId; readCount: number; pending: number };

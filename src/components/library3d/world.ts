@@ -2367,7 +2367,9 @@ export class LibraryWorld {
         this.peek(hit);
         return;
       }
-      this.peek(hit); // 크게 보기 — 누르면 고르기만 (꾹 = 꺼내 오기)
+      // 크게 보기 — 처음 누르면 고르기(살짝 나옴), 고른 책을 한 번 더 누르거나 꾹 누르면 꺼내 오기 (11-13 사용자: "눌렀는데 안 빼 와")
+      if (this.peeked?.id === hit) this.fetchPicked(hit);
+      else this.peek(hit);
       return;
     }
     if (this.addMesh) {

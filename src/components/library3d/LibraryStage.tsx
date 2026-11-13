@@ -12,6 +12,7 @@ import type { LibraryBook } from "@/lib/books/types";
 import type { HouseId } from "@/lib/house/houses";
 import type { ItemPos } from "@/lib/deco/items";
 import s from "./stage.module.css";
+import { StageLoading } from "./StageLoading";
 import { LibraryWorld, type DecoView, type StageFocus, type StageMode } from "./world";
 
 export type StageApi = {
@@ -85,6 +86,8 @@ export default function LibraryStage(p: StageProps) {
   const [units, setUnits] = useState({ count: 1, current: 0 });
   const [shelf, setShelf] = useState(false); // 책장 크게 보기 중
   const [camMoved, setCamMoved] = useState(false); // 손으로 카메라를 옮겼나 — 제자리 버튼
+  const [drawn, setDrawn] = useState(false); // 첫 장면을 그렸나 — 그 전엔 '불러오는 중' 덮개 (캔버스는 숨김)
+  const drawnRef = useRef(false);
 
   useLayoutEffect(() => {
     props.current = p;
@@ -133,6 +136,8 @@ export default function LibraryStage(p: StageProps) {
         return;
       }
       cv = document.createElement("canvas");
+      cv.style.opacity = "0"; // 첫 장면을 그리기 전엔 까맣다 — 다 그린 뒤 보인다
+      drawnRef.current = false;
       cv.className = `${s.canvas} ${props.current.editing || props.current.arranging || props.current.immersive ? s.canvasEditing : ""}`; // 화면 가득이면 손가락 끌기·두 손가락을 캔버스가 받는다
       cv.setAttribute("role", "img");
       cv.setAttribute("aria-label", labelOf(props.current));
@@ -151,6 +156,13 @@ export default function LibraryStage(p: StageProps) {
             add: () => props.current.onAdd?.(),
             gift: () => props.current.onGift?.(),
             frame: ({ x, y, visible }, gift, guest) => {
+              if (!drawnRef.current) {
+                drawnRef.current = true;
+                requestAnimationFrame(() => {
+                  if (cv) cv.style.opacity = "1";
+                  setDrawn(true);
+                });
+              }
               if (guestTag.current) {
                 guestTag.current.style.opacity = guest?.visible ? "1" : "0";
                 if (guest) guestTag.current.style.transform = `translate(${guest.x}px, ${guest.y}px) translate(-50%, -100%)`;
@@ -347,6 +359,7 @@ export default function LibraryStage(p: StageProps) {
     <div className={`${s.slot} ${p.mode === "preview" ? s.previewSlot : ""} ${p.immersive ? s.immersiveSlot : ""} ${p.className ?? ""}`}>
       <div ref={wrap} className={`${s.stage} ${p.immersive ? s.immersiveStage : ""} ${p.reading && !p.inPlace ? s.full : ""}`}>
         <div ref={host} className={s.canvasHost} />
+        {!drawn && <StageLoading overlay text={p.mode === "preview" ? "불러오는 중…" : p.mode === "visit" ? "친구 도서관에 가는 중…" : "도서관을 불러오는 중…"} />}
       {p.title && (!p.reading || p.inPlace) && <span className={s.plaque}>{p.title}</span>}
       <div ref={tag} className={s.tag} aria-hidden>
         {p.me && <b className={s.me}>나</b>}
@@ -388,7 +401,7 @@ export default function LibraryStage(p: StageProps) {
         {/* 크게 보기 — 누르면 고르기, 꾹 누르면 꺼내 오기 (11-13 사용자) */}
         {shelf && !p.editing && !p.reading && p.mode !== "preview" && (
           <p className={s.peekHint} style={p.immersive ? { top: it + 8 } : undefined}>
-            {p.mode === "visit" ? "책을 꾹 누르면 친구가 꺼내 보여 줘요" : "책을 꾹 누르면 꺼내 와요"}
+            {p.mode === "visit" ? "한 번 더 누르거나 꾹 누르면 친구가 보여 줘요" : "한 번 더 누르거나 꾹 누르면 꺼내 와요"}
           </p>
         )}
         {/* 처음 구도로 — 손가락으로 돌리거나 당겼을 때만 (가까이·멀리는 두 손가락 벌리기·오므리기, PC 는 휠). 11-13 사용자: 앱에선 손가락이라 +/- 는 필요 없다 */}

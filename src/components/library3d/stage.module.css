@@ -325,3 +325,59 @@
   pointer-events: none;
   box-shadow: 2px 2px 0 rgba(90, 69, 53, 0.18);
 }
+
+/* 불러오는 중 (11-13) — 행성이 통통 */
+.loading {
+  width: 100%;
+  height: 100%;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 19px;
+}
+.loadingOver {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+}
+.loadingPlanet {
+  width: 78px;
+  height: 78px;
+  object-fit: contain;
+  animation: loadBob 0.9s ease-in-out infinite alternate;
+}
+.loadingShadow {
+  width: 46px;
+  height: 7px;
+  margin-top: -4px;
+  border-radius: 50%;
+  background: rgba(90, 69, 53, 0.18);
+  animation: loadShadow 0.9s ease-in-out infinite alternate;
+}
+@keyframes loadBob {
+  from {
+    transform: translateY(0) rotate(-4deg);
+  }
+  to {
+    transform: translateY(-14px) rotate(4deg);
+  }
+}
+@keyframes loadShadow {
+  to {
+    transform: scaleX(0.7);
+    opacity: 0.6;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .loadingPlanet,
+  .loadingShadow {
+    animation: none;
+  }
+}
