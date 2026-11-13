@@ -2205,7 +2205,7 @@ export class LibraryWorld {
     if (!o.on && sideSwipe) return;
     o.on = true;
     this.userCam.yaw = clamp(o.yaw - (this.layout.units.length > 1 ? 0 : dx * 0.0042), -0.75, 0.75);
-    this.userCam.tilt = clamp(o.tilt + dy * 0.0032, -0.32, 0.38);
+    this.userCam.tilt = clamp(o.tilt + dy * 0.0032, -0.32, 0.62); // 11-13 사용자: 더 위에서 내려다보게 (0.38 → 0.62)
     this.goalKey = "";
     this.camNote();
   };

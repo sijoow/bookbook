@@ -113,9 +113,11 @@ export async function buyItem(user: UserDoc, id: string): Promise<{ item: DecoIt
   if (why !== "ok") throw new BadRequestError(NO_BUY[why]);
   const item = ITEM[id];
   const { users, log } = await cols();
+  // 책장 꾸미기(넓은·높은 책장·칠하기)는 배달 상자 없이 사자마자 책장에 (11-13 사용자: "책장을 샀으면 바로 배치돼야")
+  const now0 = item.kind === "shelf";
   const res = await users.updateOne(
     { _id: u._id, points: { $gte: item.price }, "deco.owned": { $ne: id }, "deco.boxes": { $ne: id } },
-    { $inc: { points: -item.price }, $push: { "deco.boxes": id } },
+    now0 ? { $inc: { points: -item.price }, $push: { "deco.owned": id, "deco.placed": id } } : { $inc: { points: -item.price }, $push: { "deco.boxes": id } },
   );
   if (!res.modifiedCount) throw new BadRequestError("포인트가 모자라거나 이미 샀어요");
   const now = new Date();
