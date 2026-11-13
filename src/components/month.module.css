@@ -36,7 +36,7 @@
 }
 .stats b {
   font-family: var(--hand);
-  font-size: 18px;
+  font-size: 16px;
   color: var(--ink);
   white-space: nowrap;
 }
