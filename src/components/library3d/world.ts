@@ -143,6 +143,9 @@ export class LibraryWorld {
   private active = false;
   private disposed = false;
   private down: { x: number; y: number; id: number } | null = null;
+  private peeked: { id: string; obj: THREE.Group; base: THREE.Vector3 } | null = null; // 크게 보기에서 고른 책 (살짝 나와 있다)
+  private pressTimer = 0; // 꾹 누르기 — 0.45초 그대로 누르고 있으면 꺼내 오기
+  private pressed = false; // 꾹 눌러서 이미 꺼냈다 (손을 뗀 건 누르기가 아니다)
   // 카메라 손 조절 (방 보기에서만) — 살짝 돌리기·가까이/멀리. 빈 곳 두 번 누르면 처음대로
   private userCam = { yaw: 0, tilt: 0, zoom: 1 };
   private orbit: { id: number; x: number; y: number; yaw: number; tilt: number; on: boolean } | null = null;
@@ -543,6 +546,7 @@ export class LibraryWorld {
   setShelfView(on: boolean) {
     if (this.shelfView === on) return;
     this.shelfView = on;
+    if (!on) this.peek(null);
     this.goalKey = "";
     this.applyForeground();
     this.events.view?.(on || this.editing);
@@ -552,6 +556,7 @@ export class LibraryWorld {
   setEditing(on: boolean) {
     if (this.editing === on) return;
     this.editing = on;
+    this.peek(null);
     if (!on) {
       this.cancelDrag();
       for (const b of this.books.values()) b.group.rotation.z = 0;
@@ -2103,8 +2108,44 @@ export class LibraryWorld {
 
   // ── 누르기 ──
 
+  /** 고른 책을 살짝 앞으로 (다른 책은 제자리) */
+  private peek(id: string | null) {
+    if ((this.peeked?.id ?? null) === id) return;
+    const old = this.peeked;
+    if (old && this.books.get(old.id)?.group === old.obj) old.obj.position.copy(old.base); // 책장을 다시 지었으면 새 책은 이미 제자리
+    this.peeked = null;
+    const b = id ? this.books.get(id) : undefined;
+    if (id && b) {
+      this.peeked = { id, obj: b.group, base: b.group.position.clone() };
+      b.group.position.z += 2.4;
+      b.group.position.y += 1.2;
+    }
+  }
+
+  /** 꺼내 오기 — 고른 책을 제자리에 두고 크게 보기를 닫는다 (페이지가 방 보기로 돌려 아바타가 꺼내러 간다) */
+  private fetchPicked(id: string) {
+    this.peek(null);
+    this.events.pick?.(id);
+  }
+
   private onDown = (e: PointerEvent) => {
     this.down = { x: e.clientX, y: e.clientY, id: e.pointerId };
+    window.clearTimeout(this.pressTimer);
+    this.pressed = false;
+    // 꾹 누르기 — 크게 보기에서 책 위를 0.45초 그대로 누르고 있으면 꺼내 온다
+    if (this.shelfView && !this.editing && !this.arranging && !this.running && !this.readingView && this.mode !== "preview") {
+      const r = this.canvas.getBoundingClientRect();
+      const id = this.bookAt(e.clientX - r.left, e.clientY - r.top);
+      if (id) {
+        const { pointerId } = e;
+        this.peek(id);
+        this.pressTimer = window.setTimeout(() => {
+          if (!this.down || this.down.id !== pointerId) return;
+          this.pressed = true;
+          this.fetchPicked(id);
+        }, 450);
+      }
+    }
     this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (this.pointers.size === 2 && this.camAdjustable()) {
       // 두 손가락 — 가까이/멀리 시작 (끌던 건 멈춘다)
@@ -2138,6 +2179,7 @@ export class LibraryWorld {
 
   private onMove = (e: PointerEvent) => {
     if (this.pointers.has(e.pointerId)) this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (this.down && this.down.id === e.pointerId && Math.hypot(e.clientX - this.down.x, e.clientY - this.down.y) > 10) window.clearTimeout(this.pressTimer); // 움직이면 꾹 누르기가 아니다
     if (this.itemDrag && e.pointerId === this.itemDrag.pointerId) {
       this.moveItemDrag(e);
       return;
@@ -2214,6 +2256,7 @@ export class LibraryWorld {
 
   private onCancel = (e?: PointerEvent) => {
     this.down = null;
+    window.clearTimeout(this.pressTimer);
     if (e) this.pointers.delete(e.pointerId);
     this.pinch = null;
     this.orbit = null;
@@ -2224,6 +2267,13 @@ export class LibraryWorld {
   private onUp = (e: PointerEvent) => {
     const d = this.down;
     this.down = null;
+    window.clearTimeout(this.pressTimer);
+    if (this.pressed) {
+      this.pressed = false;
+      this.pointers.delete(e.pointerId);
+      this.orbit = null;
+      return; // 꾹 눌러 이미 꺼냈다
+    }
     this.pointers.delete(e.pointerId);
     if (this.pinch) {
       if (this.pointers.size < 2) this.pinch = null;
@@ -2311,7 +2361,13 @@ export class LibraryWorld {
     // 책 — 책등 앞면을 화면에 비춰 가장 가까운 것 (얇은 책도 누르기 쉽게 6px 여유)
     const hit = this.bookAt(x, y);
     if (hit) {
-      this.events.pick?.(hit);
+      // 방 보기에서 누르면 책장이 크게 다가오고 그 책이 살짝 나온다 → 꾹 누르면 꺼내 온다 (11-13 사용자)
+      if (!this.shelfView && (this.mode === "home" || this.mode === "visit")) {
+        this.setShelfView(true);
+        this.peek(hit);
+        return;
+      }
+      this.peek(hit); // 크게 보기 — 누르면 고르기만 (꾹 = 꺼내 오기)
       return;
     }
     if (this.addMesh) {

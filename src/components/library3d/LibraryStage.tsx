@@ -385,6 +385,12 @@ export default function LibraryStage(p: StageProps) {
       )}
         {p.hint && !p.reading && units.count <= 1 && <p className={s.hint}>{p.hint}</p>}
         {p.hud && (!p.reading || p.inPlace) && p.hud}
+        {/* 크게 보기 — 누르면 고르기, 꾹 누르면 꺼내 오기 (11-13 사용자) */}
+        {shelf && !p.editing && !p.reading && p.mode !== "preview" && (
+          <p className={s.peekHint} style={p.immersive ? { top: it + 8 } : undefined}>
+            {p.mode === "visit" ? "책을 꾹 누르면 친구가 꺼내 보여 줘요" : "책을 꾹 누르면 꺼내 와요"}
+          </p>
+        )}
         {/* 처음 구도로 — 손가락으로 돌리거나 당겼을 때만 (가까이·멀리는 두 손가락 벌리기·오므리기, PC 는 휠). 11-13 사용자: 앱에선 손가락이라 +/- 는 필요 없다 */}
         {p.immersive && camMoved && !p.reading && !p.editing && !p.arranging && !shelf && (
           <button type="button" className={s.camReset} style={{ bottom: ib + 12 }} onClick={() => world.current?.resetCamera()} aria-label="처음 구도로" title="처음 구도로">

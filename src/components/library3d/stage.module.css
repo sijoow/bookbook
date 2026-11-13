@@ -306,3 +306,22 @@
     animation: none;
   }
 }
+
+/* 크게 보기 안내 — 꾹 누르면 꺼내 오기 (11-13) */
+.peekHint {
+  position: absolute;
+  top: 48px;
+  left: 50%;
+  z-index: 3;
+  transform: translateX(-50%);
+  padding: 4px 12px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: var(--butter);
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 15px;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 2px 2px 0 rgba(90, 69, 53, 0.18);
+}

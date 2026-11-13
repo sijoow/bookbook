@@ -509,7 +509,7 @@ export default function MyLibrary() {
               name={me.nickname}
               me
               house={me.house}
-              title={editing ? "책을 끌어서 옮겨요" : arranging ? "물건을 끌어서 옮겨요" : all.length ? "책을 누르면 꺼내 와요" : "나의 도서관"}
+              title={editing ? "책을 끌어서 옮겨요" : arranging ? "물건을 끌어서 옮겨요" : all.length ? "책장을 눌러 책을 골라요" : "나의 도서관"}
               editing={editing}
               onReorder={reorder}
               arranging={arranging}
