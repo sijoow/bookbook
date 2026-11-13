@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @next/next/no-img-element -- 우리 그림 (작은 webp) */
 
 // 책 추가 — 검색 → 고르면 상세(쪽수·두께·책등) → 상태 고르기 → 내 우주에 쌓기. 검색에 없으면 직접 입력.
 
@@ -9,6 +10,7 @@ import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { TopBar } from "@/components/Bars";
 import { CoverSticker } from "@/components/Bits";
 import { Tape, Yes24Credit } from "@/components/Deco";
+import { MenuIcon } from "@/components/MenuIcon";
 import ui from "@/components/ui.module.css";
 import { api } from "@/lib/client/api";
 import { STATUS_LABEL, shortAuthor, type BookStatus, type LibraryBook } from "@/lib/books/types";
@@ -62,7 +64,12 @@ export default function AddBook() {
 
   async function search(e: FormEvent) {
     e.preventDefault();
-    if (!q.trim()) return;
+    await runSearch(q);
+  }
+
+  /** 추천 칩·검색창 — 글자로 찾기 */
+  async function runSearch(text: string) {
+    if (!text.trim()) return;
     setBusy(true);
     setErr(null);
     setPicked(null);
@@ -70,7 +77,7 @@ export default function AddBook() {
     setFrom("search");
     setNote(null);
     try {
-      const r = await api<{ items: BookCandidate[] }>(`/api/books/search?q=${encodeURIComponent(q.trim())}`);
+      const r = await api<{ items: BookCandidate[] }>(`/api/books/search?q=${encodeURIComponent(text.trim())}`);
       setResults(r.items);
     } catch (e) {
       setErr((e as Error).message);
@@ -134,7 +141,7 @@ export default function AddBook() {
 
       {!manual ? (
         <form onSubmit={search} className={s.searchRow}>
-          <input className={ui.field} value={q} onChange={(e) => setQ(e.target.value)} placeholder="제목이나 저자로 찾기" enterKeyHint="search" />
+          <input id="book-q" className={ui.field} value={q} onChange={(e) => setQ(e.target.value)} placeholder="제목이나 저자로 찾기" enterKeyHint="search" />
           <button className={ui.btn} disabled={busy || !q.trim()}>
             찾기
           </button>
@@ -226,10 +233,58 @@ export default function AddBook() {
         </div>
       )}
 
+      {/* 아직 안 찾았을 때 — 그림 + 세 가지 방법 + 추천 칩 */}
+      {!manual && !results && !busy && !scanning && (
+        <section className={`${ui.paper} ${s.addEmpty}`}>
+          <Tape color="butter" />
+          <img src="/img/add-hero.webp" alt="" className={s.addHero} />
+          <p className={s.addTitle}>어떤 책을 꽂을까요?</p>
+          <p className={ui.muted} style={{ textAlign: "center" }}>
+            꽂으면 책장에 책등이 쏙 — 친구와 같은 책이면 통로가 열려요
+          </p>
+          <div className={s.addWays}>
+            <button type="button" className={s.addWay} onClick={() => document.getElementById("book-q")?.focus()}>
+              <MenuIcon name="zoom" />
+              <b>제목으로 찾기</b>
+              <span>제목·저자 한 단어면 돼요</span>
+            </button>
+            <button type="button" className={s.addWay} onClick={() => setScanning(true)}>
+              <MenuIcon name="add-book" />
+              <b>바코드 찍기</b>
+              <span>책 뒤 ISBN 바코드</span>
+            </button>
+            <button type="button" className={s.addWay} onClick={() => setManual(true)}>
+              <MenuIcon name="log" />
+              <b>직접 적기</b>
+              <span>찾는 책이 없을 때</span>
+            </button>
+          </div>
+          <p className={s.addAsk}>이런 책은 어때요?</p>
+          <div className={s.addChips}>
+            {PICKS.map((t) => (
+              <button
+                key={t}
+                type="button"
+                className={ui.chip}
+                onClick={() => {
+                  setQ(t);
+                  void runSearch(t);
+                }}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
       {results && results.length > 0 && <Yes24Credit />}
     </>
   );
 }
+
+/** 빈 화면 추천 — 누르면 그 제목으로 바로 찾는다 (책 목록을 쌓아 두지 않는다 — YES24 약관) */
+const PICKS = ["어린 왕자", "데미안", "아몬드", "불편한 편의점", "프로젝트 헤일메리", "코스모스", "모순", "급류"];
 
 function StatusChips({ value, onChange }: { value: BookStatus; onChange: (s: BookStatus) => void }) {
   return (

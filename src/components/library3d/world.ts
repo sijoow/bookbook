@@ -37,6 +37,7 @@ export type WorldEvents = {
   view?: (shelf: boolean) => void; // '크게 보기'(책장만)로 바뀌었다
   reorder?: (ids: string[]) => void; // 순서 바꾸기에서 책을 옮겨 놓았다
   arrange?: (id: string, pos: ItemPos) => void; // 물건 자리에서 방 물건을 옮겨 놓았다
+  itemDoubleTap?: (id: string) => void; // 방 물건을 두 번 눌렀다 (홈 — 물건 자리로)
   say?: (text: string) => void;
   sayGuest?: (text: string) => void; // 손님(나) 말풍선
   units?: (count: number, current: number) => void;
@@ -141,6 +142,12 @@ export class LibraryWorld {
   private active = false;
   private disposed = false;
   private down: { x: number; y: number; id: number } | null = null;
+  // 카메라 손 조절 (방 보기에서만) — 살짝 돌리기·가까이/멀리. 빈 곳 두 번 누르면 처음대로
+  private userCam = { yaw: 0, tilt: 0, zoom: 1 };
+  private orbit: { id: number; x: number; y: number; yaw: number; tilt: number; on: boolean } | null = null;
+  private pointers = new Map<number, { x: number; y: number }>();
+  private pinch: { dist: number; zoom: number } | null = null;
+  private lastTap: { x: number; y: number; t: number } | null = null;
   private tmp = new THREE.Vector3();
 
   constructor(
@@ -185,6 +192,7 @@ export class LibraryWorld {
     canvas.addEventListener("pointerup", this.onUp);
     canvas.addEventListener("pointercancel", this.onCancel);
     canvas.addEventListener("pointermove", this.onMove);
+    canvas.addEventListener("wheel", this.onWheel, { passive: false });
   }
 
   // ── 바깥에서 부르는 것 ──
@@ -881,6 +889,7 @@ export class LibraryWorld {
     this.canvas.removeEventListener("pointerup", this.onUp);
     this.canvas.removeEventListener("pointercancel", this.onCancel);
     this.canvas.removeEventListener("pointermove", this.onMove);
+    this.canvas.removeEventListener("wheel", this.onWheel);
     for (const b of this.books.values()) b.dispose();
     this.books.clear();
     this.avatar?.dispose();
@@ -1940,7 +1949,7 @@ export class LibraryWorld {
   private goalKey = "";
   private computeGoal() {
     const u: UnitLayout = this.layout.units[this.unit] ?? this.layout.units[0];
-    const key = `${this.guest ? "g" : ""}|${this.pet?.kind ?? "none"}|${this.mode}|${this.focus}|${this.readingView}|${this.shelfView}|${this.editing}|${this.arranging}|${this.standing}|${u.innerW}|${this.cushion.x}|${this.unit}|${this.w}x${this.h}|${u.x},${u.height}|${[...this.room.keys()].join()}|${this.giftBox ? 1 : 0}|${this.insets.top},${this.insets.bottom},${this.insets.left}|${this.house}|${this.readingSheet}`;
+    const key = `${this.guest ? "g" : ""}|${this.pet?.kind ?? "none"}|${this.mode}|${this.focus}|${this.readingView}|${this.shelfView}|${this.editing}|${this.arranging}|${this.standing}|${u.innerW}|${this.cushion.x}|${this.unit}|${this.w}x${this.h}|${u.x},${u.height}|${[...this.room.keys()].join()}|${this.giftBox ? 1 : 0}|${this.insets.top},${this.insets.bottom},${this.insets.left}|${this.house}|${this.readingSheet}|${this.userCam.yaw.toFixed(3)},${this.userCam.tilt.toFixed(3)},${this.userCam.zoom.toFixed(3)}`;
     if (key === this.goalKey) return;
     this.goalKey = key;
     const c = this.cushion;
@@ -2038,15 +2047,20 @@ export class LibraryWorld {
       tilt = cam.tilt;
       yaw = cam.yaw;
     }
+    // 손으로 돌리고 당긴 만큼 (방 보기 · 물건 자리에서만)
+    const roomView = this.mode !== "preview" && !this.readingView && !this.shelfView && !this.editing;
+    const uc = roomView ? this.userCam : { yaw: 0, tilt: 0, zoom: 1 };
+    tilt = clamp(tilt + uc.tilt, 0.06, 1.15);
+    yaw += uc.yaw;
     if (this.mode !== "preview" && !this.readingView) {
       const { top, bottom, left } = this.insets;
       rect = [Math.max(rect[0], -1 + (2 * left) / this.w), rect[1], Math.max(rect[2], -1 + (2 * bottom) / this.h), Math.min(rect[3], 1 - (2 * top) / this.h)];
     }
-    this.fit(pts, rect, tilt, yaw);
+    this.fit(pts, rect, tilt, yaw, uc.zoom);
   }
 
   /** 점들이 rect 안에 들어오게 — 바라보는 점과 거리를 몇 번 고쳐 맞춘다 */
-  private fit(pts: THREE.Vector3[], rect: [number, number, number, number], tilt: number, yaw: number) {
+  private fit(pts: THREE.Vector3[], rect: [number, number, number, number], tilt: number, yaw: number, zoom = 1) {
     const cam = new THREE.PerspectiveCamera(FOV, this.w / this.h, 1, 6000);
     const dir = new THREE.Vector3(Math.sin(yaw) * Math.cos(tilt), Math.sin(tilt), Math.cos(yaw) * Math.cos(tilt));
     const look = pts.reduce((a, p) => a.add(p), new THREE.Vector3()).multiplyScalar(1 / pts.length);
@@ -2083,13 +2097,21 @@ export class LibraryWorld {
       dist *= k;
     }
     this.goal.look.copy(look);
-    this.goal.pos.copy(look).addScaledVector(dir, dist);
+    this.goal.pos.copy(look).addScaledVector(dir, dist * zoom);
   }
 
   // ── 누르기 ──
 
   private onDown = (e: PointerEvent) => {
     this.down = { x: e.clientX, y: e.clientY, id: e.pointerId };
+    this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (this.pointers.size === 2 && this.camAdjustable()) {
+      // 두 손가락 — 가까이/멀리 시작 (끌던 건 멈춘다)
+      const [a, b] = [...this.pointers.values()];
+      this.pinch = { dist: Math.max(10, Math.hypot(a.x - b.x, a.y - b.y)), zoom: this.userCam.zoom };
+      this.orbit = null;
+      return;
+    }
     if (this.arranging) {
       if (!this.running && !this.itemDrag) {
         const r = this.canvas.getBoundingClientRect();
@@ -2099,6 +2121,7 @@ export class LibraryWorld {
           this.startItemDrag(id, e);
         }
       }
+      if (!this.itemDrag && this.camAdjustable()) this.orbit = { id: e.pointerId, x: e.clientX, y: e.clientY, yaw: this.userCam.yaw, tilt: this.userCam.tilt, on: false };
       return;
     }
     if (this.editing && !this.running && !this.drag) {
@@ -2109,18 +2132,68 @@ export class LibraryWorld {
         this.startDrag(id, e);
       }
     }
+    if (!this.drag && !this.itemDrag && this.camAdjustable()) this.orbit = { id: e.pointerId, x: e.clientX, y: e.clientY, yaw: this.userCam.yaw, tilt: this.userCam.tilt, on: false };
   };
 
   private onMove = (e: PointerEvent) => {
+    if (this.pointers.has(e.pointerId)) this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (this.itemDrag && e.pointerId === this.itemDrag.pointerId) {
       this.moveItemDrag(e);
       return;
     }
-    if (this.drag && e.pointerId === this.drag.pointerId) this.moveDrag(e);
+    if (this.drag && e.pointerId === this.drag.pointerId) {
+      this.moveDrag(e);
+      return;
+    }
+    // 두 손가락 — 가까이/멀리
+    if (this.pinch && this.pointers.size >= 2) {
+      const [a, b] = [...this.pointers.values()];
+      const dist = Math.hypot(a.x - b.x, a.y - b.y);
+      if (dist > 10) this.setUserZoom((this.pinch.zoom * this.pinch.dist) / dist);
+      return;
+    }
+    // 한 손가락 끌기 — 살짝 돌리기 (옆 책장이 여럿이면 옆으로 미는 건 책장 넘기기라 위아래만)
+    const o = this.orbit;
+    if (!o || o.id !== e.pointerId || !this.camAdjustable()) return;
+    const dx = e.clientX - o.x;
+    const dy = e.clientY - o.y;
+    if (!o.on && Math.hypot(dx, dy) < 9) return;
+    const sideSwipe = this.layout.units.length > 1 && Math.abs(dx) > Math.abs(dy);
+    if (!o.on && sideSwipe) return;
+    o.on = true;
+    this.userCam.yaw = clamp(o.yaw - (this.layout.units.length > 1 ? 0 : dx * 0.0042), -0.75, 0.75);
+    this.userCam.tilt = clamp(o.tilt + dy * 0.0032, -0.32, 0.38);
+    this.goalKey = "";
   };
 
-  private onCancel = () => {
+  /** 마우스 휠 — 가까이/멀리 */
+  private onWheel = (e: WheelEvent) => {
+    if (!this.camAdjustable()) return;
+    e.preventDefault();
+    this.setUserZoom(this.userCam.zoom * Math.exp(e.deltaY * 0.0012));
+  };
+
+  /** 방 보기에서만 손으로 카메라를 만진다 (읽는 중·크게 보기·책 정리·미리보기는 그대로) */
+  private camAdjustable(): boolean {
+    return this.mode !== "preview" && !this.readingView && !this.shelfView && !this.editing && !this.itemDrag && !this.drag;
+  }
+
+  private setUserZoom(z: number) {
+    this.userCam.zoom = clamp(z, 0.62, 1.7);
+    this.goalKey = "";
+  }
+
+  /** 카메라를 처음 구도로 */
+  resetCamera() {
+    this.userCam = { yaw: 0, tilt: 0, zoom: 1 };
+    this.goalKey = "";
+  }
+
+  private onCancel = (e?: PointerEvent) => {
     this.down = null;
+    if (e) this.pointers.delete(e.pointerId);
+    this.pinch = null;
+    this.orbit = null;
     this.cancelDrag();
     this.cancelItemDrag();
   };
@@ -2128,6 +2201,14 @@ export class LibraryWorld {
   private onUp = (e: PointerEvent) => {
     const d = this.down;
     this.down = null;
+    this.pointers.delete(e.pointerId);
+    if (this.pinch) {
+      if (this.pointers.size < 2) this.pinch = null;
+      this.orbit = null;
+      return; // 두 손가락으로 당긴 건 누르기가 아니다
+    }
+    const orbited = this.orbit?.on && this.orbit.id === e.pointerId;
+    this.orbit = null;
     if (this.itemDrag && e.pointerId === this.itemDrag.pointerId) {
       this.endItemDrag();
       return;
@@ -2136,6 +2217,7 @@ export class LibraryWorld {
       this.endDrag();
       return;
     }
+    if (orbited) return; // 끌어서 돌린 건 누르기가 아니다
     if (this.editing || this.arranging) return;
     if (!d || d.id !== e.pointerId) return;
     const dx = e.clientX - d.x;
@@ -2161,6 +2243,22 @@ export class LibraryWorld {
       return;
     }
     if (this.readingView) return;
+    // 두 번 누르기 — 물건이면 그 물건 옮기기(홈), 빈 곳이면 카메라 처음대로
+    const now = performance.now();
+    const lt = this.lastTap;
+    this.lastTap = { x, y, t: now };
+    if (lt && now - lt.t < 340 && Math.hypot(x - lt.x, y - lt.y) < 34) {
+      this.lastTap = null;
+      const item = this.mode === "home" ? this.itemAt(x, y) : null;
+      if (item) {
+        this.events.itemDoubleTap?.(item);
+        return;
+      }
+      if (!this.bookAt(x, y)) {
+        this.resetCamera();
+        return;
+      }
+    }
     // 선물 상자
     if (this.giftBox && this.mode === "home") {
       const gc = this.giftSpot.clone().add(new THREE.Vector3(0, 5, 0));

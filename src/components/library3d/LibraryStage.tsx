@@ -43,6 +43,7 @@ export type StageProps = {
   onAvatar?: () => void; // 아바타를 눌렀다 (마이페이지 — 꾸미기 창 열기)
   arranging?: boolean; // 물건 자리 — 방이 넓게 보이고 방 물건을 끌어 옮긴다 (홈만)
   onArrange?: (id: string, pos: ItemPos) => void;
+  onItemDoubleTap?: (id: string) => void; // 방 물건을 두 번 눌렀다 (홈 — 물건 자리로)
   guest?: { avatar: AvatarConfig; name: string; worn: string[] } | null; // 친구 도서관에 놀러 간 '나'
   deco?: DecoView; // 아바타 소품·방 물건
   gifts?: number; // 안 연 선물 (러그 위 상자)
@@ -131,7 +132,7 @@ export default function LibraryStage(p: StageProps) {
         return;
       }
       cv = document.createElement("canvas");
-      cv.className = `${s.canvas} ${props.current.editing || props.current.arranging ? s.canvasEditing : ""}`;
+      cv.className = `${s.canvas} ${props.current.editing || props.current.arranging || props.current.immersive ? s.canvasEditing : ""}`; // 화면 가득이면 손가락 끌기·두 손가락을 캔버스가 받는다
       cv.setAttribute("role", "img");
       cv.setAttribute("aria-label", labelOf(props.current));
       hostEl.appendChild(cv);
@@ -199,6 +200,7 @@ export default function LibraryStage(p: StageProps) {
             reorder: (ids) => props.current.onReorder?.(ids),
             avatarTap: () => props.current.onAvatar?.(),
             arrange: (id, pos) => props.current.onArrange?.(id, pos),
+            itemDoubleTap: (id) => props.current.onItemDoubleTap?.(id),
           },
           font,
         );
@@ -265,8 +267,8 @@ export default function LibraryStage(p: StageProps) {
   }, []);
 
   useEffect(() => {
-    canvasEl.current?.classList.toggle(s.canvasEditing, Boolean(p.editing || p.arranging));
-  }, [p.editing, p.arranging]);
+    canvasEl.current?.classList.toggle(s.canvasEditing, Boolean(p.editing || p.arranging || p.immersive));
+  }, [p.editing, p.arranging, p.immersive]);
 
   const label = labelOf(p);
   useEffect(() => {

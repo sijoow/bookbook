@@ -680,3 +680,82 @@
 .paintRow {
   padding-bottom: 16px;
 }
+
+/* 책 추가 — 빈 화면 (11-13) */
+.addEmpty {
+  margin-top: 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding-top: 18px;
+}
+.addHero {
+  width: min(62%, 220px);
+  height: auto;
+  margin: 2px auto 2px;
+  animation: addFloat 3.2s ease-in-out infinite;
+}
+@keyframes addFloat {
+  50% {
+    transform: translateY(-5px) rotate(-1.5deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .addHero {
+    animation: none;
+  }
+}
+.addTitle {
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 24px;
+  color: var(--ink);
+}
+.addWays {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+.addWay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 4px 9px;
+  border: 1.5px dashed var(--line);
+  border-radius: 16px;
+  background: var(--card-2);
+  color: var(--ink);
+}
+.addWay img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+.addWay b {
+  font-family: var(--hand);
+  font-size: 16px;
+}
+.addWay span {
+  font-size: 11px;
+  color: var(--ink-soft);
+  line-height: 1.3;
+  text-align: center;
+}
+.addAsk {
+  margin-top: 14px;
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--ink);
+}
+.addChips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  padding-bottom: 6px;
+}

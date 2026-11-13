@@ -478,6 +478,11 @@ export default function MyLibrary() {
               onReorder={reorder}
               arranging={arranging}
               onArrange={arranged}
+              onItemDoubleTap={() => {
+                if (flow || !canItems) return;
+                setEditing(false);
+                setArranging(true); // 두 번 누른 물건을 바로 끌어 옮길 수 있게 (11-13 사용자: "더블클릭하면 위치 조절")
+              }}
               reading={flow?.phase === "reading"}
               readingSheet={closingSheet}
               timerFrom={flow?.phase === "reading" && !closingSheet ? flow.startedAt : null}

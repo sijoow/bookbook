@@ -78,5 +78,13 @@
     "amount": 0.27,
     "unit": "usd",
     "note": "docs/design/prompts/assets/fabric-patterns.md"
+  },
+  {
+    "date": "2026-11-13",
+    "what": "add-hero.png (1024x1024, high)",
+    "tool": "GPT 그림",
+    "amount": 0.185,
+    "unit": "usd",
+    "note": "docs/design/prompts/assets/add-hero.md"
   }
 ]
