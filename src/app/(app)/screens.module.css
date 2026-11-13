@@ -1,0 +1,682 @@
+/* 화면별 배치 — 부품 모양은 components/ui.module.css */
+
+.hero {
+  position: relative;
+  text-align: center;
+  padding: 18px 0 8px;
+}
+.heroTitle {
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 32px;
+  line-height: 1.1;
+}
+.heroNum {
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 60px;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  margin-top: 6px;
+}
+.heroNum small {
+  font-size: 30px;
+  margin-left: 2px;
+}
+.heroGoal {
+  display: inline-block;
+  margin-top: 4px;
+  padding-bottom: 1px;
+  border-bottom: 2px dashed var(--line);
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+.heroBar {
+  max-width: 260px;
+  margin: 12px auto 0;
+}
+.spark {
+  position: absolute;
+}
+.towerArea {
+  margin: 14px 0 6px;
+}
+.note {
+  text-align: center;
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin-top: 4px;
+}
+.section {
+  margin-top: 26px;
+}
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 22px;
+  margin-bottom: 10px;
+}
+.nowRow {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+.nowBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.bookTitle {
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 1.35;
+}
+.handTitle {
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 26px;
+  line-height: 1.15;
+}
+.stack12 {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+  padding: 18px 0 8px;
+}
+.emptyImg {
+  width: 260px;
+  height: auto;
+}
+.shelfRow {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  padding: 6px 4px 10px;
+}
+.shelfItem {
+  flex: none;
+  width: 84px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.shelfItem span {
+  font-size: 12px;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.shelfTools {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 14px;
+}
+.shelfTools button {
+  min-height: 40px;
+  font-size: 18px;
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 86px;
+  transform: translateX(-50%);
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: max-content;
+  max-width: calc(min(440px, 100vw) - 32px);
+  padding: 10px 16px;
+  background: var(--card);
+  border: 1.5px solid var(--ink);
+  border-radius: 14px;
+  box-shadow: 2px 3px 0 rgba(90, 69, 53, 0.15);
+  font-size: 14px;
+  animation: toastIn 0.3s ease-out both;
+}
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+}
+
+/* 기록 */
+.week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  align-items: end;
+  gap: 8px;
+  height: 150px;
+  margin-top: 6px;
+}
+.weekCol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  height: 100%;
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+.weekBar {
+  width: 100%;
+  max-width: 30px;
+  min-height: 3px;
+  border: 1.5px solid var(--ink);
+  border-radius: 6px 6px 2px 2px;
+  background: repeating-linear-gradient(-45deg, var(--mint) 0 6px, #b7e0d0 6px 12px);
+}
+.weekBarToday {
+  background: repeating-linear-gradient(-45deg, var(--apricot) 0 6px, #f6c79a 6px 12px);
+}
+.weekDay {
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--ink);
+}
+.bigStat {
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 30px;
+  line-height: 1.1;
+}
+.logRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 2px dashed var(--line);
+  font-size: 14px;
+}
+.logRow:last-child {
+  border-bottom: 0;
+}
+
+/* 책 추가 */
+.searchRow {
+  display: flex;
+  gap: 8px;
+  margin: 16px 0 8px;
+}
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+.result {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  width: 100%;
+  padding: 12px;
+  text-align: left;
+  border: 1.5px solid var(--ink);
+  border-radius: 14px;
+  background: var(--card);
+}
+.resultOn {
+  background: #fdf0dc;
+  box-shadow: 2px 3px 0 rgba(90, 69, 53, 0.15);
+}
+.pick {
+  position: sticky;
+  bottom: 92px;
+  margin-top: 16px;
+  z-index: 5;
+}
+.pickHead {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.manual {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.row2 {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* 책 상세 */
+.detailHead {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  margin: 22px 0 6px;
+}
+.detailMeta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 6px;
+}
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+.memo {
+  padding: 10px 0;
+  border-bottom: 2px dashed var(--line);
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+.memo p {
+  flex: 1;
+  white-space: pre-wrap;
+  font-size: 14px;
+}
+.memo:last-child {
+  border-bottom: 0;
+}
+.intro {
+  font-size: 14px;
+  white-space: pre-wrap;
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.introOpen {
+  -webkit-line-clamp: unset;
+}
+.yesLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 10px;
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 19px;
+  border-bottom: 2px dashed var(--ink);
+}
+
+/* 서재 */
+.grid3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px 12px;
+  margin-top: 16px;
+}
+.gridItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+.gridItem span {
+  font-size: 12px;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 멀티버스 (Phase 2 전 미리보기) */
+.verse {
+  position: relative;
+  height: 330px;
+  margin: 12px 0 4px;
+}
+.verseSvg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.versePlanet {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.versePlanet img {
+  display: block;
+  height: auto;
+}
+.versePlanetFaint img {
+  opacity: 0.4;
+  filter: saturate(0.4);
+}
+.verseTag {
+  padding: 1px 10px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: var(--card);
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+.verseTagFaint {
+  border-style: dashed;
+  color: var(--ink-soft);
+}
+.quote {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-left: 3px solid var(--apricot);
+  background: var(--card-2);
+  border-radius: 0 8px 8px 0;
+  font-size: 14px;
+}
+.friendRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.go {
+  flex: none;
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 18px;
+}
+.portalRow {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 12px 0;
+  border-bottom: 2px dashed var(--line);
+}
+.portalRow:last-child {
+  border-bottom: 0;
+}
+.openTag {
+  display: inline-block;
+  padding: 0 8px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: var(--mint);
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 15px;
+}
+.faintTag {
+  display: inline-block;
+  padding: 0 8px;
+  border: 1.5px dashed var(--ink-soft);
+  border-radius: 999px;
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--ink-soft);
+}
+
+/* ── 마이페이지 — 계정 줄 · 탈퇴 확인 ── */
+.settingRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  min-height: 32px;
+  font-size: 15px;
+}
+.danger {
+  padding: 12px 14px;
+  border: 2px dashed var(--coral);
+  border-radius: 12px;
+  background: #fff4ef;
+  text-align: center;
+}
+.dangerBtn {
+  background: #c9675a;
+  border-color: var(--ink);
+}
+
+/* ── 놀러 온 친구 ── */
+.guestRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 2px;
+  border-bottom: 1.5px dashed var(--line);
+}
+.guestRow:last-child {
+  border-bottom: 0;
+}
+
+/* 홈 — 입체 도서관이 화면 가득 (탭 막대 위까지, 11-13 사용자: "이 화면이 주가 돼야") */
+.immersive {
+  position: relative;
+  height: calc(100dvh - 64px - env(safe-area-inset-bottom));
+  margin: 0 -16px -104px; /* 아래 -104px = .main 아래 여백 상쇄 → 화면이 내려가지 않는다 (숨겨진 화면일 땐 자리를 안 차지해 다른 화면에 안 번진다) */
+}
+.immersiveErr {
+  position: absolute;
+  top: 54px;
+  left: 16px;
+  right: 16px;
+  z-index: 5;
+  background: var(--card);
+}
+.toastHigh {
+  bottom: calc(166px + env(safe-area-inset-bottom));
+}
+
+/* 꾸미기 · 상점 — 포인트 동전(버터색 + 갈색 펜 테두리), 값, 내가 사는 집 */
+.coin {
+  display: inline-block;
+  flex: none;
+  width: 0.95em;
+  height: 0.95em;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: var(--butter);
+  box-shadow: inset 0 0 0 2px #fbe9b0;
+  vertical-align: -0.12em;
+}
+.price {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 14px !important;
+  color: var(--ink) !important;
+}
+.shopTile {
+  border-style: dashed;
+}
+.shopTile img {
+  filter: saturate(0.85);
+}
+.shopShort img {
+  opacity: 0.5;
+}
+.shopShort .price {
+  color: var(--ink-soft) !important;
+}
+.pointBig {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 34px;
+  line-height: 1.1;
+}
+.history {
+  margin-top: 12px;
+  font-size: 13.5px;
+}
+.history summary {
+  cursor: pointer;
+  color: var(--ink-soft);
+}
+.history ul {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+.history li {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 2px;
+  border-bottom: 1.5px dashed var(--line);
+}
+.plus {
+  color: #3f8f6e;
+}
+.minus {
+  color: #c9675a;
+}
+.houseGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.houseCard {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  background: var(--card);
+  color: var(--ink);
+  text-align: left;
+}
+.houseCard b {
+  font-family: var(--hand);
+  font-size: 19px;
+}
+.houseCard span {
+  font-size: 12.5px;
+}
+.houseCard small {
+  font-size: 11.5px;
+  color: var(--ink-soft);
+}
+.houseOn {
+  border: 2px solid var(--ink);
+  background: #fff6e6;
+  box-shadow: 2px 2px 0 rgba(90, 69, 53, 0.16);
+}
+
+/* 제자리 읽기 — ^ 를 누르면 퀵메뉴 자리에 올라오는 읽기 줄 (제목·지난번 쪽 · 책 덮기 · ∨). 숨을 땐 탭 막대 뒤로 */
+.readBar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(74px + env(safe-area-inset-bottom));
+  z-index: 15;
+  width: min(420px, calc(100% - 20px));
+  margin: 0 auto;
+  padding: 10px 10px 10px 14px;
+  background: var(--card);
+  border: 2px solid var(--ink);
+  border-radius: 20px;
+  box-shadow: 3px 4px 0 rgba(90, 69, 53, 0.18);
+  transform: translateY(calc(100% + 90px));
+  transition: transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.readBarOn {
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .readBar {
+    transition: none;
+  }
+}
+
+/* 친구 집 — 친구가 보여 주는 책 카드 (메뉴 자리에 올라온다) */
+.visitCard {
+  padding: 12px 14px 12px;
+}
+.visitActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* 꾸미기 — 옷 가게 미리보기 줄 (11-13) */
+.clothesRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+}
+.clothesRow img {
+  width: 15%;
+  aspect-ratio: 1;
+  object-fit: contain;
+  opacity: 0.9;
+}
+.clothesRow img.clothesOn {
+  opacity: 1;
+  filter: drop-shadow(0 0 0 var(--ink));
+  transform: scale(1.12);
+}
+
+/* 꾸미기 — 책장 칠하기 색 (11-13) */
+.paintRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px 14px;
+}
+.paintDot {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+}
+.paintDot span {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 3px;
+  font-size: 11px;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+.paintOn {
+  box-shadow:
+    0 0 0 3px var(--card),
+    0 0 0 5.5px var(--ink);
+}
+.paintRow {
+  padding-bottom: 16px;
+}

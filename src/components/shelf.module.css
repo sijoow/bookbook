@@ -1,0 +1,396 @@
+/* 내 책장 + 꺼내 읽기 연출 — A · 다꾸 독서 다이어리 */
+
+/* ── 책장 ── */
+.case {
+  position: relative;
+  margin-top: 26px;
+  padding: 18px 12px 10px;
+  background: #fbf4e6;
+  border: 2px solid var(--ink);
+  border-radius: 18px;
+  box-shadow: 3px 4px 0 rgba(90, 69, 53, 0.14);
+}
+.plaque {
+  position: absolute;
+  top: -17px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-1.5deg);
+  padding: 2px 16px;
+  background: var(--butter);
+  border: 1.5px solid var(--ink);
+  border-radius: 8px;
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 20px;
+  white-space: nowrap;
+}
+.row {
+  position: relative;
+  padding: 16px 4px 0;
+}
+.books {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  min-height: 150px;
+}
+.plank {
+  height: 14px;
+  margin: 0 -8px;
+  background: #dcac78;
+  border: 2px solid var(--ink);
+  border-radius: 5px;
+  box-shadow: inset 0 3px 0 #ecc596;
+}
+.spine {
+  position: relative;
+  flex: none;
+  padding: 0;
+  border: 0;
+  border-radius: 3px 3px 1px 1px;
+  background: var(--card-2);
+  box-shadow: 0 0 0 1px rgba(90, 69, 53, 0.6);
+  cursor: pointer;
+  transition: transform 0.16s ease-out;
+}
+@media (hover: hover) {
+  .spine:hover {
+    transform: translateY(-5px);
+  }
+}
+.spineImg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  border-radius: inherit;
+}
+.fake {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 6px 0;
+  overflow: hidden;
+  border-radius: inherit;
+  writing-mode: vertical-rl;
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 1;
+  color: var(--ink);
+}
+.out {
+  visibility: hidden; /* 꺼내 간 자리는 비어 보인다 */
+}
+.ribbon {
+  position: absolute;
+  top: -13px;
+  right: 18%;
+  width: 7px;
+  height: 20px;
+  background: var(--coral);
+  border: 1px solid var(--ink);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 76%, 0 100%);
+}
+.done {
+  position: absolute;
+  left: 50%;
+  bottom: 3px;
+  transform: translateX(-50%);
+  line-height: 0;
+}
+.addSlot {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 118px;
+  border: 2px dashed var(--line);
+  border-radius: 4px;
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 26px;
+  color: var(--ink-soft);
+}
+.bookend {
+  flex: none;
+  align-self: flex-end;
+  margin-left: auto;
+  height: auto;
+  pointer-events: none;
+}
+.hint {
+  margin-top: 10px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+.portalMark {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  line-height: 0;
+}
+
+/* ── 바코드 ── */
+.scan {
+  max-width: 440px;
+  margin: 0 auto;
+  padding: 28px 20px 40px;
+  text-align: center;
+}
+.scanBox {
+  position: relative;
+  width: 100%;
+  max-width: 360px;
+  aspect-ratio: 4 / 3;
+  margin: 16px auto 0;
+  overflow: hidden;
+  border: 2px solid var(--ink);
+  border-radius: 16px;
+  background: #2b2420;
+}
+.scanVideo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.scanGuide {
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  top: 30%;
+  bottom: 30%;
+  border: 3px dashed var(--butter);
+  border-radius: 10px;
+  box-shadow: 0 0 0 999px rgba(43, 36, 32, 0.35);
+}
+.scanWait {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--card);
+  font-size: 14px;
+}
+
+/* ── 순서 바꾸기 ── */
+.editing .spine {
+  touch-action: none; /* 끄는 동안 화면이 스크롤되지 않게 */
+  cursor: grab;
+  animation: wiggle 0.32s ease-in-out infinite alternate;
+}
+@keyframes wiggle {
+  from {
+    transform: rotate(-1.4deg);
+  }
+  to {
+    transform: rotate(1.4deg);
+  }
+}
+.editing .lifted,
+.lifted {
+  opacity: 0.25;
+  animation: none;
+}
+.insertBar {
+  flex: none;
+  align-self: flex-end;
+  width: 5px;
+  border-radius: 3px;
+  background: var(--coral);
+  box-shadow: 0 0 0 1.5px var(--ink);
+}
+.ghost {
+  position: fixed;
+  z-index: 70;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: 3px;
+  transform: rotate(-5deg) scale(1.08);
+  box-shadow:
+    0 0 0 1.5px var(--ink),
+    5px 7px 0 rgba(90, 69, 53, 0.22);
+}
+@media (prefers-reduced-motion: reduce) {
+  .editing .spine {
+    animation: none;
+  }
+}
+
+/* ── 꺼내 읽기 ── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  overflow-y: auto;
+  background-color: var(--paper); /* 반투명이면 뒤 화면 버튼이 비쳐 보였다 */
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+.fade {
+  animation: fadeIn 0.28s ease-out both;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+}
+.flying {
+  position: absolute;
+  z-index: 2;
+  transform-origin: 0 0;
+}
+.flyCover,
+.flySpine {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 5px;
+}
+.flyCover {
+  object-fit: cover;
+  border: 5px solid #fff;
+  box-shadow:
+    0 0 0 1.5px var(--ink),
+    3px 5px 0 rgba(90, 69, 53, 0.16);
+  background: var(--card-2);
+}
+.flyBlank {
+  display: grid;
+  place-items: center;
+  padding: 10px;
+  text-align: center;
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 22px;
+  line-height: 1.15;
+}
+.flySpine {
+  object-fit: fill;
+}
+.panel {
+  position: relative;
+  max-width: 440px;
+  margin: 0 auto;
+  padding: 0 20px 48px;
+  text-align: center;
+}
+.panelTitle {
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 28px;
+  line-height: 1.15;
+}
+.timer {
+  margin: 14px 0 2px;
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 64px;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+.timerLabel {
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+.reading {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+.twinkle {
+  animation: twinkle 1.6s ease-in-out infinite;
+}
+.twinkle:nth-child(2) {
+  animation-delay: 0.5s;
+}
+.twinkle:nth-child(3) {
+  animation-delay: 1s;
+}
+@keyframes twinkle {
+  50% {
+    transform: scale(0.7) rotate(12deg);
+    opacity: 0.6;
+  }
+}
+.progressWrap {
+  margin: 18px auto 6px;
+  max-width: 300px;
+  text-align: left;
+}
+.finish {
+  margin-top: 18px;
+  text-align: left;
+}
+.finishRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 10px;
+}
+.quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fade,
+  .twinkle {
+    animation: none;
+  }
+  .spine {
+    transition: none;
+  }
+}
+
+/* 입체 홈 — 읽는 동안 아래 작은 줄 (제목·지난번 쪽 · 책 덮기) */
+.compactRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.compactInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.compactInfo .muted,
+.compactInfo span {
+  font-size: 12.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.compactTitle {
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 19px;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.collapseBtn {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--ink);
+}

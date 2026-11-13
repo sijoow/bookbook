@@ -1,0 +1,1 @@
+The sticker: a cute round planet seen slightly from above, wide and squat, blue-green with soft hand-drawn continents, a thin apricot-orange ring around its middle, and a shallow flat crater on the very top center where a stack of books could stand. Two or three tiny pen-drawn sparkles touching the white border.

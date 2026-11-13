@@ -1,0 +1,8 @@
+Use the reference image only as a style guide: its cute die-cut "dakku" scrapbook stickers — thick clean white border, soft warm-brown pen outline, flat pastel colors with a subtle colored-pencil texture, cute and simple, front view. Do not copy any of its stickers.
+
+Create a STICKER SHEET of exactly 10 separate die-cut stickers on a fully transparent background, laid out in a strict grid of 5 columns and 2 rows. Every sticker sits centered in its own grid cell with generous empty transparent space around it, all stickers about the same size, none touching or overlapping. Each sticker has a thick clean white border around the whole shape. Use only these colors: apricot orange, mint green, butter yellow, soft coral, sky blue, cream, warm wood brown, and warm brown ink for every outline.
+
+Row 1 (children's clothes, laid flat, front view), left to right: a short-sleeve t-shirt with coral and cream horizontal stripes; butter-yellow overalls with small cream polka dots and two brown buttons; a soft coral dress with cream polka dots and a white round collar; a mint knitted turtleneck sweater with ribbed cuffs; a butter-yellow raincoat with a hood and three brown toggle buttons.
+Row 2, left to right: a cream-white child's space suit with a sky-blue collar, a coral belt and a tiny mint planet badge; a wide low wooden bookshelf with colorful book spines; a tall narrow wooden bookshelf with four shelves of colorful book spines; three small paint pots in mint, coral and sky blue with a little paint brush; a small wooden library ladder with round rungs.
+
+No text, no letters, no numbers, no labels, no grid lines, no background scenery, no cast shadows. Not 3D, no glossy highlights, no gradients, no purple.

@@ -1,0 +1,102 @@
+/* 내 사진으로 아바타 — 사진 맞추기 틀 (A · 다꾸: 갈색 펜 테두리, 흰 점선 동그라미, 버터색 이름표) */
+
+.start {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 12px 0 10px;
+}
+.startBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.startBtn img {
+  width: 26px;
+  height: 26px;
+  margin: -4px 0 -4px -4px;
+}
+.startNote {
+  margin: -4px 0 12px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.frame {
+  position: relative;
+  width: min(320px, 100%);
+  aspect-ratio: 1;
+  margin: 16px auto 0;
+  border: 2px solid var(--ink);
+  border-radius: 18px;
+  overflow: hidden;
+  background: #2b2420;
+  touch-action: none; /* 끌기·벌리기는 사진만 움직인다 */
+  cursor: grab;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.frame:active {
+  cursor: grabbing;
+}
+.canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.guide {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.mark {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 0 8px;
+  background: var(--butter);
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 1.4;
+  pointer-events: none;
+}
+
+.zoom {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: min(320px, 100%);
+  margin: 12px auto 0;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+.zoom input {
+  flex: 1;
+  accent-color: var(--ink);
+}
+.actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+.note {
+  margin-top: 14px;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+.status {
+  margin: -4px 0 12px;
+  text-align: center;
+  font-size: 13.5px;
+}

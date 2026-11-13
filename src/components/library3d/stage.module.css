@@ -1,0 +1,277 @@
+/* 나의 도서관 무대 — A · 다꾸: 갈색 펜 테두리 상자 + 버터색 이름판, 머리 위 이름표·말풍선 (산사처럼) */
+
+.slot {
+  position: relative;
+  margin-top: 26px;
+  height: clamp(420px, 124vw, 560px);
+}
+.previewSlot {
+  margin-top: 0;
+  height: 250px;
+}
+.stage {
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--ink);
+  border-radius: 18px;
+  overflow: hidden;
+  background: var(--paper);
+  box-shadow: 3px 4px 0 rgba(90, 69, 53, 0.14);
+  isolation: isolate;
+}
+.full {
+  position: fixed;
+  inset: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  z-index: 50;
+  animation: fadeIn 0.3s ease-out both;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+}
+/* 캔버스는 입체 화면을 만들 때마다 새로 붙는다 (LibraryStage start) */
+.canvasHost {
+  position: absolute;
+  inset: 0;
+}
+.canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: pan-y; /* 세로로 밀면 화면이 내려가고, 가로로 밀면 다음 책장 */
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+}
+.plaque {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-1.5deg);
+  padding: 2px 16px;
+  background: var(--butter);
+  border: 1.5px solid var(--ink);
+  border-radius: 8px;
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 20px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.tag {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 9px 2px 3px;
+  background: #fff;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+  will-change: transform;
+  transition: opacity 0.2s;
+  opacity: 0;
+}
+.tag:not(:has(.me)) {
+  padding-left: 9px;
+}
+.me {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 12px;
+}
+.bubble {
+  position: absolute;
+  left: 0;
+  top: 0;
+  padding: 5px 12px;
+  background: #fff;
+  border: 1.5px solid var(--ink);
+  border-radius: 12px;
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 17px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.18s;
+  will-change: transform;
+}
+.bubble::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  width: 10px;
+  height: 10px;
+  background: #fff;
+  border-right: 1.5px solid var(--ink);
+  border-bottom: 1.5px solid var(--ink);
+  transform: translateX(-50%) rotate(45deg);
+}
+.bubble[data-on="1"] {
+  opacity: 1;
+}
+.dots {
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  pointer-events: none;
+}
+.dot {
+  width: 8px;
+  height: 8px;
+  border: 1.5px solid var(--ink);
+  border-radius: 99px;
+  background: var(--card);
+}
+.dotOn {
+  background: var(--ink);
+}
+.hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 8px;
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  pointer-events: none;
+}
+
+/* 읽는 동안 — 무대 위에 종이 시트 (타이머·덮기) */
+.sheet {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: min(440px, 100%);
+  max-height: 62dvh;
+  overflow-y: auto;
+  z-index: 55;
+  padding: 18px 20px calc(22px + env(safe-area-inset-bottom));
+  background: var(--card);
+  border-top: 2px solid var(--ink);
+  border-radius: 22px 22px 0 0;
+  box-shadow: 0 -4px 0 rgba(90, 69, 53, 0.1);
+  text-align: center;
+  animation: up 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes up {
+  from {
+    transform: translate(-50%, 40px);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .full,
+  .sheet {
+    animation: none;
+  }
+}
+
+/* 선물 상자 위 '선물 N' */
+.giftTag {
+  position: absolute;
+  left: 0;
+  top: 0;
+  padding: 1px 9px;
+  background: var(--coral);
+  color: #fff;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.3;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+  will-change: transform;
+}
+
+/* 책장 크게 보기 ↔ 방 보기 */
+.zoomBtn {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  padding: 4px 12px;
+  background: var(--card);
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 15px;
+  box-shadow: 2px 2px 0 rgba(90, 69, 53, 0.18);
+}
+/* 순서 바꾸기 중엔 손가락으로 끌어도 화면이 내려가지 않게 */
+.canvasEditing {
+  touch-action: none;
+  cursor: grab;
+}
+
+/* 읽는 동안 머리 위 타이머 (이름표 자리) */
+.timerTag {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 14px 4px 10px;
+  background: var(--butter);
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  box-shadow: 2px 3px 0 rgba(90, 69, 53, 0.18);
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s;
+  will-change: transform;
+}
+/* 읽는 동안 아래 작은 줄 (제목 · 책 덮기) */
+.sheetCompact {
+  max-height: none;
+  padding: 12px 16px calc(14px + env(safe-area-inset-bottom));
+  text-align: left;
+}
+
+/* 홈 — 무대가 화면 가득 (11-13 사용자: "이 화면이 주가 돼야 — 나의 아바타") */
+.immersiveSlot {
+  margin-top: 0;
+  height: 100%;
+}
+.immersiveStage {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.dotsHigh {
+  z-index: 3;
+}

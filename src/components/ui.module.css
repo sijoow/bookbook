@@ -1,0 +1,380 @@
+/* 공용 부품 — A · 다꾸 독서 다이어리 */
+
+/* ── 틀 ── */
+.shell {
+  max-width: 440px;
+  min-height: 100dvh;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+.main {
+  flex: 1;
+  padding: 0 16px 104px;
+}
+
+/* ── 상단바 ── */
+.topbar {
+  display: grid;
+  grid-template-columns: 48px 1fr 48px;
+  align-items: center;
+  height: 56px;
+  margin: 0 -16px 4px;
+  padding: 0 8px;
+  border-bottom: 2px dashed var(--line);
+}
+.topSide {
+  display: flex;
+  align-items: center;
+}
+.topRight {
+  justify-content: flex-end;
+}
+.logo {
+  text-align: center;
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 24px;
+  letter-spacing: 0.01em;
+}
+.back,
+.iconBtn {
+  display: inline-grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  border: 1.5px solid var(--ink);
+  background: var(--card);
+  font-family: var(--hand);
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* ── 하단 탭 ── */
+.tabbar {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: min(440px, 100%);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  padding: 8px 12px calc(10px + env(safe-area-inset-bottom)); /* 높이 64px 그대로 (8 + 44 + 10 + 테두리 2) */
+  background: var(--card);
+  border-top: 2px solid var(--ink);
+  z-index: 20;
+  isolation: isolate;
+}
+.tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  height: 44px;
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 13.5px;
+  line-height: 1;
+  color: var(--ink-soft);
+  -webkit-tap-highlight-color: transparent;
+}
+.tabIcon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+}
+/* 고른 탭 — 그림 뒤에 버터색 동그라미 (레퍼런스처럼), 이름은 펜 색 */
+.tabOn {
+  color: var(--ink);
+}
+.tabOn .tabIcon::before {
+  content: "";
+  position: absolute;
+  inset: -4px -10px;
+  z-index: -1;
+  border-radius: 999px;
+  background: var(--butter);
+  opacity: 0.75;
+}
+.tabIcon > img {
+  position: relative;
+}
+
+/* ── 카드(종이) ── */
+.paper {
+  position: relative;
+  background: var(--card);
+  border: 1.5px solid var(--ink);
+  border-radius: 16px;
+  padding: 18px 16px 16px;
+  box-shadow: 2px 3px 0 rgba(90, 69, 53, 0.12);
+}
+.paperLabel {
+  display: inline-block;
+  margin-bottom: 8px;
+  padding: 2px 10px;
+  border-radius: 6px;
+  background: var(--butter);
+  border: 1.5px solid var(--ink);
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 18px;
+  line-height: 1.2;
+}
+.dashed {
+  border: 0;
+  border-top: 2px dashed var(--line);
+  margin: 14px 0;
+}
+
+/* ── 마스킹테이프 ── */
+.tape {
+  position: absolute;
+  top: -11px;
+  left: 50%;
+  width: 72px;
+  height: 22px;
+  transform: translateX(-50%) rotate(-4deg);
+  opacity: 0.88;
+  /* 양 끝을 톱니처럼 */
+  clip-path: polygon(3% 0, 97% 0, 100% 18%, 96% 36%, 100% 54%, 96% 72%, 100% 90%, 97% 100%, 3% 100%, 0 82%, 4% 64%, 0 46%, 4% 28%, 0 10%);
+}
+.tape_apricot {
+  background: repeating-linear-gradient(-45deg, var(--apricot) 0 7px, #f6c79a 7px 14px);
+}
+.tape_mint {
+  background: repeating-linear-gradient(-45deg, var(--mint) 0 7px, #c4e6d9 7px 14px);
+}
+.tape_butter {
+  background: repeating-linear-gradient(-45deg, var(--butter) 0 7px, #fbe9b4 7px 14px);
+}
+.tape_coral {
+  background: repeating-linear-gradient(-45deg, var(--coral) 0 7px, #f6c3b8 7px 14px);
+}
+.tape_sky {
+  background: repeating-linear-gradient(-45deg, var(--sky) 0 7px, #c6e1ee 7px 14px);
+}
+.doodle {
+  display: inline-block;
+  flex: none;
+}
+
+/* ── 버튼·칩·입력 ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 10px 22px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: var(--brown);
+  color: var(--card);
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 1;
+  white-space: nowrap;
+  flex: none;
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.btnWide {
+  width: 100%;
+}
+.btnGhost {
+  background: var(--card);
+  color: var(--ink);
+  border-style: dashed;
+}
+.textBtn {
+  border: 0;
+  background: none;
+  color: var(--ink-soft);
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.chip {
+  padding: 6px 14px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: var(--card);
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 17px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.chipOn {
+  background: var(--apricot);
+}
+.field,
+.textarea {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid var(--ink);
+  border-radius: 12px;
+  background: var(--card);
+  outline: none;
+}
+.field:focus,
+.textarea:focus {
+  border-color: var(--brown);
+  box-shadow: 0 0 0 3px rgba(240, 163, 94, 0.35);
+}
+.textarea {
+  min-height: 84px;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+/* ── 진행 막대 (마스킹테이프처럼) ── */
+.progress {
+  height: 14px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: var(--card);
+  overflow: hidden;
+}
+.progressFill {
+  height: 100%;
+  border-radius: 999px;
+  background: repeating-linear-gradient(-45deg, var(--mint) 0 6px, #b7e0d0 6px 12px);
+  border-right: 1.5px solid var(--ink);
+}
+
+/* ── 표지 스티커 ── */
+.cover,
+.coverBlank {
+  display: block;
+  flex: none;
+  object-fit: cover;
+  border: 4px solid #fff;
+  border-radius: 5px;
+  box-shadow:
+    0 0 0 1.5px var(--ink),
+    2px 3px 0 rgba(90, 69, 53, 0.15);
+  background: var(--card-2);
+}
+.coverBlank {
+  display: grid;
+  place-items: center;
+  padding: 6px;
+  text-align: center;
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.15;
+  overflow: hidden;
+}
+
+/* ── 별점 ── */
+.stars {
+  display: inline-flex;
+  gap: 2px;
+}
+.starBtn {
+  display: inline-grid;
+  place-items: center;
+  padding: 2px;
+  border: 0;
+  background: none;
+}
+.starBtn:disabled {
+  cursor: default;
+}
+
+/* ── 기타 ── */
+.muted {
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+.credit {
+  margin: 20px 0 4px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+.credit a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.error {
+  margin: 10px 0;
+  padding: 8px 12px;
+  border: 1.5px dashed var(--coral);
+  border-radius: 10px;
+  background: #fbe6df;
+  font-size: 14px;
+}
+
+/* ── 스티커 모음판 (꾸미기 선물·동물 고르기) — GPT 다꾸 스티커 public/img/stickers ── */
+.stickerGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.stickerTile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  padding: 8px 4px 6px;
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  background: var(--card);
+  font-size: 12.5px;
+  line-height: 1.25;
+  text-align: center;
+  color: var(--ink);
+}
+.stickerTile img {
+  width: 100%;
+  max-width: 62px;
+  height: 52px;
+  object-fit: contain;
+}
+.stickerTile small {
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+.stickerOn {
+  border: 2px solid var(--ink);
+  background: #fff6e6;
+  box-shadow: 2px 2px 0 rgba(90, 69, 53, 0.16);
+}
+.stickerOn small {
+  color: #c9675a;
+  font-weight: 700;
+}
+.stickerLocked img {
+  filter: grayscale(1);
+  opacity: 0.32;
+}
+.stickerBox {
+  border-style: dashed;
+  border-color: var(--coral);
+}
+.stickerBox img {
+  opacity: 0.55;
+}
+
+/* 입체 홈의 아래 여백은 screens.module.css .immersive 가 스스로 상쇄한다
+   (.main:has([data-immersive]) 로 고쳤더니 Next 16 이 숨겨 두는 지난 화면에도 걸려 마이페이지 끝이 탭 막대에 깔렸다 — 11-13) */

@@ -1,0 +1,74 @@
+[
+  {
+    "date": "2026-11-12",
+    "what": "디자인 시안 3장 (A 다꾸 · B 동화책 · C 리소) + 그림 재료 8장 (행성 6 · 빈 우주 · 행성 고침 1)",
+    "tool": "GPT 그림",
+    "amount": 1.71,
+    "unit": "usd",
+    "note": "합계 기록 (이하)"
+  },
+  {
+    "date": "2026-11-12",
+    "what": "꾸미기 스티커 20개 한 장 (소품 14 · 동물 5 · 선물 상자)",
+    "tool": "GPT 그림",
+    "amount": 0.27,
+    "unit": "usd",
+    "note": "docs/design/assets/stickers-collection.png"
+  },
+  {
+    "date": "2026-11-13",
+    "what": "메뉴 아이콘 12개 한 장 (퀵메뉴 · 친구 집 · 아래 탭)",
+    "tool": "GPT 그림",
+    "amount": 0.271,
+    "unit": "usd",
+    "note": "docs/design/assets/menu-icons.png"
+  },
+  {
+    "date": "2026-11-13",
+    "what": "캐릭터 시험 2장 (다섯 명 나란히 · 다락방에서 읽기)",
+    "tool": "GPT 그림",
+    "amount": 0.536,
+    "unit": "usd",
+    "note": "docs/design/concepts/characters"
+  },
+  {
+    "date": "2026-11-13",
+    "what": "캐릭터 목소리 34줄 × 2 (여자아이 수아 · 남자아이 태지)",
+    "tool": "Typecast",
+    "amount": 484,
+    "unit": "credits",
+    "note": "월 구독 안 (계정 공유, 그때 이번 달 53,184)"
+  },
+  {
+    "date": "2026-11-13",
+    "what": "maker-icons.png (1536x1024, high)",
+    "tool": "GPT 그림",
+    "amount": 0.267,
+    "unit": "usd",
+    "note": "docs/design/prompts/assets/maker-icons.md"
+  },
+  {
+    "date": "2026-11-13",
+    "what": "shop-clothes-shelf.png (1536x1024, high)",
+    "tool": "GPT 그림",
+    "amount": 0.269,
+    "unit": "usd",
+    "note": "docs/design/prompts/assets/shop-clothes-shelf.md"
+  },
+  {
+    "date": "2026-11-13",
+    "what": "캐릭터 목소리 12줄 (girl·boy)",
+    "tool": "Typecast",
+    "amount": 120,
+    "unit": "credits",
+    "note": "이번 달 사용 53308"
+  },
+  {
+    "date": "2026-11-13",
+    "what": "캐릭터 목소리 8줄 (girl·boy)",
+    "tool": "Typecast",
+    "amount": 84,
+    "unit": "credits",
+    "note": "이번 달 사용 53428"
+  }
+]

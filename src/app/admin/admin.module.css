@@ -1,0 +1,574 @@
+/* 관리자 — A · 다꾸 토큰 그대로, 조금 빽빽하게 (컴퓨터에서도 넓게) */
+
+.wrap {
+  max-width: 980px;
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: 0 16px 60px;
+}
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 0 12px;
+  margin-bottom: 14px;
+  border-bottom: 2px dashed var(--line);
+}
+.logo {
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 24px;
+}
+.logo small {
+  margin-left: 6px;
+  padding: 1px 8px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: var(--butter);
+  font-size: 14px;
+}
+.tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.tab {
+  padding: 6px 14px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--ink);
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 16px;
+}
+.tabOn {
+  background: var(--brown);
+  color: var(--card);
+}
+.card {
+  position: relative;
+  padding: 14px 14px 12px;
+  border: 1.5px solid var(--ink);
+  border-radius: 14px;
+  background: var(--card);
+  box-shadow: 2px 3px 0 rgba(90, 69, 53, 0.1);
+}
+.card h3 {
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 19px;
+  margin-bottom: 8px;
+}
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  border: 1.5px solid var(--ink);
+  border-radius: 14px;
+  background: var(--card);
+}
+.tile b {
+  font-family: var(--hand);
+  font-size: 30px;
+  line-height: 1.05;
+}
+.tile b.small {
+  font-size: 18px;
+}
+.tile span {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.tile small {
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+.grid2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+/* 막대 차트 — 막대 #c9675a (검사 통과), 축·눈금은 흐리게, 글자는 펜 색 */
+.chartHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+.chartHead span {
+  font-size: 12.5px;
+  color: var(--ink-soft);
+}
+.chartHead b {
+  color: var(--ink);
+  font-size: 15px;
+}
+.chartBox {
+  position: relative;
+}
+.chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.bar {
+  fill: #c9675a;
+}
+.barOn {
+  fill: #a9473a;
+}
+.base {
+  stroke: var(--ink-soft);
+  stroke-width: 1;
+}
+.grid {
+  stroke: var(--line);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+.tick {
+  fill: var(--ink-soft);
+  font-size: 9px;
+  text-anchor: middle;
+}
+.tip {
+  position: absolute;
+  top: -6px;
+  transform: translate(-50%, -100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3px 9px;
+  border: 1.5px solid var(--ink);
+  border-radius: 10px;
+  background: #fff;
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.tip b {
+  font-size: 14px;
+}
+.table {
+  margin-top: 6px;
+  font-size: 12.5px;
+}
+.table summary {
+  cursor: pointer;
+  color: var(--ink-soft);
+}
+.table table {
+  width: 100%;
+  margin-top: 6px;
+  border-collapse: collapse;
+}
+.table td {
+  padding: 3px 4px;
+  border-bottom: 1px dashed var(--line);
+}
+.table td:last-child {
+  text-align: right;
+}
+.rank {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 14px;
+}
+.rank li {
+  padding: 5px 0;
+  border-bottom: 1.5px dashed var(--line);
+}
+.rank li > span,
+.rank li > b {
+  display: inline-block;
+}
+.rank li {
+  display: list-item;
+}
+.rank li b {
+  float: right;
+}
+.rank small {
+  color: var(--ink-soft);
+}
+.itemRow {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 회원 · 글 */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.input,
+.textarea {
+  min-width: 0;
+  flex: 1;
+  padding: 8px 10px;
+  border: 1.5px solid var(--ink);
+  border-radius: 10px;
+  background: #fff;
+  font-size: 14px;
+}
+.textarea {
+  width: 100%;
+  min-height: 70px;
+  resize: vertical;
+  margin: 6px 0 8px;
+}
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.userCard {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.userHead {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.nick {
+  font-family: var(--hand);
+  font-size: 19px;
+}
+.userMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+.btn,
+.btnGhost,
+.btnDanger {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  font-size: 13.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.btn {
+  background: var(--brown);
+  color: var(--card);
+}
+.btnGhost {
+  background: var(--card);
+  color: var(--ink);
+}
+.btnDanger {
+  background: #fff1ee;
+  border-color: #c9675a;
+  color: #a9473a;
+}
+.btn:disabled,
+.btnGhost:disabled,
+.btnDanger:disabled {
+  opacity: 0.45;
+}
+.chip {
+  padding: 4px 12px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: #fff;
+  font-size: 13.5px;
+}
+.chipOn {
+  background: var(--butter);
+  font-weight: 700;
+}
+.badge,
+.badgeOn,
+.badgeWarn {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 8px;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  font-size: 11.5px;
+  color: var(--ink-soft);
+}
+.badgeOn {
+  border-color: #3f8f6e;
+  color: #2f7457;
+}
+.badgeWarn {
+  border-color: #c9675a;
+  color: #a9473a;
+}
+.warnText {
+  color: #a9473a;
+  font-size: 12.5px;
+}
+.hiddenPost {
+  opacity: 0.6;
+  border-style: dashed;
+}
+.postText {
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+.pager {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+.counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+.counts b {
+  color: var(--ink);
+}
+.noticeRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 0;
+  border-bottom: 1.5px dashed var(--line);
+}
+.noticeText {
+  flex: 1;
+  min-width: 160px;
+  font-size: 14px;
+}
+.ok {
+  color: #2f7457;
+}
+.bad {
+  color: #a9473a;
+}
+.muted {
+  font-size: 12.5px;
+  color: var(--ink-soft);
+}
+.note {
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  border: 1.5px dashed var(--ink-soft);
+  border-radius: 10px;
+  font-size: 13.5px;
+}
+.err {
+  margin: 10px 0;
+  padding: 8px 12px;
+  border: 1.5px dashed var(--coral);
+  border-radius: 10px;
+  color: #a9473a;
+  font-size: 13.5px;
+}
+
+/* 옆 막대 메뉴 (11-13 사용자: "어드민 단은 사이드 쪽에 있는 게 좋아서") — 좁은 화면에선 위로 접힌다 */
+.shell {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  min-height: 100dvh;
+}
+.side {
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 22px 14px 18px;
+  border-right: 2px dashed var(--line);
+  background: rgba(253, 249, 240, 0.7);
+}
+.sideNav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sideItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1.5px solid transparent;
+  border-radius: 12px;
+  background: none;
+  color: var(--ink);
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 18px;
+  text-align: left;
+  cursor: pointer;
+}
+.sideItem:hover {
+  border-color: var(--line);
+  background: #fff6e6;
+}
+.sideOn,
+.sideOn:hover {
+  border-color: var(--ink);
+  background: var(--brown);
+  color: var(--card);
+}
+.sideFoot {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.content {
+  width: 100%;
+  max-width: 1040px;
+  padding: 22px 26px 60px;
+}
+.pageHead {
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 2px dashed var(--line);
+}
+.pageHead h1 {
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 28px;
+  line-height: 1.15;
+}
+@media (max-width: 760px) {
+  .shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .side {
+    position: static;
+    height: auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-right: 0;
+    border-bottom: 2px dashed var(--line);
+  }
+  .sideNav {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .sideItem {
+    padding: 6px 10px;
+    font-size: 15px;
+  }
+  .sideFoot {
+    display: none;
+  }
+  .content {
+    padding: 14px 16px 60px;
+  }
+}
+
+/* 비용 표 */
+.tableWrap {
+  overflow-x: auto;
+}
+.costTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+.costTable th {
+  text-align: left;
+  font-weight: 700;
+  color: var(--ink-soft);
+  padding: 6px 8px;
+  border-bottom: 2px dashed var(--line);
+  white-space: nowrap;
+}
+.costTable td {
+  padding: 7px 8px;
+  border-bottom: 1px dashed var(--line);
+  vertical-align: top;
+}
+.num {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.costTable .badgeWarn {
+  white-space: nowrap;
+}
+/* 휴대폰 폭 — 표 대신 한 줄씩 카드처럼 (칸이 찌그러지지 않게) */
+@media (max-width: 640px) {
+  .costTable thead {
+    display: none;
+  }
+  .costTable tr {
+    display: flex;
+    flex-direction: column;
+    padding: 8px 0;
+    border-bottom: 1px dashed var(--line);
+  }
+  .costTable td {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    padding: 2px 0;
+    border: 0;
+    text-align: right;
+  }
+  .costTable td::before {
+    content: attr(data-label);
+    flex: none;
+    color: var(--ink-soft);
+    font-size: 12.5px;
+    text-align: left;
+  }
+  .costTable td[data-main] {
+    display: block;
+    order: -1; /* 제목이 맨 위 */
+    padding-bottom: 4px;
+    font-weight: 600;
+    text-align: left;
+  }
+  .costTable td[data-main]::before {
+    content: none;
+  }
+  .costTable td[data-main] small {
+    font-weight: 400;
+  }
+}

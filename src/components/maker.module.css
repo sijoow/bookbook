@@ -1,0 +1,405 @@
+/* 나의 모습 꾸미기 — 왼쪽 아바타 크게 · 오른쪽 탭·그림 칸·색 동그라미·결정 (11-13 사용자: 동물의 숲 꾸미기 같은 배치, 그림체는 우리 다꾸) */
+
+.maker {
+  display: grid;
+  grid-template-columns: minmax(0, 45fr) minmax(0, 55fr);
+  gap: 10px;
+  height: 100%;
+  min-height: 0;
+}
+
+/* 왼쪽 — 입체 미리보기가 칸을 꽉 채운다 */
+.stageCol {
+  position: relative;
+  min-height: 0;
+}
+.stageCol .stageSlot {
+  height: 100%;
+  margin: 0;
+}
+
+/* 오른쪽 */
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+  min-height: 0;
+}
+.tabs {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  padding: 3px 1px;
+  background: var(--butter);
+  border: 2px solid var(--ink);
+  border-radius: 18px;
+}
+.arrow {
+  flex: none;
+  width: 16px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1;
+}
+.tabRow {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 1px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tab {
+  flex: none;
+  width: 31px;
+  height: 31px;
+  padding: 2px;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  display: grid;
+  place-items: center;
+}
+.tab img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.tabOn {
+  background: var(--card);
+  box-shadow: inset 0 0 0 2px var(--ink);
+}
+.tabName {
+  text-align: center;
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 19px;
+  line-height: 1;
+  color: var(--ink);
+}
+
+.scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 7px 7px 6px 3px;
+}
+.groupTitle {
+  margin: 0 0 5px 2px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+.gridWide {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.tile {
+  position: relative;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 4px 3px 3px;
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--ink);
+}
+.tile img,
+.tileText {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: contain;
+}
+.gridWide .tile img,
+.gridWide .tileText {
+  aspect-ratio: 2.3;
+}
+.tileText {
+  display: grid;
+  place-items: center;
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--ink-soft);
+}
+.tileLabel {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  line-height: 1.25;
+  color: var(--ink-soft);
+}
+.tileOn {
+  border: 2.5px solid var(--ink);
+  background: #fff6d8;
+}
+.tileOn .tileLabel {
+  color: var(--ink);
+  font-weight: 700;
+}
+.tileOn::after,
+.swatchOn::after {
+  content: "✓";
+  position: absolute;
+  top: -8px;
+  right: -7px;
+  width: 19px;
+  height: 19px;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--coral);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  padding: 6px 0 2px;
+}
+.swatch {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+}
+.swatchOn {
+  box-shadow:
+    0 0 0 3px var(--card),
+    0 0 0 5.5px var(--ink);
+}
+.swatchOn::after {
+  top: -10px;
+  right: -10px;
+}
+
+.done {
+  flex: none;
+  height: 46px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--brown);
+  color: var(--card);
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 21px;
+  box-shadow: 0 3px 0 rgba(90, 69, 53, 0.25);
+}
+.done:disabled {
+  opacity: 0.5;
+}
+
+/* 마이페이지 — 화면 가득 꾸미기 창 */
+.sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 10px calc(10px + env(safe-area-inset-bottom));
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 18px 18px;
+  animation: sheetIn 0.25s ease-out both;
+}
+@keyframes sheetIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+.sheetHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.sheetTitle {
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 22px;
+  color: var(--ink);
+}
+.sheetClose {
+  min-width: 44px;
+  height: 36px;
+  padding: 0 12px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--ink);
+  font-size: 14px;
+}
+.sheetBody {
+  flex: 1;
+  min-height: 0;
+}
+
+/* 옷 가게 — 가운데 아바타(입어 보기), 양옆 옷 3벌씩, 아래 고른 옷·값·사기 (11-13) */
+.shopPoints {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: var(--butter);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--ink);
+}
+.shopPoints i {
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid var(--ink);
+  border-radius: 50%;
+  background: #f2c14e;
+}
+.shop {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.55fr) minmax(0, 1fr);
+  gap: 8px;
+}
+.shopCol {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  gap: 8px;
+  min-height: 0;
+}
+.shopStage {
+  position: relative;
+  min-height: 0;
+}
+.shopStage .stageSlot {
+  height: 100%;
+  margin: 0;
+}
+.shopTile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 6px 4px 5px;
+  border: 1.5px solid var(--line);
+  border-radius: 16px;
+  background: var(--card);
+  color: var(--ink);
+}
+.shopTile img {
+  width: 100%;
+  max-height: 78px;
+  aspect-ratio: 1;
+  object-fit: contain;
+}
+.shopTileOn {
+  border: 2.5px solid var(--ink);
+  background: #fff6d8;
+}
+.shopTileOn::after {
+  content: "✓";
+  position: absolute;
+  top: -8px;
+  right: -7px;
+  width: 19px;
+  height: 19px;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--coral);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+}
+.shopName {
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.shopPrice {
+  font-size: 11.5px;
+  color: var(--ink-soft);
+}
+.shopBar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 8px 8px 16px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--card);
+}
+.shopSum {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+.shopSum b {
+  font-family: var(--hand);
+  font-size: 19px;
+  color: var(--ink);
+}
+.shopBuy {
+  flex: none;
+  min-width: 96px;
+  height: 42px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--brown);
+  color: var(--card);
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 19px;
+}
+.shopBuy:disabled {
+  opacity: 0.45;
+}
+.shopNote {
+  margin: -2px 0 0;
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+}

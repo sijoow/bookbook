@@ -1,0 +1,581 @@
+/* 홈 무대 위 버튼 — A · 다꾸: 종이 막대 퀵메뉴 · 버터색 색인 탭 · 모눈종이 옆 서랍 (갈색 펜 테두리, 그라디언트·광택 없음) */
+
+/* ── 퀵메뉴 (아래) ── */
+.quick {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  z-index: 4;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  padding: 7px 2px 6px;
+  background: var(--card);
+  border: 2px solid var(--ink);
+  border-radius: 20px;
+  box-shadow: 3px 4px 0 rgba(90, 69, 53, 0.18);
+}
+.qBtn {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 14.5px;
+  line-height: 1.15;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+}
+.qBtn:disabled {
+  opacity: 0.38;
+  cursor: default;
+}
+.qIcon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 40px;
+  border: 1.5px solid transparent;
+  border-radius: 999px;
+  transition:
+    transform 0.12s,
+    background-color 0.15s;
+}
+.qBtn:not(:disabled):active .qIcon {
+  transform: translateY(1px) scale(0.94);
+}
+.qOn .qIcon {
+  background: var(--butter);
+  border-color: var(--ink);
+}
+.badge {
+  position: absolute;
+  top: -5px;
+  left: calc(50% + 6px);
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: var(--coral);
+  color: #fff;
+  font-family: var(--hand);
+  font-style: normal;
+  font-size: 13px;
+  line-height: 17px;
+  text-align: center;
+}
+/* 빈 책장 — '책 꽂기'가 숨 쉬듯 */
+.pulse .qIcon {
+  background: var(--butter);
+  border-color: var(--ink);
+  animation: pulse 1.6s ease-in-out infinite;
+}
+@keyframes pulse {
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* ── 정리 중 (퀵메뉴 자리) ── */
+.editBar {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 10px 12px;
+  background: var(--card);
+  border: 2px solid var(--ink);
+  border-radius: 20px;
+  box-shadow: 3px 4px 0 rgba(90, 69, 53, 0.18);
+}
+.editChips {
+  display: flex;
+  gap: 6px;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 1px;
+}
+.editChip {
+  flex: none;
+  padding: 5px 11px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 13.5px;
+  white-space: nowrap;
+}
+.doneBtn {
+  padding: 6px 26px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--brown);
+  color: var(--card);
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 18px;
+}
+
+/* ── 옆 탭 (왼쪽 가장자리 색인) ── */
+.sideTab {
+  position: absolute;
+  left: 0;
+  top: 58px;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 6px 9px 5px;
+  border: 2px solid var(--ink);
+  border-left: 0;
+  border-radius: 0 14px 14px 0;
+  background: var(--butter);
+  color: var(--ink);
+  box-shadow: 2px 3px 0 rgba(90, 69, 53, 0.18);
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 16px;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+}
+.sideTabText {
+  writing-mode: vertical-rl;
+  letter-spacing: 1px;
+  line-height: 1;
+}
+.sideTab:active {
+  transform: translateX(2px);
+}
+
+/* 무대 위 작은 안내 */
+.hint {
+  position: absolute;
+  left: 50%;
+  bottom: 96px;
+  z-index: 4;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100% - 40px);
+  padding: 6px 14px;
+  border: 1.5px solid var(--ink);
+  border-radius: 12px;
+  background: #fff;
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 16px;
+  text-align: center;
+  pointer-events: none;
+}
+.credit {
+  position: absolute;
+  right: 8px;
+  top: 52px;
+  z-index: 3;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: rgba(253, 249, 240, 0.78);
+  font-size: 10px;
+  color: var(--ink-soft);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ── 옆 서랍 ── */
+.drawerRoot {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  width: min(440px, 100%);
+  margin: 0 auto;
+  overflow: hidden;
+  pointer-events: none;
+}
+.drawerRoot[data-open="1"] {
+  pointer-events: auto;
+}
+.backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(43, 36, 32, 0.4);
+  opacity: 0;
+  transition: opacity 0.26s;
+}
+.drawerRoot[data-open="1"] > .backdrop {
+  opacity: 1;
+}
+.drawer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: min(86%, 340px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 18px 16px calc(28px + env(safe-area-inset-bottom));
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 18px 18px;
+  border-right: 2px solid var(--ink);
+  box-shadow: 4px 0 0 rgba(90, 69, 53, 0.12);
+  transform: translateX(-104%);
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  touch-action: pan-y;
+}
+.drawerRoot[data-open="1"] > .drawer {
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .backdrop,
+  .drawer {
+    transition: none;
+  }
+  .pulse .qIcon {
+    animation: none;
+  }
+}
+.drawerHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.drawerTitle {
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 28px;
+  line-height: 1.1;
+}
+.close {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--ink);
+}
+.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1.5px solid var(--ink);
+  border-radius: 14px;
+  background: var(--card);
+}
+.statNum {
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 22px;
+  line-height: 1.1;
+}
+.statLabel {
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+.block {
+  margin-top: 20px;
+}
+.blockTitle {
+  margin-bottom: 8px;
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 20px;
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 1.5px solid var(--ink);
+  border-radius: 14px;
+  background: var(--card);
+}
+.row + .row {
+  margin-top: 8px;
+}
+.rowBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.rowTitle {
+  font-weight: 700;
+  font-size: 14.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.small {
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+.rowBtn {
+  flex: none;
+  padding: 5px 10px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--brown);
+  color: var(--card);
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 15px;
+}
+.links {
+  display: flex;
+  flex-direction: column;
+}
+.link {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 4px;
+  border-bottom: 2px dashed var(--line);
+  font-weight: 600;
+  font-size: 15px;
+}
+.rowBody .small {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 내 포인트 (오른쪽 위, 누르면 상점) */
+.points {
+  position: absolute;
+  right: 8px;
+  top: 12px;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px 3px 6px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: var(--card);
+  box-shadow: 2px 2px 0 rgba(90, 69, 53, 0.16);
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 17px;
+  line-height: 1.2;
+  color: var(--ink);
+}
+.coin {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: var(--butter);
+  box-shadow: inset 0 0 0 2px #fbe9b0;
+}
+/* 서랍 맨 위 — 내 포인트 · 상점 가기 */
+.pointRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border: 1.5px solid var(--ink);
+  border-radius: 14px;
+  background: #fff6e6;
+  font-size: 14.5px;
+}
+.pointRow b {
+  font-family: var(--hand);
+  font-size: 22px;
+  margin-left: 4px;
+}
+
+/* 공지 띠 (이름판 아래) */
+.notice {
+  position: absolute;
+  left: 40px;
+  right: 10px;
+  top: 52px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 6px 6px 8px;
+  border: 1.5px solid var(--ink);
+  border-radius: 12px;
+  background: var(--card);
+  box-shadow: 2px 3px 0 rgba(90, 69, 53, 0.16);
+  font-size: 13.5px;
+}
+.noticeWarn {
+  background: #fff1ee;
+}
+.noticeTag {
+  flex: none;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--butter);
+  font-family: var(--hand);
+  font-size: 14px;
+}
+.noticeWarn .noticeTag {
+  background: var(--coral);
+  color: #fff;
+}
+.noticeText {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.35;
+}
+.noticeClose {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  background: none;
+  color: var(--ink-soft);
+}
+
+/* 읽는 동안 — 퀵메뉴는 아래로 미끄러져 숨고(무대 밖으로 잘린다), 가운데 ^ 손잡이 */
+.quick {
+  transition:
+    transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 0.22s;
+}
+.quickHidden {
+  transform: translateY(calc(100% + 18px));
+  opacity: 0;
+  pointer-events: none;
+}
+.readHandle {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 34px;
+  transform: translateX(-50%);
+  border: 2px solid var(--ink);
+  border-bottom: 0;
+  border-radius: 16px 16px 0 0;
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: 0 -2px 0 rgba(90, 69, 53, 0.08);
+  animation: handleUp 0.3s 0.15s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  cursor: pointer;
+}
+@keyframes handleUp {
+  from {
+    transform: translate(-50%, 100%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .quick {
+    transition: none;
+  }
+  .readHandle {
+    animation: none;
+  }
+}
+
+/* 친구 집 — 왼쪽 위 뒤로 */
+.back {
+  position: absolute;
+  left: 8px;
+  top: 10px;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: 2px 2px 0 rgba(90, 69, 53, 0.16);
+}
+
+.linkBtn {
+  width: 100%;
+  border: 0;
+  border-bottom: 2px dashed var(--line);
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* 그림 아이콘 (MenuIcon) — 칸 안에서 조금 크게 */
+.qIcon > img {
+  width: 38px;
+  height: 38px;
+}
+
+/* 정리 — '책 순서' / '물건 자리' 탭 (11-13 물건 옮기기) */
+.editTabs {
+  display: flex;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  overflow: hidden;
+  background: #fff;
+}
+.editTab {
+  padding: 4px 16px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 16px;
+}
+.editTab + .editTab {
+  border-left: 1.5px solid var(--ink);
+}
+.editTabOn {
+  background: var(--butter);
+}
+.editRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 10px;
+}
+.editHint {
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+.editChip:disabled {
+  opacity: 0.45;
+}

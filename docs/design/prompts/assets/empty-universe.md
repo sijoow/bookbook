@@ -1,0 +1,1 @@
+The sticker: a tiny empty blue-green planet with a little paper rocket just landing beside it, a dotted pen trail behind the rocket and a few small stars — cozy and hopeful, like the first page of a new diary.

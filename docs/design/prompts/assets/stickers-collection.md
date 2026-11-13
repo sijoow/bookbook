@@ -1,0 +1,10 @@
+Use the reference image only as a style guide: its cozy Korean "dakku" scrapbook look, pastel apricot, mint, butter yellow, soft coral and warm brown ink, hand-drawn ink-pen outlines and a paper-sticker feel. Do not copy the phone screens.
+
+Create a STICKER SHEET of exactly 20 separate die-cut stickers on a fully transparent background, laid out in a strict grid of 5 columns and 4 rows. Every sticker sits centered in its own grid cell with generous empty transparent space around it, all stickers about the same size, none touching or overlapping. Each sticker has a thick clean white border around the whole shape, a soft warm-brown pen outline, flat colors with a subtle colored-pencil texture, cute and simple, front view.
+
+Row 1, left to right: a small potted plant with round green leaves in a terracotta pot; a soft coral hair ribbon bow; a small desk lamp with a butter-yellow shade; a knitted coral scarf with two cream stripes; a small square window with sky-blue glass, one white cloud and tied coral curtains.
+Row 2, left to right: a butter-yellow star hairpin; a sleeping orange tabby cat curled into a ball; a flower crown ring of tiny pastel flowers on a mint vine; a short string of little round light bulbs in butter, coral, mint and sky; a small apricot backpack with a butter flap.
+Row 3, left to right: a wooden picture frame with a tiny mint planet inside and a strip of washi tape on top; a headband with two brown teddy-bear ears; a small round wooden side table with a coral mug and a sky-blue book on it; a small golden crown with coral, sky and mint gems; a coral gift box tied with a butter-yellow ribbon bow.
+Row 4, left to right: a sitting cream puppy with brown floppy ears; a sitting orange kitten; a sitting white bunny with pink inner ears; a round golden hamster with a white belly; a fluffy yellow baby chick.
+
+No text, no letters, no numbers, no labels, no grid lines, no background scenery, no cast shadows. Not 3D, no glossy highlights, no gradients, no purple.

@@ -1,0 +1,9 @@
+Use the reference image only as a style guide: its cute hand-drawn app menu icons — chunky warm-brown pen outlines, flat pastel colors with a subtle colored-pencil texture, a few tiny sparkle tick marks around some icons, friendly rounded shapes, front view. Do not copy its labels, its paper bar or its exact icons.
+
+Create an ICON SHEET of exactly 12 separate icons on a fully transparent background, laid out in a strict grid of 4 columns and 3 rows. Every icon sits centered in its own grid cell with generous empty transparent space around it, all icons about the same visual size and weight, none touching or overlapping. No white sticker border. Use only these colors: apricot orange, mint green, butter yellow, soft coral, sky blue, cream, and warm brown ink for every outline.
+
+Row 1, left to right: a stack of two books with a small round mint plus badge on the corner; a round magnifying glass with a butter-yellow rim and a tiny sparkle; three books of different heights standing upright in a neat row with a small curved arrow above them; a tiny shop stall with a coral-and-cream striped awning and a small gift box on its counter.
+Row 2, left to right: a sky-blue paper airplane with a small dotted heart trail; a coral paw-print stamp; two small open books side by side linked by a dotted line with a tiny butter star between them; a cozy little house with an apricot roof, a round window and a chimney.
+Row 3, left to right: a small wooden bookshelf with colorful book spines; a calendar page with a coral binding and a big mint check mark; a little mint planet with a butter ring and two tiny stars; a cute round child face with brown bob hair and rosy cheeks.
+
+No text, no letters, no numbers, no labels, no grid lines, no background, no cast shadows. Not 3D, no glossy highlights, no gradients, no purple.

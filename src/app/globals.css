@@ -1,0 +1,71 @@
+/* A · 다꾸 독서 다이어리 (11-12 사용자 선택, docs/design/concepts/2026-11-12-a-daku.png)
+   모눈종이 바탕 · 갈색 펜 잉크 · 살구·민트·버터·코랄 · 손글씨 제목(Gaegu) + 본문(Pretendard)
+   하지 말 것: 매끈한 그라디언트, 광택 3D, 이모지, 보라
+   Pretendard 는 layout.tsx 에서 불러온다 */
+
+:root {
+  --paper: #f7f1e3; /* 모눈종이 바탕 */
+  --grid: #ece2cd; /* 모눈 선 */
+  --card: #fdf9f0; /* 카드 종이 */
+  --card-2: #f9f2e2; /* 카드 안 칸 */
+  --ink: #5a4535; /* 갈색 펜 — 본문·선 */
+  --ink-soft: #8c7762; /* 보조 글 */
+  --line: #d6c4a6; /* 점선·구분선 */
+  --brown: #6b5140; /* 버튼 */
+  --apricot: #f0a35e;
+  --mint: #8fcdb6;
+  --butter: #f6d77c;
+  --coral: #ef8f7c;
+  --sky: #8cc3dc;
+  --hand: var(--font-hand), "Gaegu", cursive;
+  --sans: "Pretendard Variable", Pretendard, system-ui, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+body {
+  min-height: 100dvh;
+  color: var(--ink);
+  background-color: var(--paper);
+  /* 모눈 — 그라디언트 함수로 1px 선만 긋는다 (색 번짐 없음) */
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 18px 18px;
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+img {
+  max-width: 100%;
+}
